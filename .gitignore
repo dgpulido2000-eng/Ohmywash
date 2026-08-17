@@ -1,0 +1,18 @@
+.DS_Store
+server/node_modules/
+server/.env
+.claude/
+CLAUDE.md
+INSTRUCCIONES.md
+
+# Assets de otro negocio (no usados por Oh My Wash)
+assets/hero.mp4
+assets/hamburguesa.mp4
+assets/hamburguesa-thumb.png
+assets/logo.jpg
+assets/menu-1.jpg
+assets/menu-2.jpg
+assets/menu-3.jpg
+assets/menu-4.jpg
+assets/menu-5.jpg
+assets/Pa q chompi hamgurguesa video.mov.png

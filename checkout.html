@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Oh My Wash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#3e96a5;
+    --teal-dark:#2b6f7a;
+    --teal-deep:#1d4f58;
+    --teal-light:#7cc3cf;
+    --teal-pale:#eaf6f8;
+    --ink:#12191a;
+    --paper:#ffffff;
+    --off:#f4fafb;
+    --shadow: 0 20px 50px rgba(20,50,55,.12);
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Inter',sans-serif;color:var(--ink);background:var(--off);
+    -webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px;}
+
+  header{
+    background:#fff;border-bottom:1px solid #eaf1f2;padding:16px 0;
+    position:sticky;top:0;z-index:10;
+  }
+  header .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.15rem;color:var(--teal-deep);}
+  .brand svg{width:24px;height:32px;}
+  .back-link{font-weight:600;font-size:.9rem;color:var(--teal);display:flex;align-items:center;gap:6px;}
+  .back-link:hover{color:var(--teal-dark);}
+
+  main{padding:56px 0 100px;}
+  .page-title{font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(1.7rem,3.6vw,2.4rem);margin-bottom:8px;}
+  .page-sub{color:#5c6b6e;margin-bottom:40px;}
+
+  .checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;}
+  .panel{background:#fff;border-radius:22px;padding:32px;box-shadow:var(--shadow);}
+  .panel h2{font-family:'Fredoka',sans-serif;font-size:1.2rem;margin-bottom:22px;color:var(--ink);}
+
+  .order-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #f0f5f5;}
+  .order-item-name{font-weight:600;font-size:.94rem;}
+  .order-item-qty{font-size:.78rem;color:#8b9a9c;margin-top:2px;}
+  .order-item-price{font-weight:600;color:var(--teal-deep);font-family:'Fredoka',sans-serif;white-space:nowrap;}
+  .order-total-row{
+    display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:18px;
+    border-top:2px solid var(--teal-pale);font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.3rem;
+  }
+  .order-note{font-size:.78rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
+
+  .pay-field{margin-bottom:18px;}
+  .pay-field label{display:block;font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:8px;}
+  #card-container{padding:2px;border-radius:12px;min-height:56px;}
+  #card-button{
+    width:100%;padding:15px;border-radius:100px;border:none;background:var(--teal);color:#fff;
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
+    box-shadow:0 12px 30px rgba(62,150,165,.3);
+  }
+  #card-button:hover{background:var(--teal-dark);transform:translateY(-2px);}
+  #card-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+  #payment-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
+  .sandbox-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
+
+  .empty-state{
+    text-align:center;background:#fff;border-radius:22px;padding:70px 30px;box-shadow:var(--shadow);
+  }
+  .empty-state span{font-size:3.4rem;display:block;margin-bottom:18px;}
+  .empty-state h2{font-family:'Fredoka',sans-serif;font-size:1.4rem;margin-bottom:10px;}
+  .empty-state p{color:#5c6b6e;margin-bottom:26px;}
+  .btn-primary{
+    display:inline-flex;padding:14px 30px;border-radius:100px;background:var(--teal);color:#fff;
+    font-weight:600;font-family:'Fredoka',sans-serif;box-shadow:0 10px 26px rgba(62,150,165,.3);
+    transition:transform .25s var(--ease), background .25s;
+  }
+  .btn-primary:hover{transform:translateY(-2px);background:var(--teal-dark);}
+
+  .success-panel{grid-column:1 / -1;text-align:center;padding:60px 30px;}
+  .success-icon{
+    width:70px;height:70px;border-radius:50%;background:var(--teal-pale);color:var(--teal-deep);
+    display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px;
+  }
+  .success-panel h2{font-family:'Fredoka',sans-serif;font-size:1.6rem;margin-bottom:10px;}
+  .success-panel p{color:#5c6b6e;margin-bottom:6px;}
+  .success-panel a.receipt{color:var(--teal);font-weight:600;text-decoration:underline;}
+
+  @media (max-width: 760px){
+    .checkout-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="web-oh-my-wash.html" class="brand">
+      <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7cc3cf"/><stop offset="100%" stop-color="#3e96a5"/></linearGradient></defs>
+        <path d="M50 2C38 18 30 30 30 40a20 20 0 0 0 40 0c0-10-8-22-20-38z" fill="url(#dg)"/>
+        <ellipse cx="50" cy="64" rx="42" ry="9" fill="none" stroke="#3e96a5" stroke-width="4" opacity=".45"/>
+        <ellipse cx="50" cy="64" rx="29" ry="6.2" fill="none" stroke="#3e96a5" stroke-width="4" opacity=".7"/>
+        <ellipse cx="50" cy="64" rx="16" ry="3.5" fill="none" stroke="#3e96a5" stroke-width="4"/>
+        <path d="M50 66C38 82 30 94 30 104a20 20 0 0 0 40 0c0-10-8-22-20-38z" fill="url(#dg)"/>
+      </svg>
+      Oh my wash
+    </a>
+    <a href="web-oh-my-wash.html" class="back-link">‹ Volver a la tienda</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1 class="page-title">Checkout</h1>
+    <p class="page-sub">Revisa tu pedido y completa el pago para reservar tus servicios.</p>
+
+    <div id="checkoutContent"></div>
+  </div>
+</main>
+
+<script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+<script>
+(function(){
+  const CART_KEY = 'ohMyWashCart';
+  const SQUARE_APP_ID = 'sandbox-sq0idb-vWARhzSVpcoP9rJCKsJUTg';
+  const SQUARE_LOCATION_ID = 'LZEH8Y72GWZ27';
+  const BACKEND_URL = 'http://localhost:3000/create-payment';
+
+  const content = document.getElementById('checkoutContent');
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
+
+  const formatUSD = (n) => '$' + n.toFixed(2);
+  const cartTotal = () => cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+  if (!cart.length) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <span>🛒</span>
+        <h2>Tu carrito está vacío</h2>
+        <p>Agrega uno o más servicios desde la tienda antes de pagar.</p>
+        <a href="web-oh-my-wash.html#servicios" class="btn-primary">Ver servicios</a>
+      </div>
+    `;
+    return;
+  }
+
+  const total = cartTotal();
+
+  content.innerHTML = `
+    <div class="checkout-grid" id="checkoutGrid">
+      <div class="panel">
+        <h2>Resumen de tu pedido</h2>
+        <div id="orderItems">
+          ${cart.map(i => `
+            <div class="order-item">
+              <div>
+                <div class="order-item-name">${i.name}</div>
+                <div class="order-item-qty">${formatUSD(i.price)} × ${i.qty}</div>
+              </div>
+              <div class="order-item-price">${formatUSD(i.price * i.qty)}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="order-total-row"><span>Total</span><span>${formatUSD(total)}</span></div>
+        <p class="order-note">Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.</p>
+      </div>
+      <div class="panel">
+        <h2>Datos de pago</h2>
+        <div class="pay-field">
+          <label>Tarjeta</label>
+          <div id="card-container"></div>
+        </div>
+        <button id="card-button" type="button">Pagar ${formatUSD(total)}</button>
+        <p id="payment-status"></p>
+        <p class="sandbox-note">🧪 Entorno de pruebas (Sandbox) — ningún cargo es real.<br>Tarjeta de prueba: 4111 1111 1111 1111 · fecha futura · CVV 111 · ZIP 12345</p>
+      </div>
+    </div>
+  `;
+
+  const statusEl = document.getElementById('payment-status');
+  const cardButton = document.getElementById('card-button');
+
+  function setStatus(html, kind) {
+    if (!statusEl) return;
+    statusEl.innerHTML = html;
+    statusEl.style.color = kind === 'error' ? '#c0392b' : kind === 'ok' ? '#1d8a4a' : '#5c6b6e';
+  }
+
+  function showSuccess(data) {
+    const receiptLink = data.receiptUrl
+      ? `<p><a class="receipt" href="${data.receiptUrl}" target="_blank" rel="noopener">Ver recibo</a></p>`
+      : '';
+    document.getElementById('checkoutGrid').innerHTML = `
+      <div class="panel success-panel">
+        <div class="success-icon">✓</div>
+        <h2>¡Pago recibido!</h2>
+        <p>ID de pago: ${data.paymentId}</p>
+        <p>Total cobrado: ${formatUSD(total)}</p>
+        ${receiptLink}
+        <p style="margin-top:22px;"><a href="web-oh-my-wash.html" class="btn-primary">Volver al inicio</a></p>
+      </div>
+    `;
+    localStorage.removeItem(CART_KEY);
+  }
+
+  async function initSquarePayments() {
+    if (!window.Square) {
+      setStatus('No se pudo cargar Square Web Payments SDK.', 'error');
+      if (cardButton) cardButton.disabled = true;
+      return;
+    }
+
+    let card;
+    try {
+      const payments = window.Square.payments(SQUARE_APP_ID, SQUARE_LOCATION_ID);
+      card = await payments.card();
+      await card.attach('#card-container');
+    } catch (err) {
+      console.error('No se pudo inicializar el formulario de tarjeta:', err);
+      setStatus('No se pudo cargar el formulario de tarjeta (revisa la consola).', 'error');
+      if (cardButton) cardButton.disabled = true;
+      return;
+    }
+
+    cardButton.addEventListener('click', async () => {
+      setStatus('Procesando...', 'info');
+      cardButton.disabled = true;
+      try {
+        const amountCents = Math.round(total * 100);
+        const tokenResult = await card.tokenize();
+        if (tokenResult.status !== 'OK') {
+          throw new Error(tokenResult.errors?.[0]?.message || 'No se pudo procesar la tarjeta');
+        }
+
+        const res = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceId: tokenResult.token, amount: amountCents }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          setStatus('✅ Pago exitoso', 'ok');
+          showSuccess(data);
+        } else {
+          throw new Error(data.error || 'El backend rechazó el pago');
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus(`❌ ${err.message}`, 'error');
+      } finally {
+        cardButton.disabled = false;
+      }
+    });
+  }
+
+  initSquarePayments();
+})();
+</script>
+
+</body>
+</html>
