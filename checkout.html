@@ -64,6 +64,13 @@
   .btn-secondary:hover{background:var(--teal-pale);}
   .btn-secondary:disabled{opacity:.5;cursor:not-allowed;}
 
+  .appt-service-summary{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    padding:14px 16px;border-radius:12px;background:var(--teal-pale);border:1.5px solid var(--teal-light);
+  }
+  .appt-service-summary .appt-service-name{font-weight:700;color:var(--ink);font-size:.95rem;}
+  .appt-service-summary .appt-service-meta{font-size:.8rem;color:var(--teal-deep);font-weight:700;white-space:nowrap;}
+
   .date-picker-wrap{position:relative;}
   .date-picker-btn{
     width:100%;display:flex;align-items:center;justify-content:space-between;
@@ -229,7 +236,7 @@
         <p class="section-hint">Elige el servicio principal, la fecha, y confirma un horario disponible con nuestro equipo.</p>
         <div class="pay-field">
           <label>Servicio</label>
-          <select id="apptService"><option>Cargando servicios...</option></select>
+          <div id="apptServiceSummary" class="appt-service-summary">Cargando servicio...</div>
         </div>
         <div class="pay-field">
           <label>Fecha</label>
@@ -320,7 +327,7 @@
   let apptAvailabilities = [];
   let apptSelectedIndex = null;
 
-  const apptServiceSel = document.getElementById('apptService');
+  const apptServiceSummary = document.getElementById('apptServiceSummary');
   const apptSearchBtn = document.getElementById('apptSearchBtn');
   const apptSlotsEl = document.getElementById('apptSlots');
   const apptCustomerForm = document.getElementById('apptCustomerForm');
@@ -414,21 +421,23 @@
       apptServices = matched.length ? matched : allServices;
 
       if (!apptServices.length) {
-        apptServiceSel.innerHTML = '<option>No hay servicios reservables todavía</option>';
+        apptServiceSummary.textContent = 'No hay servicios reservables todavía';
         return;
       }
-      apptServiceSel.innerHTML = apptServices
-        .map((s, i) => `<option value="${i}">${s.serviceName} — $${s.price.toFixed(2)} (${s.durationMinutes} min)</option>`)
-        .join('');
+      const service = apptServices[0];
+      apptServiceSummary.innerHTML = `
+        <span class="appt-service-name">${service.serviceName}</span>
+        <span class="appt-service-meta">$${service.price.toFixed(2)} · ${service.durationMinutes} min</span>
+      `;
     } catch (err) {
       console.error(err);
-      apptServiceSel.innerHTML = '<option>No se pudieron cargar los servicios</option>';
+      apptServiceSummary.textContent = 'No se pudieron cargar los servicios';
     }
   }
   loadApptServices();
 
   apptSearchBtn.addEventListener('click', async () => {
-    const service = apptServices[apptServiceSel.value];
+    const service = apptServices[0];
     if (!service) { setApptStatus('Elige un servicio primero', 'error'); return; }
     const dateVal = toDateStr(selectedDate);
 
@@ -523,7 +532,6 @@
       paymentPanel.style.pointerEvents = 'auto';
       document.getElementById('paymentGateNote').textContent = 'Tu cita ya está agendada — completa el pago para confirmar tu reserva.';
       apptSearchBtn.disabled = true;
-      apptServiceSel.disabled = true;
       apptDateBtn.disabled = true;
     } catch (err) {
       console.error(err);
