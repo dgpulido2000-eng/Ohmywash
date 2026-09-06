@@ -42,9 +42,37 @@
   .page-title{font-family:'Inter',sans-serif;font-weight:700;font-size:clamp(1.7rem,3.6vw,2.4rem);margin-bottom:8px;}
   .page-sub{color:#5c6b6e;margin-bottom:40px;}
 
-  .checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;}
-  .panel{background:#fff;border-radius:22px;padding:32px;box-shadow:var(--shadow);}
+  .checkout-flow{display:flex;flex-direction:column;gap:28px;max-width:640px;margin:0 auto;}
+  .panel{background:#fff;border-radius:22px;padding:32px;box-shadow:var(--shadow);transition:opacity .3s var(--ease);}
   .panel h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:22px;color:var(--ink);}
+  .section-hint{color:#5c6b6e;font-size:.88rem;margin-bottom:18px;line-height:1.5;}
+
+  select, input[type="date"], input[type="text"], input[type="email"], input[type="tel"]{
+    width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #d8e8ea;
+    font-size:.95rem;font-family:'Inter',sans-serif;color:var(--ink);background:#fff;
+  }
+  select:focus, input:focus{outline:none;border-color:var(--teal);}
+
+  .btn-secondary{
+    width:100%;padding:13px;border-radius:100px;border:1.5px solid var(--teal);background:#fff;color:var(--teal-deep);
+    font-weight:600;font-size:.94rem;cursor:pointer;transition:background .25s var(--ease), color .25s var(--ease);margin-top:4px;
+  }
+  .btn-secondary:hover{background:var(--teal-pale);}
+  .btn-secondary:disabled{opacity:.5;cursor:not-allowed;}
+
+  .appt-slots{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+  .appt-slot-btn{
+    padding:10px 16px;border-radius:100px;border:1.5px solid #d8e8ea;background:#fff;color:var(--ink);
+    font-weight:600;font-size:.88rem;cursor:pointer;transition:all .2s var(--ease);
+  }
+  .appt-slot-btn:hover{border-color:var(--teal);}
+  .appt-slot-btn.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .appt-customer-form{margin-top:22px;padding-top:20px;border-top:1px dashed #e3edee;}
+  .appt-confirmed{
+    background:var(--teal-pale);border-radius:14px;padding:16px 18px;
+    font-weight:600;color:var(--teal-deep);font-size:.92rem;
+  }
+  #appt-status{margin-top:16px;font-weight:600;font-size:.9rem;min-height:20px;}
 
   .order-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #f0f5f5;}
   .order-item-name{font-weight:600;font-size:.94rem;}
@@ -62,14 +90,14 @@
   .pay-field{margin-bottom:18px;}
   .pay-field label{display:block;font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:8px;}
   #card-container{padding:2px;border-radius:12px;min-height:56px;}
-  #card-button{
+  #card-button, #apptConfirmBtn{
     width:100%;padding:15px;border-radius:100px;border:none;background:var(--teal);color:#fff;
     font-family:'Inter',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
     transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
     box-shadow:0 12px 30px rgba(46,196,182,.3);
   }
-  #card-button:hover{background:var(--teal-dark);transform:translateY(-2px);}
-  #card-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+  #card-button:hover, #apptConfirmBtn:hover{background:var(--teal-dark);transform:translateY(-2px);}
+  #card-button:disabled, #apptConfirmBtn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
   #payment-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
   .sandbox-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
 
@@ -86,7 +114,7 @@
   }
   .btn-primary:hover{transform:translateY(-2px);background:var(--teal-dark);}
 
-  .success-panel{grid-column:1 / -1;text-align:center;padding:60px 30px;}
+  .success-panel{text-align:center;padding:60px 30px;}
   .success-icon{
     width:70px;height:70px;border-radius:50%;background:var(--teal-pale);color:var(--teal-deep);
     display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px;
@@ -95,9 +123,6 @@
   .success-panel p{color:#5c6b6e;margin-bottom:6px;}
   .success-panel a.receipt{color:var(--teal);font-weight:600;text-decoration:underline;}
 
-  @media (max-width: 760px){
-    .checkout-grid{grid-template-columns:1fr;}
-  }
 </style>
 </head>
 <body>
@@ -150,15 +175,39 @@
   let total = cartTotal();
 
   content.innerHTML = `
-    <div class="checkout-grid" id="checkoutGrid">
+    <div class="checkout-flow" id="checkoutGrid">
       <div class="panel">
         <h2>Resumen de tu pedido</h2>
         <div id="orderItems"></div>
         <div class="order-total-row"><span>Total</span><span id="orderTotal">${formatUSD(total)}</span></div>
         <p class="order-note">Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.</p>
       </div>
+
       <div class="panel">
+        <h2>Agenda tu cita</h2>
+        <p class="section-hint">Elige el servicio principal, la fecha, y confirma un horario disponible con nuestro equipo.</p>
+        <div class="pay-field">
+          <label>Servicio</label>
+          <select id="apptService"><option>Cargando servicios...</option></select>
+        </div>
+        <div class="pay-field">
+          <label>Fecha</label>
+          <input type="date" id="apptDate">
+        </div>
+        <button id="apptSearchBtn" type="button" class="btn-secondary">Buscar horarios disponibles</button>
+        <div id="apptSlots" class="appt-slots"></div>
+        <div id="apptCustomerForm" class="appt-customer-form" hidden>
+          <div class="pay-field"><label>Nombre completo</label><input type="text" id="apptName" placeholder="Tu nombre"></div>
+          <div class="pay-field"><label>Correo</label><input type="email" id="apptEmail" placeholder="tu@correo.com"></div>
+          <div class="pay-field"><label>Teléfono</label><input type="tel" id="apptPhone" placeholder="+1 678 555 0100"></div>
+          <button id="apptConfirmBtn" type="button">Confirmar cita</button>
+        </div>
+        <p id="appt-status"></p>
+      </div>
+
+      <div class="panel" id="paymentPanel" style="opacity:.5;pointer-events:none;">
         <h2>Datos de pago</h2>
+        <p class="section-hint" id="paymentGateNote">Agenda tu cita arriba para habilitar el pago.</p>
         <div class="pay-field">
           <label>Tarjeta</label>
           <div id="card-container"></div>
@@ -170,7 +219,10 @@
     </div>
   `;
 
+  const API_BASE = 'https://oh-my-wash-server.onrender.com';
   const cardButton = document.getElementById('card-button');
+  const paymentPanel = document.getElementById('paymentPanel');
+  let bookingConfirmed = false;
 
   function renderOrderItems() {
     document.getElementById('orderItems').innerHTML = cart.map(i => `
@@ -205,6 +257,154 @@
   }
 
   renderOrderItems();
+
+  // ---------- Agenda tu cita ----------
+  let apptServices = [];
+  let apptAvailabilities = [];
+  let apptSelectedIndex = null;
+
+  const apptServiceSel = document.getElementById('apptService');
+  const apptDateInput = document.getElementById('apptDate');
+  const apptSearchBtn = document.getElementById('apptSearchBtn');
+  const apptSlotsEl = document.getElementById('apptSlots');
+  const apptCustomerForm = document.getElementById('apptCustomerForm');
+  const apptConfirmBtn = document.getElementById('apptConfirmBtn');
+  const apptStatusEl = document.getElementById('appt-status');
+
+  function setApptStatus(html, kind) {
+    apptStatusEl.innerHTML = html;
+    apptStatusEl.style.color = kind === 'error' ? '#c0392b' : kind === 'ok' ? '#1d8a4a' : '#5c6b6e';
+  }
+
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  apptDateInput.min = tomorrow.toISOString().slice(0, 10);
+  apptDateInput.value = tomorrow.toISOString().slice(0, 10);
+
+  async function loadApptServices() {
+    try {
+      const res = await fetch(`${API_BASE}/services`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      apptServices = data.services || [];
+      if (!apptServices.length) {
+        apptServiceSel.innerHTML = '<option>No hay servicios reservables todavía</option>';
+        return;
+      }
+      apptServiceSel.innerHTML = apptServices
+        .map((s, i) => `<option value="${i}">${s.serviceName} — $${s.price.toFixed(2)} (${s.durationMinutes} min)</option>`)
+        .join('');
+    } catch (err) {
+      console.error(err);
+      apptServiceSel.innerHTML = '<option>No se pudieron cargar los servicios</option>';
+    }
+  }
+  loadApptServices();
+
+  apptSearchBtn.addEventListener('click', async () => {
+    const service = apptServices[apptServiceSel.value];
+    if (!service) { setApptStatus('Elige un servicio primero', 'error'); return; }
+    const dateVal = apptDateInput.value;
+    if (!dateVal) { setApptStatus('Elige una fecha', 'error'); return; }
+
+    setApptStatus('Buscando horarios...', 'info');
+    apptSlotsEl.innerHTML = '';
+    apptCustomerForm.hidden = true;
+    apptSelectedIndex = null;
+    apptSearchBtn.disabled = true;
+
+    const startAt = `${dateVal}T00:00:00Z`;
+    const endDate = new Date(`${dateVal}T00:00:00Z`);
+    endDate.setUTCDate(endDate.getUTCDate() + 1);
+    const endAt = endDate.toISOString();
+
+    try {
+      const res = await fetch(`${API_BASE}/availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serviceVariationId: service.serviceVariationId, startAt, endAt }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      apptAvailabilities = data.availabilities || [];
+
+      if (!apptAvailabilities.length) {
+        setApptStatus('No hay horarios disponibles ese día. Prueba otra fecha.', 'error');
+        return;
+      }
+
+      apptSlotsEl.innerHTML = apptAvailabilities
+        .map((a, i) => {
+          const time = new Date(a.startAt).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit' });
+          return `<button type="button" class="appt-slot-btn" data-index="${i}">${time}</button>`;
+        })
+        .join('');
+      setApptStatus('', 'info');
+
+      document.querySelectorAll('.appt-slot-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.appt-slot-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          apptSelectedIndex = parseInt(btn.dataset.index, 10);
+          apptCustomerForm.hidden = false;
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      setApptStatus(`❌ ${err.message}`, 'error');
+    } finally {
+      apptSearchBtn.disabled = false;
+    }
+  });
+
+  apptConfirmBtn.addEventListener('click', async () => {
+    if (apptSelectedIndex == null) { setApptStatus('Elige un horario primero', 'error'); return; }
+    const name = document.getElementById('apptName').value.trim();
+    if (!name) { setApptStatus('Escribe tu nombre', 'error'); return; }
+    const email = document.getElementById('apptEmail').value.trim();
+    const phone = document.getElementById('apptPhone').value.trim();
+
+    const slot = apptAvailabilities[apptSelectedIndex];
+    const segment = slot.appointmentSegments[0];
+
+    setApptStatus('Confirmando tu cita...', 'info');
+    apptConfirmBtn.disabled = true;
+
+    try {
+      const res = await fetch(`${API_BASE}/create-booking`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceVariationId: segment.serviceVariationId,
+          serviceVariationVersion: segment.serviceVariationVersion,
+          teamMemberId: segment.teamMemberId,
+          startAt: slot.startAt,
+          durationMinutes: segment.durationMinutes,
+          customerName: name,
+          customerEmail: email || undefined,
+          customerPhone: phone || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+
+      const dateStr = new Date(slot.startAt).toLocaleString('es-US', {
+        weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+      });
+      setApptStatus(`<div class="appt-confirmed">✅ Cita confirmada para ${dateStr}</div>`, 'ok');
+
+      bookingConfirmed = true;
+      paymentPanel.style.opacity = '1';
+      paymentPanel.style.pointerEvents = 'auto';
+      document.getElementById('paymentGateNote').textContent = 'Tu cita ya está agendada — completa el pago para confirmar tu reserva.';
+      apptSearchBtn.disabled = true;
+      apptServiceSel.disabled = true;
+      apptDateInput.disabled = true;
+    } catch (err) {
+      console.error(err);
+      setApptStatus(`❌ ${err.message}`, 'error');
+      apptConfirmBtn.disabled = false;
+    }
+  });
 
   const statusEl = document.getElementById('payment-status');
 
@@ -251,6 +451,10 @@
     }
 
     cardButton.addEventListener('click', async () => {
+      if (!bookingConfirmed) {
+        setStatus('Agenda tu cita antes de pagar.', 'error');
+        return;
+      }
       setStatus('Procesando...', 'info');
       cardButton.disabled = true;
       try {
