@@ -6,7 +6,7 @@
 <title>Checkout — Oh My Wash</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Forum&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --teal:#2ec4b6;
@@ -127,7 +127,7 @@
   .order-item-qty{font-size:.78rem;color:#8b9a9c;margin-top:2px;}
   .order-item-right{display:flex;align-items:center;gap:12px;}
   .order-item-price{font-weight:600;color:var(--teal-deep);font-family:'Inter',sans-serif;font-weight:700;white-space:nowrap;}
-  .order-item-remove{background:none;border:none;cursor:pointer;font-size:.95rem;opacity:.5;transition:opacity .2s var(--ease);}
+  .order-item-remove{background:none;border:none;cursor:pointer;font-size:1.3rem;line-height:1;opacity:.55;transition:opacity .2s var(--ease);}
   .order-item-remove:hover{opacity:1;}
   .order-total-row{
     display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:18px;
@@ -148,6 +148,8 @@
   #card-button:disabled, #apptConfirmBtn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
   #payment-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
   .sandbox-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
+  .powered-by-light{text-align:center;padding:36px 0 10px;font-size:.8rem;color:#8b9a9c;}
+  .powered-by-light b{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal-deep);}
 
   .empty-state{
     text-align:center;background:#fff;border-radius:22px;padding:70px 30px;box-shadow:var(--shadow);
@@ -190,6 +192,8 @@
     <p class="page-sub">Revisa tu pedido y completa el pago para reservar tus servicios.</p>
 
     <div id="checkoutContent"></div>
+
+    <div class="powered-by-light">Powered by <b>NEXO GROWTH</b></div>
   </div>
 </main>
 
