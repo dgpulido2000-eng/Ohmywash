@@ -297,7 +297,7 @@
         </div>
         <div class="order-item-right">
           <div class="order-item-price">${formatUSD(i.price * i.qty)}</div>
-          <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar servicio">🗑</button>
+          <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar servicio">✕</button>
         </div>
       </div>
     `).join('');
@@ -424,11 +424,10 @@
         apptServiceSummary.textContent = 'No hay servicios reservables todavía';
         return;
       }
-      const service = apptServices[0];
-      apptServiceSummary.innerHTML = `
-        <span class="appt-service-name">${service.serviceName}</span>
-        <span class="appt-service-meta">$${service.price.toFixed(2)} · ${service.durationMinutes} min</span>
-      `;
+      apptServiceSummary.innerHTML = apptServices.map(s => `
+        <span class="appt-service-name">${s.serviceName}</span>
+        <span class="appt-service-meta">$${s.price.toFixed(2)} · ${s.durationMinutes} min</span>
+      `).join('<hr style="width:100%;border:none;border-top:1px dashed var(--teal-light);margin:2px 0;">');
     } catch (err) {
       console.error(err);
       apptServiceSummary.textContent = 'No se pudieron cargar los servicios';
@@ -437,8 +436,7 @@
   loadApptServices();
 
   apptSearchBtn.addEventListener('click', async () => {
-    const service = apptServices[0];
-    if (!service) { setApptStatus('Elige un servicio primero', 'error'); return; }
+    if (!apptServices.length) { setApptStatus('No hay servicios para agendar', 'error'); return; }
     const dateVal = toDateStr(selectedDate);
 
     setApptStatus('Buscando horarios...', 'info');
@@ -456,7 +454,7 @@
       const res = await fetch(`${API_BASE}/availability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceVariationId: service.serviceVariationId, startAt, endAt }),
+        body: JSON.stringify({ serviceVariationIds: apptServices.map(s => s.serviceVariationId), startAt, endAt }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
@@ -499,7 +497,7 @@
     const phone = document.getElementById('apptPhone').value.trim();
 
     const slot = apptAvailabilities[apptSelectedIndex];
-    const segment = slot.appointmentSegments[0];
+    const segments = slot.appointmentSegments;
 
     setApptStatus('Confirmando tu cita...', 'info');
     apptConfirmBtn.disabled = true;
@@ -509,11 +507,13 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          serviceVariationId: segment.serviceVariationId,
-          serviceVariationVersion: segment.serviceVariationVersion,
-          teamMemberId: segment.teamMemberId,
+          segments: segments.map(s => ({
+            serviceVariationId: s.serviceVariationId,
+            serviceVariationVersion: s.serviceVariationVersion,
+            teamMemberId: s.teamMemberId,
+            durationMinutes: s.durationMinutes,
+          })),
           startAt: slot.startAt,
-          durationMinutes: segment.durationMinutes,
           customerName: name,
           customerEmail: email || undefined,
           customerPhone: phone || undefined,

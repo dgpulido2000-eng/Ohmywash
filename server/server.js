@@ -111,24 +111,29 @@ app.get('/services', async (req, res) => {
   }
 });
 
-// Busca horarios disponibles para un servicio en un rango de fechas.
+// Busca horarios disponibles para uno o varios servicios (una sola visita) en un rango de fechas.
 app.post('/availability', async (req, res) => {
-  const { serviceVariationId, teamMemberId, startAt, endAt } = req.body || {};
+  const { serviceVariationId, serviceVariationIds, teamMemberId, startAt, endAt } = req.body || {};
 
-  if (!serviceVariationId || !startAt || !endAt) {
-    return res.status(400).json({ success: false, error: 'serviceVariationId, startAt y endAt son requeridos' });
+  const ids = serviceVariationIds && serviceVariationIds.length ? serviceVariationIds : (serviceVariationId ? [serviceVariationId] : []);
+
+  if (!ids.length || !startAt || !endAt) {
+    return res.status(400).json({ success: false, error: 'serviceVariationIds, startAt y endAt son requeridos' });
   }
 
   try {
-    const segmentFilter = { serviceVariationId };
-    if (teamMemberId) segmentFilter.teamMemberIdFilter = { any: [teamMemberId] };
+    const segmentFilters = ids.map(id => {
+      const filter = { serviceVariationId: id };
+      if (teamMemberId) filter.teamMemberIdFilter = { any: [teamMemberId] };
+      return filter;
+    });
 
     const response = await squareClient.bookingsApi.searchAvailability({
       query: {
         filter: {
           startAtRange: { startAt, endAt },
           locationId: process.env.SQUARE_LOCATION_ID,
-          segmentFilters: [segmentFilter],
+          segmentFilters,
         },
       },
     });
@@ -143,20 +148,29 @@ app.post('/availability', async (req, res) => {
 });
 
 // Crea la cita real en Square (y el cliente si no existe todavía).
+// Acepta "segments" (varios servicios en una sola visita) o los campos sueltos de un solo servicio, por compatibilidad.
 app.post('/create-booking', async (req, res) => {
   const {
+    segments,
     serviceVariationId,
     serviceVariationVersion,
     teamMemberId,
-    startAt,
     durationMinutes,
+    startAt,
     customerName,
     customerEmail,
     customerPhone,
   } = req.body || {};
 
-  if (!serviceVariationId || !teamMemberId || !startAt || !customerName) {
+  const segmentList = segments && segments.length
+    ? segments
+    : (serviceVariationId ? [{ serviceVariationId, serviceVariationVersion, teamMemberId, durationMinutes }] : []);
+
+  if (!segmentList.length || !startAt || !customerName) {
     return res.status(400).json({ success: false, error: 'Faltan datos requeridos para la reserva' });
+  }
+  if (segmentList.some(s => !s.serviceVariationId || !s.teamMemberId)) {
+    return res.status(400).json({ success: false, error: 'Cada servicio de la reserva necesita serviceVariationId y teamMemberId' });
   }
 
   try {
@@ -184,14 +198,12 @@ app.post('/create-booking', async (req, res) => {
         locationId: process.env.SQUARE_LOCATION_ID,
         startAt,
         customerId,
-        appointmentSegments: [
-          {
-            teamMemberId,
-            serviceVariationId,
-            serviceVariationVersion: serviceVariationVersion != null ? BigInt(serviceVariationVersion) : undefined,
-            durationMinutes,
-          },
-        ],
+        appointmentSegments: segmentList.map(s => ({
+          teamMemberId: s.teamMemberId,
+          serviceVariationId: s.serviceVariationId,
+          serviceVariationVersion: s.serviceVariationVersion != null ? BigInt(s.serviceVariationVersion) : undefined,
+          durationMinutes: s.durationMinutes,
+        })),
       },
     });
 
