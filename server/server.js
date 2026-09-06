@@ -22,6 +22,19 @@ function bigIntSafe(value) {
   return typeof value === 'bigint' ? Number(value) : value;
 }
 
+// Convierte recursivamente cualquier BigInt dentro de un objeto/array a Number,
+// para que se pueda mandar con res.json() sin que truene la serialización.
+function deepBigIntToNumber(value) {
+  if (typeof value === 'bigint') return Number(value);
+  if (Array.isArray(value)) return value.map(deepBigIntToNumber);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const key of Object.keys(value)) out[key] = deepBigIntToNumber(value[key]);
+    return out;
+  }
+  return value;
+}
+
 app.get('/', (req, res) => {
   res.json({ ok: true, service: 'oh-my-wash-server' });
 });
@@ -121,7 +134,7 @@ app.post('/availability', async (req, res) => {
     });
 
     const availabilities = response.result?.availabilities ?? response.availabilities ?? [];
-    res.json({ success: true, availabilities });
+    res.json({ success: true, availabilities: deepBigIntToNumber(availabilities) });
   } catch (err) {
     console.error('Error buscando disponibilidad:', err);
     const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
