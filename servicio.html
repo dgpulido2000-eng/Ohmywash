@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servicio — Oh My Wash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#2ec4b6;
+    --teal-dark:#22a89c;
+    --teal-deep:#0f6a62;
+    --teal-light:#7de0d4;
+    --teal-pale:#e6faf7;
+    --ink:#12191a;
+    --gray:#2b2b2b;
+    --paper:#ffffff;
+    --off:#f4fafb;
+    --shadow: 0 20px 50px rgba(20,50,55,.12);
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',sans-serif;color:var(--ink);background:var(--paper);
+    overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Inter',sans-serif;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:900px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- Nav ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 32px;background:rgba(255,255,255,.7);
+    backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);
+    border-bottom:1px solid rgba(46,196,182,.15);
+    transition:padding .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  header.scrolled{padding:8px 32px;box-shadow:0 8px 30px rgba(20,50,55,.08);}
+  .logo{display:flex;align-items:center;}
+  .nav-icon{height:42px;display:inline-flex;align-items:center;}
+  .nav-icon img{height:100%;width:auto;display:block;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  nav ul{display:flex;gap:30px;align-items:center;}
+  nav a{font-weight:500;font-size:.95rem;color:var(--gray);position:relative;padding:4px 0;}
+  nav a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--teal);transition:width .3s var(--ease);}
+  nav a:hover::after, nav a.active::after{width:100%;}
+  .header-actions{display:flex;align-items:center;gap:14px;}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
+  .burger span{width:24px;height:2.5px;background:var(--teal-deep);border-radius:2px;}
+
+  /* ---------- Cart ---------- */
+  .cart-btn{
+    position:relative;width:54px;height:54px;border-radius:50%;border:none;flex:0 0 54px;
+    background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 8px 22px rgba(46,196,182,.4);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
+  }
+  .cart-btn:hover{transform:translateY(-2px);background:var(--teal-dark);box-shadow:0 12px 28px rgba(46,196,182,.5);}
+  .cart-badge{
+    position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;padding:0 6px;border-radius:100px;
+    background:#e2574c;color:#fff;font-size:.8rem;font-weight:700;display:none;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;border:2.5px solid #fff;
+  }
+  .cart-overlay{position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:200;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);}
+  .cart-overlay.open{opacity:1;pointer-events:auto;}
+  .cart-drawer{
+    position:fixed;top:0;right:-420px;width:min(420px,92vw);height:100vh;background:#fff;z-index:201;
+    display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.25);transition:right .4s var(--ease);
+  }
+  .cart-drawer.open{right:0;}
+  .cart-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:24px 26px;border-bottom:1px solid #eef4f4;}
+  .cart-drawer-header h3{font-weight:700;font-size:1.3rem;color:var(--ink);}
+  .cart-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8b9a9c;width:34px;height:34px;border-radius:50%;transition:background .25s;}
+  .cart-close:hover{background:var(--teal-pale);color:var(--teal-deep);}
+  .cart-items{flex:1;overflow-y:auto;padding:8px 26px;}
+  .cart-empty{text-align:center;padding:60px 10px;color:#8b9a9c;}
+  .cart-empty span{font-size:3.4rem;display:block;margin-bottom:14px;}
+  .cart-empty p{font-weight:600;color:var(--ink);margin-bottom:4px;}
+  .cart-empty small{font-size:.85rem;}
+  .cart-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #f0f5f5;}
+  .cart-item-info{display:flex;flex-direction:column;gap:4px;}
+  .cart-item-name{font-weight:600;font-size:.9rem;color:var(--ink);}
+  .cart-item-price{font-size:.78rem;color:#8b9a9c;}
+  .cart-item-controls{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+  .qty-btn{width:26px;height:26px;border-radius:8px;border:1px solid #d8e8ea;background:#fff;color:var(--teal-deep);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .qty-btn:hover{background:var(--teal-pale);}
+  .qty-value{min-width:16px;text-align:center;font-weight:600;font-size:.88rem;}
+  .remove-btn{background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.55;margin-left:2px;}
+  .remove-btn:hover{opacity:1;}
+  .cart-footer{padding:20px 26px 26px;border-top:1px solid #eef4f4;}
+  .cart-total-row{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1.2rem;color:var(--ink);margin-bottom:16px;}
+  .cart-note{font-size:.74rem;color:#8b9a9c;text-align:center;margin-top:12px;line-height:1.5;}
+  .btn{padding:15px 30px;border-radius:100px;font-weight:600;font-size:1rem;cursor:pointer;border:none;transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s;display:inline-flex;align-items:center;gap:8px;justify-content:center;}
+  .btn-solid{background:var(--teal);color:#fff;box-shadow:0 10px 30px rgba(46,196,182,.35);}
+  .btn-solid:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(46,196,182,.45);background:var(--teal-dark);}
+  .btn-solid:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  /* ---------- Page ---------- */
+  main{padding:120px 0 140px;}
+  .breadcrumb{font-size:.85rem;color:#8b9a9c;margin-bottom:24px;}
+  .breadcrumb a{color:var(--teal-deep);font-weight:600;}
+  .breadcrumb a:hover{color:var(--teal-dark);}
+
+  .service-photo{
+    width:100%;aspect-ratio:16/8;border-radius:24px;overflow:hidden;margin-bottom:32px;
+    background:linear-gradient(135deg, var(--teal-deep), var(--teal) 60%, var(--teal-light));
+    display:flex;align-items:center;justify-content:center;position:relative;box-shadow:var(--shadow);
+  }
+  .service-photo::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.25) 2px, transparent 2px);background-size:26px 26px;opacity:.5;}
+  .service-photo-label{position:relative;color:#fff;text-align:center;font-weight:600;font-size:.85rem;background:rgba(0,0,0,.25);padding:10px 20px;border-radius:100px;}
+
+  .service-eyebrow{color:var(--teal);font-weight:700;font-size:.82rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:block;}
+  .service-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.15;margin-bottom:14px;}
+  .service-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:26px;}
+  .service-duration{font-size:.85rem;color:#5c6b6e;font-weight:600;background:var(--teal-pale);padding:6px 14px;border-radius:100px;}
+  .service-varies{font-size:.85rem;color:#5c6b6e;}
+
+  .service-description{color:#4b5a5c;font-size:1.02rem;line-height:1.75;margin-bottom:24px;}
+  .service-bullets-title{font-weight:700;font-size:1.05rem;margin-bottom:14px;}
+  .service-bullets{margin-bottom:36px;}
+  .service-bullets li{
+    display:flex;gap:10px;align-items:flex-start;padding:9px 0;color:#4b5a5c;font-size:.94rem;line-height:1.55;
+    border-bottom:1px solid #f0f5f5;
+  }
+  .service-bullets li::before{content:'✓';color:var(--teal);font-weight:800;flex:0 0 auto;}
+
+  .options-title{font-weight:800;font-size:1.3rem;margin-bottom:16px;}
+  .option-row{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;
+    border:1.5px solid #e3edee;border-radius:16px;margin-bottom:12px;cursor:pointer;
+    transition:border-color .25s var(--ease), background .25s var(--ease);
+  }
+  .option-row:hover{border-color:var(--teal-light);}
+  .option-row.selected{border-color:var(--teal);background:var(--teal-pale);}
+  .option-row.disabled{opacity:.5;cursor:not-allowed;}
+  .option-info{display:flex;flex-direction:column;gap:3px;}
+  .option-label{font-weight:700;font-size:1rem;}
+  .option-sub{font-size:.85rem;color:#8b9a9c;}
+  .option-price{font-weight:800;font-size:1.1rem;color:var(--teal-deep);white-space:nowrap;}
+  .option-radio{
+    width:22px;height:22px;border-radius:50%;border:2px solid #d8e8ea;flex:0 0 22px;
+    display:flex;align-items:center;justify-content:center;transition:border-color .25s;
+  }
+  .option-row.selected .option-radio{border-color:var(--teal);}
+  .option-radio-dot{width:11px;height:11px;border-radius:50%;background:var(--teal);opacity:0;transition:opacity .2s;}
+  .option-row.selected .option-radio-dot{opacity:1;}
+
+  .add-bar{
+    position:sticky;bottom:0;background:#fff;border-top:1px solid #eaf1f2;padding:18px 0;
+    margin-top:30px;box-shadow:0 -10px 30px rgba(20,50,55,.06);
+  }
+  .add-bar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .add-bar-price{font-weight:800;font-size:1.4rem;color:var(--ink);}
+  .add-bar-price small{display:block;font-size:.72rem;font-weight:500;color:#8b9a9c;}
+  #addToCartBtn{min-width:220px;}
+
+  .not-found{text-align:center;padding:80px 20px;}
+
+  footer{background:#0f2226;color:rgba(255,255,255,.7);padding:50px 0 26px;}
+  .footer-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;padding-bottom:30px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .footer-logo{font-weight:800;font-size:1.3rem;color:#fff;}
+  .footer-tag{font-size:.85rem;color:var(--teal-light);margin-top:4px;}
+  footer nav ul{display:flex;gap:24px;}
+  footer nav a{font-size:.9rem;color:rgba(255,255,255,.7);}
+  footer nav a:hover{color:#fff;}
+  .footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:22px;font-size:.8rem;color:rgba(255,255,255,.45);}
+
+  @media (max-width: 860px){
+    nav ul{position:fixed;top:0;right:-100%;width:78%;max-width:320px;height:100vh;background:#fff;flex-direction:column;justify-content:center;gap:34px;transition:right .4s var(--ease);box-shadow:-10px 0 40px rgba(0,0,0,.15);}
+    nav ul.open{right:0;}
+    .burger{display:flex;}
+    header{padding:14px 20px;}
+    .add-bar-inner{justify-content:center;text-align:center;}
+    #addToCartBtn{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <a href="web-oh-my-wash.html" class="logo" aria-label="Oh My Wash — inicio">
+    <span class="nav-icon">
+      <img src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
+    </span>
+    <span class="sr-only">Oh My Wash</span>
+  </a>
+  <nav>
+    <ul id="navList">
+      <li><a href="servicios.html" class="nav-link active">Servicios</a></li>
+      <li><a href="web-oh-my-wash.html#equipo" class="nav-link">Equipo</a></li>
+      <li><a href="web-oh-my-wash.html#nosotros" class="nav-link">Nosotros</a></li>
+      <li><a href="web-oh-my-wash.html#contacto" class="nav-link">Contacto</a></li>
+    </ul>
+  </nav>
+  <div class="header-actions">
+    <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="burger" id="burger" aria-label="Menú"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main>
+  <div class="wrap" id="serviceContent"></div>
+</main>
+
+<footer>
+  <div class="wrap" style="max-width:1200px;">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">💧 Oh my wash</div>
+        <div class="footer-tag">We care like it's ours</div>
+      </div>
+      <nav><ul>
+        <li><a href="web-oh-my-wash.html">Inicio</a></li>
+        <li><a href="web-oh-my-wash.html#nosotros">Nosotros</a></li>
+        <li><a href="web-oh-my-wash.html#contacto">Contacto</a></li>
+      </ul></nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Oh My Wash, LLC — Atlanta &amp; Chamblee, GA</span>
+      <span>+1 678-895-5812 · info.ohmywash@gmail.com</span>
+    </div>
+  </div>
+</footer>
+
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header">
+    <h3>Tu carrito</h3>
+    <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal">$0.00</span></div>
+    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;" disabled>Checkout →</button>
+    <p class="cart-note">Precios de partida — el monto final puede variar según el vehículo.</p>
+  </div>
+</aside>
+
+<script>
+(function(){
+  // ---------- Datos reales de servicios (de Square) ----------
+  const SERVICES = {
+    'in-n-out': {
+      name: 'Oh My Wash | In-N-Out',
+      category: 'Detailing',
+      photoFile: 'assets/servicio-in-n-out.jpg',
+      description: 'Lavado exterior e interior rápido y completo para cuando necesitas tu auto limpio sin parar tu día. Incluye aspirado profundo, limpieza de plásticos con protección UV y ambientador.',
+      bullets: [
+        'Lavado a mano', 'Eliminación de insectos', 'Limpieza de la tapa del tanque',
+        'Secado con aire y toalla', 'Limpieza profunda y abrillantado de llantas, rines y pozos de rueda',
+        'Limpieza de plásticos interiores y exteriores con protección UV', 'Alfombrillas (goma, plástico, alfombra)',
+        'Limpieza completa del interior', 'Limpieza de ventanas y espejos',
+        'Aspirado profundo completo, incluyendo la cajuela si está vacía (eliminación de pelo de mascota con cargo adicional de +$50)',
+        'Limpieza profunda de consola central, tablero y paneles de puertas', 'Ambientador',
+      ],
+      options: [
+        { label: 'Sedán', price: 100, duration: '2 hr' },
+        { label: 'SUV', price: 120, duration: '2 hr 15 min' },
+        { label: 'Big SUV/Truck', price: 140, duration: '2 hr 30 min' },
+      ],
+    },
+    'wax-protection': {
+      name: 'Oh My Wash | Wax Protection',
+      category: 'Detailing',
+      photoFile: 'assets/servicio-wax-protection.jpg',
+      description: 'Todo lo del lavado completo, más una capa de cera de alta calidad que le devuelve brillo a la pintura y ayuda a repeler la suciedad por más tiempo.',
+      bullets: [
+        'Lavado a mano', 'Eliminación de insectos', 'Limpieza de la tapa del tanque',
+        'Secado con aire y toalla', 'Limpieza profunda y abrillantado de llantas, rines y pozos de rueda',
+        'Limpieza de plásticos interiores y exteriores con protección UV', 'Alfombrillas (goma, plástico, alfombra)',
+        'Limpieza completa del interior', 'Limpieza de ventanas y espejos',
+        'Aspirado profundo completo, incluyendo la cajuela si está vacía (eliminación de pelo de mascota con cargo adicional de +$50)',
+        'Limpieza profunda de consola central, tablero y paneles de puertas', 'Ambientador',
+        'Aplicación de cera de alta calidad',
+      ],
+      options: [
+        { label: 'Regular', price: 125, duration: '2 hr 15 min' },
+        { label: 'SUV', price: 145, duration: '2 hr 30 min' },
+        { label: 'Big SUV/Truck', price: 165, duration: '2 hr 45 min' },
+      ],
+    },
+    'interior-detailing': {
+      name: 'Interior Detailing',
+      category: 'Detailing',
+      photoFile: 'assets/servicio-interior-detailing.jpg',
+      description: 'Enfocado 100% en el interior: shampoo y vapor para tapicería y alfombrillas, acondicionado de asientos de piel y limpieza profunda de consola, tablero y paneles.',
+      bullets: [
+        'Limpieza de plásticos interiores con protección UV', 'Limpieza completa del interior',
+        'Limpieza de ventanas y espejos',
+        'Aspirado profundo completo, incluyendo la cajuela si está vacía (eliminación de pelo de mascota con cargo adicional de +$50)',
+        'Shampoo, vapor y aspirado de tapicería y alfombrillas', 'Limpieza y acondicionamiento de asientos de piel (si aplica)',
+        'Limpieza profunda de consola central, tablero y paneles de puertas', 'Ambientador',
+      ],
+      options: [
+        { label: 'Sedán', price: 150, duration: '2 hr' },
+        { label: 'SUV', price: 170, duration: '2 hr' },
+        { label: 'Big SUV/Truck', price: 190, duration: '2 hr' },
+      ],
+    },
+    'wax-engine': {
+      name: 'Oh My Wash | Wax & Engine',
+      category: 'Detailing',
+      photoFile: 'assets/servicio-wax-engine.jpg',
+      description: 'El paquete completo de lavado y cera, sumando limpieza e hidratación del compartimento del motor para que tu auto luzca impecable por dentro, por fuera y bajo el cofre.',
+      bullets: [
+        'Lavado a mano', 'Eliminación de insectos', 'Limpieza de la tapa del tanque',
+        'Secado con aire y toalla', 'Limpieza profunda y abrillantado de llantas, rines y pozos de rueda',
+        'Limpieza de plásticos interiores y exteriores con protección UV', 'Alfombrillas (goma, plástico, alfombra)',
+        'Limpieza completa del interior', 'Limpieza de ventanas y espejos',
+        'Aspirado profundo completo, incluyendo la cajuela si está vacía (eliminación de pelo de mascota con cargo adicional de +$50)',
+        'Limpieza profunda de consola central, tablero y paneles de puertas', 'Ambientador',
+        'Aplicación de cera de alta calidad', 'Limpieza del compartimento del motor e hidratación de plásticos',
+      ],
+      options: [
+        { label: 'Sedán', price: 180, duration: '2 hr 30 min' },
+        { label: 'SUV', price: 200, duration: '3 hr' },
+        { label: 'Big SUV/Truck', price: 220, duration: '3 hr 30 min' },
+      ],
+    },
+    'all-in-one': {
+      name: 'All In One',
+      category: 'Detailing',
+      photoFile: 'assets/servicio-all-in-one.jpg',
+      description: 'Combina un brillo increíble y protección duradera. Utilizando tecnología micro-abrasiva avanzada y protección nano de última generación, este proceso elimina eficazmente imperfecciones menores mientras crea un escudo duradero contra contaminantes ambientales. Disfruta hasta 6 meses de protección impecable y limpieza sin esfuerzo, dejando tu auto luciendo y sintiéndose increíble.',
+      bullets: [
+        'Lavado exterior a mano', 'Eliminación de insectos', 'Limpieza de la tapa del tanque',
+        'Secado con aire y toalla', 'Limpieza profunda y abrillantado de llantas, rines y pozos de rueda',
+        'Limpieza de ventanas y espejos', 'Descontaminación de la pintura',
+        'Aplicación de All in One (pulido de 1 paso)',
+      ],
+      options: [
+        { label: 'Small Cars', price: 200, duration: '3 hr' },
+        { label: 'SUV', price: 250, duration: '3 hr 30 min' },
+        { label: 'Big SUV/Truck', price: 300, duration: '4 hr' },
+      ],
+    },
+    'full-detailing': {
+      name: 'Oh My Wash | Full Detailing',
+      category: 'Detailing',
+      photoFile: 'assets/servicio-full-detailing.jpg',
+      description: 'Nuestro detailing más completo: lavado a fondo, descontaminación de pintura con clay bar, shampoo de tapicería, acondicionado de asientos de piel y encerado de alta calidad.',
+      bullets: [
+        'Lavado a mano', 'Eliminación de insectos', 'Limpieza de la tapa del tanque',
+        'Secado con aire y toalla', 'Limpieza profunda y abrillantado de llantas, rines y pozos de rueda',
+        'Limpieza de plásticos interiores y exteriores con protección UV', 'Limpieza completa del interior',
+        'Limpieza de ventanas y espejos',
+        'Aspirado profundo completo, incluyendo la cajuela si está vacía (eliminación de pelo de mascota con cargo adicional de +$50)',
+        'Shampoo, vapor y aspirado de tapicería y alfombrillas', 'Limpieza y acondicionamiento de asientos de piel (si aplica)',
+        'Limpieza profunda de consola central, tablero y paneles de puertas', 'Ambientador',
+        'Descontaminación de pintura / clay bar', 'Aplicación de cera de alta calidad',
+      ],
+      options: [
+        { label: 'Sedán', price: 275, duration: '3 hr' },
+        { label: 'SUV', price: 300, duration: '3 hr 25 min' },
+        { label: 'Big SUV/Truck', price: 325, duration: '3 hr 45 min' },
+      ],
+    },
+    'ceramic-2y': {
+      name: 'Ceramic Coating · 2 años',
+      category: 'Ceramic Coating',
+      photoFile: 'assets/servicio-ceramic-2y.jpg',
+      description: 'Recubrimiento ultra duro, resistente al clima, de alto brillo, acabado a prueba de agua y aceite, superficie repelente a la suciedad, efecto anticalcáreo, protección resistente a detergentes, efecto autolimpiante y protección UV para los acabados exteriores.',
+      options: [
+        { label: 'Sedán', price: 300, duration: '3 hr' },
+        { label: 'SUV', price: 400, duration: '4 hr' },
+        { label: 'Big SUV/Truck', price: 500, duration: '5 hr' },
+      ],
+    },
+    'ceramic-5y': {
+      name: 'Ceramic Coating · 5 años',
+      category: 'Ceramic Coating',
+      photoFile: 'assets/servicio-ceramic-5y.jpg',
+      description: 'Recubrimiento ultra duro, resistente al clima, de alto brillo, acabado a prueba de agua y aceite, superficie repelente a la suciedad, efecto anticalcáreo, protección resistente a detergentes, efecto autolimpiante y protección UV para los acabados exteriores.',
+      options: [
+        { label: 'Sedán', price: 400, duration: '3 hr' },
+        { label: 'SUV', price: 500, duration: '3 hr 30 min' },
+        { label: 'Big SUV/Truck', price: 600, duration: '3 hr' },
+      ],
+    },
+    'ceramic-5y-correction': {
+      name: 'Ceramic Coating · 5 años + corrección',
+      category: 'Ceramic Coating',
+      photoFile: 'assets/servicio-ceramic-5y-correction.jpg',
+      description: 'Recubrimiento ultra duro, resistente al clima, de alto brillo, acabado a prueba de agua y aceite, superficie repelente a la suciedad, efecto anticalcáreo, protección resistente a detergentes, efecto autolimpiante y protección UV para los acabados exteriores.',
+      options: [
+        { label: 'Sedán', price: 600, duration: '6 hr' },
+        { label: 'SUV', price: 700, duration: '6 hr 30 min' },
+        { label: 'Big SUV/Truck', price: 800, duration: '7 hr' },
+      ],
+    },
+    'paint-correction': {
+      name: 'Paint Correction',
+      category: 'Paint Correction',
+      photoFile: 'assets/servicio-paint-correction.jpg',
+      description: 'Este servicio está diseñado para eliminar entre el 70% y 85% de remolinos, rayones leves e imperfecciones de tu pintura. Previene la oxidación, ofrece protección UV, es hidrofóbico y restaura el color. Está pensado para lograr el máximo brillo y claridad en tu pintura.',
+      bullets: [
+        'Lavado exterior a mano', 'Eliminación de insectos', 'Limpieza de la tapa del tanque',
+        'Secado con aire y toalla', 'Limpieza profunda y abrillantado de llantas, rines y pozos de rueda',
+        'Limpieza de ventanas y espejos', 'Descontaminación de la pintura',
+        'Corrección de pintura (pulido de 2 o 3 pasos)',
+      ],
+      options: [
+        { label: 'Small Cars', price: 450, duration: '5 hr' },
+        { label: 'SUV', price: 550, duration: '5 hr 30 min' },
+        { label: 'XL', price: 650, duration: '6 hr' },
+      ],
+    },
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const serviceId = params.get('id');
+  const service = SERVICES[serviceId];
+  const contentEl = document.getElementById('serviceContent');
+
+  if (!service) {
+    contentEl.innerHTML = `
+      <div class="not-found">
+        <h1 class="service-title">Servicio no encontrado</h1>
+        <p style="margin:16px 0 26px;color:#5c6b6e;">No pudimos encontrar ese servicio.</p>
+        <a href="servicios.html" class="btn btn-solid">Ver todos los servicios</a>
+      </div>
+    `;
+  } else {
+    const cheapest = Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
+
+    contentEl.innerHTML = `
+      <div class="breadcrumb"><a href="servicios.html">Todos los servicios</a> / ${service.name}</div>
+      <div class="service-photo"><span class="service-photo-label">📷 Foto próximamente</span></div>
+      <span class="service-eyebrow">${service.category}</span>
+      <h1 class="service-title">${service.name}</h1>
+      <div class="service-meta">
+        <span class="service-duration">Desde $${cheapest}</span>
+        <span class="service-varies">El precio final depende del tipo de auto</span>
+      </div>
+      ${service.description ? `<p class="service-description">${service.description}</p>` : ''}
+      ${service.bullets ? `
+        <div class="service-bullets-title">Incluye:</div>
+        <ul class="service-bullets">${service.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
+      ` : ''}
+      <div class="options-title">Elige el tipo de tu auto</div>
+      <div id="optionList">
+        ${service.options.map((o, i) => `
+          <div class="option-row${o.price == null ? ' disabled' : ''}" data-index="${i}">
+            <div class="option-info">
+              <span class="option-label">${o.label}</span>
+              <span class="option-sub">${o.duration ? o.duration : 'Contáctanos para este tamaño'}</span>
+            </div>
+            <span class="option-price">${o.price != null ? '$' + o.price.toFixed(2) : 'Por confirmar'}</span>
+            <span class="option-radio"><span class="option-radio-dot"></span></span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="add-bar">
+        <div class="wrap add-bar-inner" style="padding:0;">
+          <div class="add-bar-price" id="addBarPrice">
+            Elige un tipo de auto
+            <small>para ver el precio</small>
+          </div>
+          <button class="btn btn-solid" id="addToCartBtn" disabled>Agregar al carrito</button>
+        </div>
+      </div>
+    `;
+
+    let selected = null;
+    const optionRows = contentEl.querySelectorAll('.option-row');
+    const addBarPrice = document.getElementById('addBarPrice');
+    const addToCartBtn = document.getElementById('addToCartBtn');
+
+    optionRows.forEach(row => {
+      if (row.classList.contains('disabled')) return;
+      row.addEventListener('click', () => {
+        optionRows.forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+        const idx = parseInt(row.dataset.index, 10);
+        selected = service.options[idx];
+        addBarPrice.innerHTML = `$${selected.price.toFixed(2)}<small>${selected.label} · ${selected.duration}</small>`;
+        addToCartBtn.disabled = false;
+      });
+    });
+
+    addToCartBtn.addEventListener('click', () => {
+      if (!selected) return;
+      addToCart(`${service.name} (${selected.label})`, selected.price);
+    });
+  }
+
+  // ---------- Header / menú ----------
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 40);
+  }, {passive:true});
+
+  const burger = document.getElementById('burger');
+  const navList = document.getElementById('navList');
+  burger.addEventListener('click', () => navList.classList.toggle('open'));
+  document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => navList.classList.remove('open')));
+
+  // ---------- Carrito ----------
+  const CART_KEY = 'ohMyWashCart';
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
+
+  const cartItemsEl = document.getElementById('cartItems');
+  const cartTotalEl = document.getElementById('cartTotal');
+  const cartBadgeEl = document.getElementById('cartBadge');
+  const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+  const cartDrawer = document.getElementById('cartDrawer');
+  const cartOverlay = document.getElementById('cartOverlay');
+
+  const formatUSD = (n) => '$' + n.toFixed(2);
+  const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  const cartTotal = () => cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+  function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
+  function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
+
+  function renderCart(){
+    const count = cart.reduce((sum, i) => sum + i.qty, 0);
+    cartBadgeEl.textContent = count;
+    cartBadgeEl.style.display = count > 0 ? 'flex' : 'none';
+
+    if (!cart.length) {
+      cartItemsEl.innerHTML = '<div class="cart-empty"><span>🧴</span><p>Tu carrito está vacío</p><small>Agrega un servicio desde el menú</small></div>';
+      cartCheckoutBtn.disabled = true;
+    } else {
+      cartItemsEl.innerHTML = cart.map(i => `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <span class="cart-item-name">${i.name}</span>
+            <span class="cart-item-price">${formatUSD(i.price)} c/u</span>
+          </div>
+          <div class="cart-item-controls">
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>
+            <span class="qty-value">${i.qty}</span>
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1">+</button>
+            <button class="remove-btn" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar">🗑</button>
+          </div>
+        </div>
+      `).join('');
+      cartCheckoutBtn.disabled = false;
+
+      cartItemsEl.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeQty(btn.dataset.name, parseInt(btn.dataset.delta, 10)));
+      });
+      cartItemsEl.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => removeItem(btn.dataset.name));
+      });
+    }
+    cartTotalEl.textContent = formatUSD(cartTotal());
+  }
+
+  function addToCart(name, price){
+    const existing = cart.find(i => i.name === name);
+    if (existing) existing.qty += 1;
+    else cart.push({ name, price, qty: 1 });
+    saveCart();
+    renderCart();
+  }
+
+  function changeQty(name, delta){
+    const item = cart.find(i => i.name === name);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
+    saveCart();
+    renderCart();
+  }
+
+  function removeItem(name){
+    cart = cart.filter(i => i.name !== name);
+    saveCart();
+    renderCart();
+  }
+
+  document.getElementById('cartBtn').addEventListener('click', openCart);
+  document.getElementById('cartClose').addEventListener('click', closeCart);
+  cartOverlay.addEventListener('click', closeCart);
+  cartCheckoutBtn.addEventListener('click', () => {
+    if (!cart.length) return;
+    window.location.href = 'checkout.html';
+  });
+
+  renderCart();
+})();
+</script>
+
+</body>
+</html>

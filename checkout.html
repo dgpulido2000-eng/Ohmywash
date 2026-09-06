@@ -6,14 +6,14 @@
 <title>Checkout — Oh My Wash</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --teal:#3e96a5;
-    --teal-dark:#2b6f7a;
-    --teal-deep:#1d4f58;
-    --teal-light:#7cc3cf;
-    --teal-pale:#eaf6f8;
+    --teal:#2ec4b6;
+    --teal-dark:#22a89c;
+    --teal-deep:#0f6a62;
+    --teal-light:#7de0d4;
+    --teal-pale:#e6faf7;
     --ink:#12191a;
     --paper:#ffffff;
     --off:#f4fafb;
@@ -33,26 +33,29 @@
     position:sticky;top:0;z-index:10;
   }
   header .wrap{display:flex;align-items:center;justify-content:space-between;}
-  .brand{display:flex;align-items:center;gap:10px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.15rem;color:var(--teal-deep);}
-  .brand svg{width:24px;height:32px;}
+  .brand{display:flex;align-items:center;}
+  .brand img{height:40px;width:auto;display:block;}
   .back-link{font-weight:600;font-size:.9rem;color:var(--teal);display:flex;align-items:center;gap:6px;}
   .back-link:hover{color:var(--teal-dark);}
 
   main{padding:56px 0 100px;}
-  .page-title{font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(1.7rem,3.6vw,2.4rem);margin-bottom:8px;}
+  .page-title{font-family:'Inter',sans-serif;font-weight:700;font-size:clamp(1.7rem,3.6vw,2.4rem);margin-bottom:8px;}
   .page-sub{color:#5c6b6e;margin-bottom:40px;}
 
   .checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;}
   .panel{background:#fff;border-radius:22px;padding:32px;box-shadow:var(--shadow);}
-  .panel h2{font-family:'Fredoka',sans-serif;font-size:1.2rem;margin-bottom:22px;color:var(--ink);}
+  .panel h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:22px;color:var(--ink);}
 
   .order-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #f0f5f5;}
   .order-item-name{font-weight:600;font-size:.94rem;}
   .order-item-qty{font-size:.78rem;color:#8b9a9c;margin-top:2px;}
-  .order-item-price{font-weight:600;color:var(--teal-deep);font-family:'Fredoka',sans-serif;white-space:nowrap;}
+  .order-item-right{display:flex;align-items:center;gap:12px;}
+  .order-item-price{font-weight:600;color:var(--teal-deep);font-family:'Inter',sans-serif;font-weight:700;white-space:nowrap;}
+  .order-item-remove{background:none;border:none;cursor:pointer;font-size:.95rem;opacity:.5;transition:opacity .2s var(--ease);}
+  .order-item-remove:hover{opacity:1;}
   .order-total-row{
     display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:18px;
-    border-top:2px solid var(--teal-pale);font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.3rem;
+    border-top:2px solid var(--teal-pale);font-family:'Inter',sans-serif;font-weight:700;font-size:1.3rem;
   }
   .order-note{font-size:.78rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
 
@@ -61,9 +64,9 @@
   #card-container{padding:2px;border-radius:12px;min-height:56px;}
   #card-button{
     width:100%;padding:15px;border-radius:100px;border:none;background:var(--teal);color:#fff;
-    font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
     transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
-    box-shadow:0 12px 30px rgba(62,150,165,.3);
+    box-shadow:0 12px 30px rgba(46,196,182,.3);
   }
   #card-button:hover{background:var(--teal-dark);transform:translateY(-2px);}
   #card-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}
@@ -74,11 +77,11 @@
     text-align:center;background:#fff;border-radius:22px;padding:70px 30px;box-shadow:var(--shadow);
   }
   .empty-state span{font-size:3.4rem;display:block;margin-bottom:18px;}
-  .empty-state h2{font-family:'Fredoka',sans-serif;font-size:1.4rem;margin-bottom:10px;}
+  .empty-state h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.4rem;margin-bottom:10px;}
   .empty-state p{color:#5c6b6e;margin-bottom:26px;}
   .btn-primary{
     display:inline-flex;padding:14px 30px;border-radius:100px;background:var(--teal);color:#fff;
-    font-weight:600;font-family:'Fredoka',sans-serif;box-shadow:0 10px 26px rgba(62,150,165,.3);
+    font-weight:600;font-family:'Inter',sans-serif;font-weight:700;box-shadow:0 10px 26px rgba(46,196,182,.3);
     transition:transform .25s var(--ease), background .25s;
   }
   .btn-primary:hover{transform:translateY(-2px);background:var(--teal-dark);}
@@ -88,7 +91,7 @@
     width:70px;height:70px;border-radius:50%;background:var(--teal-pale);color:var(--teal-deep);
     display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px;
   }
-  .success-panel h2{font-family:'Fredoka',sans-serif;font-size:1.6rem;margin-bottom:10px;}
+  .success-panel h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.6rem;margin-bottom:10px;}
   .success-panel p{color:#5c6b6e;margin-bottom:6px;}
   .success-panel a.receipt{color:var(--teal);font-weight:600;text-decoration:underline;}
 
@@ -102,17 +105,9 @@
 <header>
   <div class="wrap">
     <a href="web-oh-my-wash.html" class="brand">
-      <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7cc3cf"/><stop offset="100%" stop-color="#3e96a5"/></linearGradient></defs>
-        <path d="M50 2C38 18 30 30 30 40a20 20 0 0 0 40 0c0-10-8-22-20-38z" fill="url(#dg)"/>
-        <ellipse cx="50" cy="64" rx="42" ry="9" fill="none" stroke="#3e96a5" stroke-width="4" opacity=".45"/>
-        <ellipse cx="50" cy="64" rx="29" ry="6.2" fill="none" stroke="#3e96a5" stroke-width="4" opacity=".7"/>
-        <ellipse cx="50" cy="64" rx="16" ry="3.5" fill="none" stroke="#3e96a5" stroke-width="4"/>
-        <path d="M50 66C38 82 30 94 30 104a20 20 0 0 0 40 0c0-10-8-22-20-38z" fill="url(#dg)"/>
-      </svg>
-      Oh my wash
+      <img src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
     </a>
-    <a href="web-oh-my-wash.html" class="back-link">‹ Volver a la tienda</a>
+    <a href="servicios.html" class="back-link">‹ Volver a servicios</a>
   </div>
 </header>
 
@@ -146,30 +141,20 @@
         <span>🛒</span>
         <h2>Tu carrito está vacío</h2>
         <p>Agrega uno o más servicios desde la tienda antes de pagar.</p>
-        <a href="web-oh-my-wash.html#servicios" class="btn-primary">Ver servicios</a>
+        <a href="servicios.html" class="btn-primary">Ver servicios</a>
       </div>
     `;
     return;
   }
 
-  const total = cartTotal();
+  let total = cartTotal();
 
   content.innerHTML = `
     <div class="checkout-grid" id="checkoutGrid">
       <div class="panel">
         <h2>Resumen de tu pedido</h2>
-        <div id="orderItems">
-          ${cart.map(i => `
-            <div class="order-item">
-              <div>
-                <div class="order-item-name">${i.name}</div>
-                <div class="order-item-qty">${formatUSD(i.price)} × ${i.qty}</div>
-              </div>
-              <div class="order-item-price">${formatUSD(i.price * i.qty)}</div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="order-total-row"><span>Total</span><span>${formatUSD(total)}</span></div>
+        <div id="orderItems"></div>
+        <div class="order-total-row"><span>Total</span><span id="orderTotal">${formatUSD(total)}</span></div>
         <p class="order-note">Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.</p>
       </div>
       <div class="panel">
@@ -185,8 +170,43 @@
     </div>
   `;
 
-  const statusEl = document.getElementById('payment-status');
   const cardButton = document.getElementById('card-button');
+
+  function renderOrderItems() {
+    document.getElementById('orderItems').innerHTML = cart.map(i => `
+      <div class="order-item">
+        <div>
+          <div class="order-item-name">${i.name}</div>
+          <div class="order-item-qty">${formatUSD(i.price)} × ${i.qty}</div>
+        </div>
+        <div class="order-item-right">
+          <div class="order-item-price">${formatUSD(i.price * i.qty)}</div>
+          <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar servicio">🗑</button>
+        </div>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.order-item-remove').forEach(btn => {
+      btn.addEventListener('click', () => removeCartItem(btn.dataset.name));
+    });
+  }
+
+  function removeCartItem(name) {
+    cart = cart.filter(i => i.name !== name);
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    if (!cart.length) {
+      window.location.reload();
+      return;
+    }
+    total = cartTotal();
+    renderOrderItems();
+    document.getElementById('orderTotal').textContent = formatUSD(total);
+    if (cardButton) cardButton.textContent = `Pagar ${formatUSD(total)}`;
+  }
+
+  renderOrderItems();
+
+  const statusEl = document.getElementById('payment-status');
 
   function setStatus(html, kind) {
     if (!statusEl) return;
