@@ -35,8 +35,12 @@
   header .wrap{display:flex;align-items:center;justify-content:space-between;}
   .brand{display:flex;align-items:center;}
   .brand img{height:40px;width:auto;display:block;}
-  .back-link{font-weight:600;font-size:.9rem;color:var(--teal);display:flex;align-items:center;gap:6px;}
-  .back-link:hover{color:var(--teal-dark);}
+  .back-link{
+    font-weight:700;font-size:.98rem;color:var(--teal-deep);display:flex;align-items:center;gap:8px;
+    padding:11px 22px;border-radius:100px;border:1.5px solid var(--teal);background:var(--teal-pale);
+    transition:background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
+  }
+  .back-link:hover{background:var(--teal);color:#fff;transform:translateY(-2px);}
 
   main{padding:56px 0 100px;}
   .page-title{font-family:'Inter',sans-serif;font-weight:700;font-size:clamp(1.7rem,3.6vw,2.4rem);margin-bottom:8px;}
@@ -59,6 +63,43 @@
   }
   .btn-secondary:hover{background:var(--teal-pale);}
   .btn-secondary:disabled{opacity:.5;cursor:not-allowed;}
+
+  .date-picker-wrap{position:relative;}
+  .date-picker-btn{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px;border-radius:12px;border:1.5px solid #d8e8ea;background:#fff;
+    font-size:.95rem;font-family:'Inter',sans-serif;color:var(--ink);cursor:pointer;text-align:left;
+  }
+  .date-picker-btn:hover{border-color:var(--teal);}
+  .date-picker-btn:disabled{opacity:.6;cursor:not-allowed;}
+  .date-picker-icon{font-size:1.1rem;}
+  .appt-calendar{
+    position:absolute;top:calc(100% + 10px);left:0;z-index:20;
+    background:#fff;border-radius:20px;box-shadow:var(--shadow);border:1px solid #eaf1f2;
+    padding:22px;width:320px;max-width:90vw;
+  }
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .cal-header span{font-weight:700;font-size:1.05rem;color:var(--ink);text-transform:capitalize;}
+  .cal-nav{
+    width:34px;height:34px;border-radius:50%;border:none;background:var(--teal-pale);color:var(--teal-deep);
+    font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;
+    transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .cal-nav:hover:not(:disabled){background:var(--teal);color:#fff;}
+  .cal-nav:disabled{opacity:.35;cursor:not-allowed;}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px;}
+  .cal-weekdays span{text-align:center;font-size:.7rem;font-weight:700;color:#8b9a9c;text-transform:uppercase;}
+  .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-day{
+    aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;
+    border:none;background:transparent;font-size:.92rem;font-weight:600;color:var(--ink);cursor:pointer;
+    transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .cal-day:hover:not(:disabled):not(.empty){background:var(--teal-pale);}
+  .cal-day.selected{background:var(--teal);color:#fff;}
+  .cal-day.today:not(.selected){border:1.5px solid var(--teal);}
+  .cal-day:disabled{color:#d0dbdc;cursor:not-allowed;}
+  .cal-day.empty{visibility:hidden;cursor:default;}
 
   .appt-slots{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
   .appt-slot-btn{
@@ -192,7 +233,23 @@
         </div>
         <div class="pay-field">
           <label>Fecha</label>
-          <input type="date" id="apptDate">
+          <div class="date-picker-wrap">
+            <button type="button" id="apptDateBtn" class="date-picker-btn">
+              <span id="apptDateLabel">Elige una fecha</span>
+              <span class="date-picker-icon">📅</span>
+            </button>
+            <div id="apptCalendar" class="appt-calendar" hidden>
+              <div class="cal-header">
+                <button type="button" id="calPrev" class="cal-nav" aria-label="Mes anterior">‹</button>
+                <span id="calMonthLabel"></span>
+                <button type="button" id="calNext" class="cal-nav" aria-label="Mes siguiente">›</button>
+              </div>
+              <div class="cal-weekdays">
+                <span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span>
+              </div>
+              <div id="calDays" class="cal-days"></div>
+            </div>
+          </div>
         </div>
         <button id="apptSearchBtn" type="button" class="btn-secondary">Buscar horarios disponibles</button>
         <div id="apptSlots" class="appt-slots"></div>
@@ -264,7 +321,6 @@
   let apptSelectedIndex = null;
 
   const apptServiceSel = document.getElementById('apptService');
-  const apptDateInput = document.getElementById('apptDate');
   const apptSearchBtn = document.getElementById('apptSearchBtn');
   const apptSlotsEl = document.getElementById('apptSlots');
   const apptCustomerForm = document.getElementById('apptCustomerForm');
@@ -276,16 +332,87 @@
     apptStatusEl.style.color = kind === 'error' ? '#c0392b' : kind === 'ok' ? '#1d8a4a' : '#5c6b6e';
   }
 
+  // ---------- Calendario personalizado ----------
+  const apptDateBtn = document.getElementById('apptDateBtn');
+  const apptDateLabel = document.getElementById('apptDateLabel');
+  const apptCalendar = document.getElementById('apptCalendar');
+  const calMonthLabel = document.getElementById('calMonthLabel');
+  const calDays = document.getElementById('calDays');
+  const calPrev = document.getElementById('calPrev');
+  const calNext = document.getElementById('calNext');
+
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  apptDateInput.min = tomorrow.toISOString().slice(0, 10);
-  apptDateInput.value = tomorrow.toISOString().slice(0, 10);
+  const minDate = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+  let selectedDate = new Date(minDate);
+  let calViewDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+
+  const toDateStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+  function updateDateLabel() {
+    apptDateLabel.textContent = selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  updateDateLabel();
+
+  function renderCalendar() {
+    calMonthLabel.textContent = calViewDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+
+    const year = calViewDate.getFullYear();
+    const month = calViewDate.getMonth();
+    const startWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let html = '';
+    for (let i = 0; i < startWeekday; i++) html += `<button type="button" class="cal-day empty" disabled></button>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      const dStr = toDateStr(dateObj);
+      const disabled = dateObj < minDate;
+      const isSelected = dStr === toDateStr(selectedDate);
+      const isToday = dStr === toDateStr(new Date());
+      html += `<button type="button" class="cal-day${isSelected ? ' selected' : ''}${isToday ? ' today' : ''}" data-date="${dStr}"${disabled ? ' disabled' : ''}>${d}</button>`;
+    }
+    calDays.innerHTML = html;
+
+    calPrev.disabled = (year === minDate.getFullYear() && month === minDate.getMonth());
+
+    calDays.querySelectorAll('.cal-day[data-date]:not(:disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [y, m, day] = btn.dataset.date.split('-').map(Number);
+        selectedDate = new Date(y, m - 1, day);
+        updateDateLabel();
+        apptCalendar.hidden = true;
+        renderCalendar();
+      });
+    });
+  }
+
+  apptDateBtn.addEventListener('click', () => {
+    apptCalendar.hidden = !apptCalendar.hidden;
+    if (!apptCalendar.hidden) renderCalendar();
+  });
+  calPrev.addEventListener('click', () => { calViewDate.setMonth(calViewDate.getMonth() - 1); renderCalendar(); });
+  calNext.addEventListener('click', () => { calViewDate.setMonth(calViewDate.getMonth() + 1); renderCalendar(); });
+  document.addEventListener('click', (e) => {
+    if (apptCalendar.hidden) return;
+    if (!apptCalendar.contains(e.target) && e.target !== apptDateBtn && !apptDateBtn.contains(e.target)) {
+      apptCalendar.hidden = true;
+    }
+  });
 
   async function loadApptServices() {
     try {
       const res = await fetch(`${API_BASE}/services`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      apptServices = data.services || [];
+      const allServices = data.services || [];
+
+      // Solo mostramos los servicios reservables que coinciden con algo del carrito.
+      const cartNames = cart.map(i => i.name.toLowerCase());
+      const matched = allServices.filter(s =>
+        cartNames.some(name => name.includes(s.serviceName.toLowerCase()))
+      );
+      apptServices = matched.length ? matched : allServices;
+
       if (!apptServices.length) {
         apptServiceSel.innerHTML = '<option>No hay servicios reservables todavía</option>';
         return;
@@ -303,8 +430,7 @@
   apptSearchBtn.addEventListener('click', async () => {
     const service = apptServices[apptServiceSel.value];
     if (!service) { setApptStatus('Elige un servicio primero', 'error'); return; }
-    const dateVal = apptDateInput.value;
-    if (!dateVal) { setApptStatus('Elige una fecha', 'error'); return; }
+    const dateVal = toDateStr(selectedDate);
 
     setApptStatus('Buscando horarios...', 'info');
     apptSlotsEl.innerHTML = '';
@@ -398,7 +524,7 @@
       document.getElementById('paymentGateNote').textContent = 'Tu cita ya está agendada — completa el pago para confirmar tu reserva.';
       apptSearchBtn.disabled = true;
       apptServiceSel.disabled = true;
-      apptDateInput.disabled = true;
+      apptDateBtn.disabled = true;
     } catch (err) {
       console.error(err);
       setApptStatus(`❌ ${err.message}`, 'error');
