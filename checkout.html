@@ -449,20 +449,42 @@
       if (!data.success) throw new Error(data.error);
       const allServices = data.services || [];
 
-      // Solo mostramos los servicios reservables que coinciden con algo del carrito.
-      // Se normaliza quitando espacios/puntuación para que pequeñas diferencias
-      // (ej. "Small Car" en Square vs "Small Cars" en la web) no rompan la coincidencia.
-      // También se toma en cuenta la CANTIDAD del carrito: si hay 3 del mismo
-      // servicio, la cita debe reservar el tiempo de las 3, no solo de 1.
-      const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const matched = allServices
-        .map(s => {
-          const serviceNorm = normalize(s.serviceName);
-          const cartItem = cart.find(i => {
-            const n = normalize(i.name);
-            return n.includes(serviceNorm) || serviceNorm.includes(n);
-          });
-          return cartItem ? { ...s, qty: cartItem.qty } : null;
+      // Por cada producto del carrito buscamos SU variacion exacta en Square
+      // comparando "bolsas de palabras" (nombre del item + talla/variacion),
+      // no el string completo: en Square las tallas viven como variaciones
+      // dentro de un mismo item (ej. "ALL IN ONE" con variaciones "SUV",
+      // "SMALL CARS", "BIG SUV/TRUCK"), y el orden/idioma de las palabras no
+      // siempre coincide con el nombre en la web (ej. "Ceramic Coating - 2
+      // anos" en la web vs "2 years Ceramic coating Without paint
+      // correction:" en Square). Comparar el string completo hacia "match"
+      // con varias tallas a la vez (pedia disponibilidad para todas juntas)
+      // o directamente no encontraba nada.
+      // Se cuentan palabras clave en comun (ignorando acentos y conectores)
+      // y, si hay mas de un candidato con suficientes palabras en comun, se
+      // usa el precio (identico en la web y en Square) para desempatar.
+      const TRANSLATE = { anos: 'years', ano: 'years', correccion: 'correction' };
+      const STOPWORDS = new Set(['oh', 'my', 'wash', 'with', 'without', 'de', 'la', 'el', 'y']);
+      const words = (str) => str
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(Boolean)
+        .map(w => TRANSLATE[w] || w)
+        .filter(w => !STOPWORDS.has(w));
+      const overlap = (a, b) => { const bSet = new Set(b); return a.filter(w => bSet.has(w)).length; };
+
+      const matched = cart
+        .map(item => {
+          const itemWords = words(item.name);
+          const candidates = allServices
+            .map(s => ({ s, score: overlap(itemWords, words(`${s.serviceName} ${s.variationName}`)) }))
+            .filter(x => x.score >= 2)
+            .sort((a, b) => b.score - a.score);
+          if (!candidates.length) return null;
+          const best = candidates.find(x => x.s.price === item.price) || candidates[0];
+          return { ...best.s, qty: item.qty };
         })
         .filter(Boolean);
       apptServices = matched.length ? matched : allServices.map(s => ({ ...s, qty: 1 }));
