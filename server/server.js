@@ -119,6 +119,39 @@ app.get('/services', async (req, res) => {
   }
 });
 
+// Diagnóstico de solo lectura para depurar por qué un técnico específico no
+// tiene horarios en cierta fecha. Devuelve solo metadatos de la reserva
+// (fecha/hora, estado, técnico, servicio) — nunca nombre, correo, teléfono
+// ni customerId del cliente.
+app.get('/debug/bookings', async (req, res) => {
+  const { teamMemberId, startAt, endAt } = req.query;
+  if (!startAt || !endAt) {
+    return res.status(400).json({ success: false, error: 'startAt y endAt son requeridos (query params)' });
+  }
+  try {
+    const response = await squareClient.bookingsApi.listBookings(
+      undefined, undefined, undefined, teamMemberId || undefined,
+      process.env.SQUARE_LOCATION_ID, startAt, endAt,
+    );
+    const bookings = response.result?.bookings ?? response.bookings ?? [];
+    const sanitized = bookings.map(b => ({
+      id: b.id,
+      status: b.status,
+      startAt: b.startAt,
+      segments: (b.appointmentSegments || []).map(s => ({
+        teamMemberId: s.teamMemberId,
+        serviceVariationId: s.serviceVariationId,
+        durationMinutes: s.durationMinutes,
+      })),
+    }));
+    res.json({ success: true, bookings: deepBigIntToNumber(sanitized) });
+  } catch (err) {
+    console.error('Error listando reservas (debug):', err);
+    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
 // Diagnóstico de solo lectura (sin datos de clientes) para depurar problemas
 // de disponibilidad: perfil de horario del negocio y de cada miembro del equipo.
 app.get('/debug/booking-setup', async (req, res) => {
