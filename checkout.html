@@ -418,10 +418,14 @@
       const allServices = data.services || [];
 
       // Solo mostramos los servicios reservables que coinciden con algo del carrito.
-      const cartNames = cart.map(i => i.name.toLowerCase());
-      const matched = allServices.filter(s =>
-        cartNames.some(name => name.includes(s.serviceName.toLowerCase()))
-      );
+      // Se normaliza quitando espacios/puntuación para que pequeñas diferencias
+      // (ej. "Small Car" en Square vs "Small Cars" en la web) no rompan la coincidencia.
+      const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cartNamesNorm = cart.map(i => normalize(i.name));
+      const matched = allServices.filter(s => {
+        const serviceNorm = normalize(s.serviceName);
+        return cartNamesNorm.some(name => name.includes(serviceNorm) || serviceNorm.includes(name));
+      });
       apptServices = matched.length ? matched : allServices;
 
       if (!apptServices.length) {
