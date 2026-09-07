@@ -330,33 +330,38 @@
     </div>
 
     <div class="tab-panel" id="panel-addons">
-      <p style="color:#5c6b6e;margin-bottom:24px;max-width:640px;">Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se procesan por la web.</p>
+      <p style="color:#5c6b6e;margin-bottom:24px;max-width:640px;">Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se cobra por la web.</p>
       <div class="card-grid stagger in">
-        <div class="card addon-card">
+        <a class="card addon-card" href="servicio.html?id=stain-removal">
           <h3>Stain Removal</h3>
           <p>Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.</p>
           <div class="card-footer"><span class="price">Precio variable</span><span class="duration">2h 30m</span></div>
-        </div>
-        <div class="card addon-card">
+          <span class="card-book">Ver detalles →</span>
+        </a>
+        <a class="card addon-card" href="servicio.html?id=headlight-restoration">
           <h3>Headlight Restoration with Ceramic Coating</h3>
           <p>Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.</p>
           <div class="card-footer"><span class="price">Precio variable</span><span class="duration">1 hr</span></div>
-        </div>
-        <div class="card addon-card">
+          <span class="card-book">Ver detalles →</span>
+        </a>
+        <a class="card addon-card" href="servicio.html?id=engine-bay-cleaning">
           <h3>Engine Bay Cleaning</h3>
           <p>Limpieza y desengrasado profundo del compartimento del motor.</p>
           <div class="card-footer"><span class="price">Precio variable</span><span class="duration">1h 30m</span></div>
-        </div>
-        <div class="card addon-card">
+          <span class="card-book">Ver detalles →</span>
+        </a>
+        <a class="card addon-card" href="servicio.html?id=upholstery-cleaning">
           <h3>Upholstery Cleaning</h3>
           <p>Limpieza profunda de asientos y tapicería de tela.</p>
           <div class="card-footer"><span class="price">Precio variable</span><span class="duration">2h 40m</span></div>
-        </div>
-        <div class="card addon-card">
+          <span class="card-book">Ver detalles →</span>
+        </a>
+        <a class="card addon-card" href="servicio.html?id=carpet-cleaning">
           <h3>Carpet Cleaning</h3>
           <p>Limpieza profunda de alfombras y tapetes interiores.</p>
           <div class="card-footer"><span class="price">Precio variable</span><span class="duration">1h 30m</span></div>
-        </div>
+          <span class="card-book">Ver detalles →</span>
+        </a>
       </div>
     </div>
 
@@ -446,7 +451,7 @@
 
   const formatUSD = (n) => '$' + n.toFixed(2);
   const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  const cartTotal = () => cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
   function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
   function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
@@ -464,7 +469,7 @@
         <div class="cart-item">
           <div class="cart-item-info">
             <span class="cart-item-name">${i.name}</span>
-            <span class="cart-item-price">${formatUSD(i.price)} c/u</span>
+            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</span>
           </div>
           <div class="cart-item-controls">
             <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>

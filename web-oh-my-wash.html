@@ -737,7 +737,7 @@
 
   const formatUSD = (n) => '$' + n.toFixed(2);
   const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  const cartTotal = () => cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
   function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
   function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
@@ -755,7 +755,7 @@
         <div class="cart-item">
           <div class="cart-item-info">
             <span class="cart-item-name">${i.name}</span>
-            <span class="cart-item-price">${formatUSD(i.price)} c/u</span>
+            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</span>
           </div>
           <div class="cart-item-controls">
             <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>

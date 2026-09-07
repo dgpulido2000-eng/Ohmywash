@@ -226,7 +226,7 @@
   try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
 
   const formatUSD = (n) => '$' + n.toFixed(2);
-  const cartTotal = () => cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
   if (!cart.length) {
     content.innerHTML = `
@@ -248,7 +248,7 @@
         <h2>Resumen de tu pedido</h2>
         <div id="orderItems"></div>
         <div class="order-total-row"><span>Total</span><span id="orderTotal">${formatUSD(total)}</span></div>
-        <p class="order-note">Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.</p>
+        <p class="order-note" id="orderNote"></p>
       </div>
 
       <div class="panel">
@@ -312,12 +312,18 @@
   const paymentPanel = document.getElementById('paymentPanel');
   let bookingConfirmed = false;
 
+  function renderOrderNote() {
+    document.getElementById('orderNote').textContent = cart.some(i => i.price == null)
+      ? 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo. Los add-ons de precio variable no están incluidos en este total — se cotizan y se cobran en sitio con el técnico.'
+      : 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.';
+  }
+
   function renderOrderItems() {
     document.getElementById('orderItems').innerHTML = cart.map(i => `
       <div class="order-item">
         <div>
           <div class="order-item-name">${i.name}</div>
-          <div class="order-item-qty">${formatUSD(i.price)} c/u</div>
+          <div class="order-item-qty">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</div>
         </div>
         <div class="order-item-right">
           <div class="order-item-controls">
@@ -325,7 +331,7 @@
             <span class="qty-value">${i.qty}</span>
             <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1" aria-label="Agregar uno">+</button>
           </div>
-          <div class="order-item-price">${formatUSD(i.price * i.qty)}</div>
+          <div class="order-item-price">${i.price != null ? formatUSD(i.price * i.qty) : 'Precio variable'}</div>
           <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar servicio">✕</button>
         </div>
       </div>
@@ -343,6 +349,7 @@
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
     total = cartTotal();
     renderOrderItems();
+    renderOrderNote();
     document.getElementById('orderTotal').textContent = formatUSD(total);
     if (cardButton) cardButton.textContent = `Pagar ${formatUSD(total)}`;
     loadApptServices();
@@ -370,6 +377,7 @@
   }
 
   renderOrderItems();
+  renderOrderNote();
 
   // ---------- Agenda tu cita ----------
   let apptServices = [];

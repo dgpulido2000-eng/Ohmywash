@@ -418,6 +418,46 @@
         { label: 'XL', price: 650, duration: '6 hr' },
       ],
     },
+    'stain-removal': {
+      name: 'Stain Removal',
+      category: 'Add-ons',
+      photoFile: 'assets/servicio-stain-removal.jpg',
+      description: 'Tratamiento especializado para eliminar manchas difíciles de tapicería, alfombras y superficies interiores que el lavado normal no puede quitar. Se cotiza en sitio según el tipo y tamaño de la mancha.',
+      bullets: ['Identificación y pretratamiento de la mancha', 'Producto especializado según el tipo de mancha', 'Secado y revisión final'],
+      options: [{ label: 'Estándar', price: null, duration: '2 hr 30 min' }],
+    },
+    'headlight-restoration': {
+      name: 'Headlight Restoration with Ceramic Coating',
+      category: 'Add-ons',
+      photoFile: 'assets/servicio-headlight-restoration.jpg',
+      description: 'Restaura faros opacos, amarillentos o dañados por el sol, y los sella con un recubrimiento cerámico para mantener la claridad por más tiempo y mejorar la visibilidad nocturna.',
+      bullets: ['Pulido de faros opacos o amarillentos', 'Sellado con recubrimiento cerámico', 'Mejora la visibilidad nocturna y la apariencia del auto'],
+      options: [{ label: 'Estándar', price: null, duration: '1 hr' }],
+    },
+    'engine-bay-cleaning': {
+      name: 'Engine Bay Cleaning',
+      category: 'Add-ons',
+      photoFile: 'assets/servicio-engine-bay-cleaning.jpg',
+      description: 'Limpieza y desengrasado profundo del compartimento del motor, dejándolo libre de polvo, grasa y suciedad acumulada, con un acabado protector.',
+      bullets: ['Desengrasado de piezas del motor', 'Limpieza segura sin dañar componentes eléctricos', 'Acabado con brillo protector'],
+      options: [{ label: 'Estándar', price: null, duration: '1 hr 30 min' }],
+    },
+    'upholstery-cleaning': {
+      name: 'Upholstery Cleaning',
+      category: 'Add-ons',
+      photoFile: 'assets/servicio-upholstery-cleaning.jpg',
+      description: 'Limpieza profunda de asientos y tapicería de tela, eliminando suciedad, olores y manchas superficiales.',
+      bullets: ['Aspirado profundo', 'Shampoo y extracción de tapicería', 'Secado y aroma final'],
+      options: [{ label: 'Estándar', price: null, duration: '2 hr 40 min' }],
+    },
+    'carpet-cleaning': {
+      name: 'Carpet Cleaning',
+      category: 'Add-ons',
+      photoFile: 'assets/servicio-carpet-cleaning.jpg',
+      description: 'Limpieza profunda de alfombras y tapetes interiores para eliminar suciedad, manchas y olores.',
+      bullets: ['Aspirado profundo', 'Shampoo y extracción de alfombras', 'Secado final'],
+      options: [{ label: 'Estándar', price: null, duration: '1 hr 30 min' }],
+    },
   };
 
   const params = new URLSearchParams(window.location.search);
@@ -434,7 +474,12 @@
       </div>
     `;
   } else {
-    const cheapest = Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
+    // Los add-ons son un solo extra de precio variable (no tienen tallas de
+    // auto), así que se muestran directo con "Agregar al carrito" habilitado,
+    // sin el paso de "elige el tipo de tu auto" que sí necesitan los
+    // servicios con precio por tamaño.
+    const isVariablePricing = service.options.length === 1 && service.options[0].price == null;
+    const cheapest = isVariablePricing ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
 
     contentEl.innerHTML = `
       <div class="breadcrumb"><a href="servicios.html">Todos los servicios</a> / ${service.name}</div>
@@ -442,39 +487,42 @@
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
-        <span class="service-duration">Desde $${cheapest}</span>
-        <span class="service-varies">El precio final depende del tipo de auto</span>
+        <span class="service-duration">${isVariablePricing ? 'Precio variable' : 'Desde $' + cheapest}</span>
+        <span class="service-varies">${isVariablePricing ? 'Se cotiza y se cobra en sitio con el técnico' : 'El precio final depende del tipo de auto'}</span>
       </div>
       ${service.description ? `<p class="service-description">${service.description}</p>` : ''}
       ${service.bullets ? `
         <div class="service-bullets-title">Incluye:</div>
         <ul class="service-bullets">${service.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
       ` : ''}
-      <div class="options-title">Elige el tipo de tu auto</div>
-      <div id="optionList">
-        ${service.options.map((o, i) => `
-          <div class="option-row${o.price == null ? ' disabled' : ''}" data-index="${i}">
-            <div class="option-info">
-              <span class="option-label">${o.label}</span>
-              <span class="option-sub">${o.duration ? o.duration : 'Contáctanos para este tamaño'}</span>
+      ${isVariablePricing ? '' : `
+        <div class="options-title">Elige el tipo de tu auto</div>
+        <div id="optionList">
+          ${service.options.map((o, i) => `
+            <div class="option-row${o.price == null ? ' disabled' : ''}" data-index="${i}">
+              <div class="option-info">
+                <span class="option-label">${o.label}</span>
+                <span class="option-sub">${o.duration ? o.duration : 'Contáctanos para este tamaño'}</span>
+              </div>
+              <span class="option-price">${o.price != null ? '$' + o.price.toFixed(2) : 'Por confirmar'}</span>
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
             </div>
-            <span class="option-price">${o.price != null ? '$' + o.price.toFixed(2) : 'Por confirmar'}</span>
-            <span class="option-radio"><span class="option-radio-dot"></span></span>
-          </div>
-        `).join('')}
-      </div>
+          `).join('')}
+        </div>
+      `}
       <div class="add-bar">
         <div class="wrap add-bar-inner" style="padding:0;">
           <div class="add-bar-price" id="addBarPrice">
-            Elige un tipo de auto
-            <small>para ver el precio</small>
+            ${isVariablePricing
+              ? `Precio variable<small>${service.options[0].duration}</small>`
+              : 'Elige un tipo de auto<small>para ver el precio</small>'}
           </div>
-          <button class="btn btn-solid" id="addToCartBtn" disabled>Agregar al carrito</button>
+          <button class="btn btn-solid" id="addToCartBtn" ${isVariablePricing ? '' : 'disabled'}>Agregar al carrito</button>
         </div>
       </div>
     `;
 
-    let selected = null;
+    let selected = isVariablePricing ? service.options[0] : null;
     const optionRows = contentEl.querySelectorAll('.option-row');
     const addBarPrice = document.getElementById('addBarPrice');
     const addToCartBtn = document.getElementById('addToCartBtn');
@@ -493,7 +541,8 @@
 
     addToCartBtn.addEventListener('click', () => {
       if (!selected) return;
-      addToCart(`${service.name} (${selected.label})`, selected.price);
+      const name = isVariablePricing ? service.name : `${service.name} (${selected.label})`;
+      addToCart(name, selected.price);
     });
   }
 
@@ -522,7 +571,7 @@
 
   const formatUSD = (n) => '$' + n.toFixed(2);
   const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  const cartTotal = () => cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
   function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
   function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
@@ -540,7 +589,7 @@
         <div class="cart-item">
           <div class="cart-item-info">
             <span class="cart-item-name">${i.name}</span>
-            <span class="cart-item-price">${formatUSD(i.price)} c/u</span>
+            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</span>
           </div>
           <div class="cart-item-controls">
             <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>
