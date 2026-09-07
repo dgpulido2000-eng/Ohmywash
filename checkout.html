@@ -420,21 +420,28 @@
       // Solo mostramos los servicios reservables que coinciden con algo del carrito.
       // Se normaliza quitando espacios/puntuación para que pequeñas diferencias
       // (ej. "Small Car" en Square vs "Small Cars" en la web) no rompan la coincidencia.
+      // También se toma en cuenta la CANTIDAD del carrito: si hay 3 del mismo
+      // servicio, la cita debe reservar el tiempo de las 3, no solo de 1.
       const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const cartNamesNorm = cart.map(i => normalize(i.name));
-      const matched = allServices.filter(s => {
-        const serviceNorm = normalize(s.serviceName);
-        return cartNamesNorm.some(name => name.includes(serviceNorm) || serviceNorm.includes(name));
-      });
-      apptServices = matched.length ? matched : allServices;
+      const matched = allServices
+        .map(s => {
+          const serviceNorm = normalize(s.serviceName);
+          const cartItem = cart.find(i => {
+            const n = normalize(i.name);
+            return n.includes(serviceNorm) || serviceNorm.includes(n);
+          });
+          return cartItem ? { ...s, qty: cartItem.qty } : null;
+        })
+        .filter(Boolean);
+      apptServices = matched.length ? matched : allServices.map(s => ({ ...s, qty: 1 }));
 
       if (!apptServices.length) {
         apptServiceSummary.textContent = 'No hay servicios reservables todavía';
         return;
       }
       apptServiceSummary.innerHTML = apptServices.map(s => `
-        <span class="appt-service-name">${s.serviceName}</span>
-        <span class="appt-service-meta">${s.price != null ? '$' + s.price.toFixed(2) : 'Precio a confirmar'} · ${s.durationMinutes} min</span>
+        <span class="appt-service-name">${s.serviceName}${s.qty > 1 ? ` ×${s.qty}` : ''}</span>
+        <span class="appt-service-meta">${s.price != null ? '$' + s.price.toFixed(2) : 'Precio a confirmar'} · ${s.durationMinutes} min${s.qty > 1 ? ' c/u' : ''}</span>
       `).join('<hr style="width:100%;border:none;border-top:1px dashed var(--teal-light);margin:2px 0;">');
     } catch (err) {
       console.error(err);
@@ -462,7 +469,11 @@
       const res = await fetch(`${API_BASE}/availability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceVariationIds: apptServices.map(s => s.serviceVariationId), startAt, endAt }),
+        body: JSON.stringify({
+          serviceVariationIds: apptServices.flatMap(s => Array(s.qty || 1).fill(s.serviceVariationId)),
+          startAt,
+          endAt,
+        }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
