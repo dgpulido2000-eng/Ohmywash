@@ -126,6 +126,13 @@
   .order-item-name{font-weight:600;font-size:.94rem;}
   .order-item-qty{font-size:.78rem;color:#8b9a9c;margin-top:2px;}
   .order-item-right{display:flex;align-items:center;gap:12px;}
+  .order-item-controls{display:flex;align-items:center;gap:6px;}
+  .qty-btn{
+    width:26px;height:26px;border-radius:8px;border:1px solid #d8e8ea;background:#fff;color:var(--teal-deep);
+    font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;
+  }
+  .qty-btn:hover{background:var(--teal-pale);}
+  .qty-value{min-width:16px;text-align:center;font-weight:600;font-size:.88rem;}
   .order-item-price{font-weight:600;color:var(--teal-deep);font-family:'Inter',sans-serif;font-weight:700;white-space:nowrap;}
   .order-item-remove{background:none;border:none;cursor:pointer;font-size:1.3rem;line-height:1;opacity:.55;transition:opacity .2s var(--ease);}
   .order-item-remove:hover{opacity:1;}
@@ -297,9 +304,14 @@
       <div class="order-item">
         <div>
           <div class="order-item-name">${i.name}</div>
-          <div class="order-item-qty">${formatUSD(i.price)} × ${i.qty}</div>
+          <div class="order-item-qty">${formatUSD(i.price)} c/u</div>
         </div>
         <div class="order-item-right">
+          <div class="order-item-controls">
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1" aria-label="Quitar uno">−</button>
+            <span class="qty-value">${i.qty}</span>
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1" aria-label="Agregar uno">+</button>
+          </div>
           <div class="order-item-price">${formatUSD(i.price * i.qty)}</div>
           <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar servicio">✕</button>
         </div>
@@ -309,19 +321,39 @@
     document.querySelectorAll('.order-item-remove').forEach(btn => {
       btn.addEventListener('click', () => removeCartItem(btn.dataset.name));
     });
+    document.querySelectorAll('.order-item-controls .qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => changeOrderQty(btn.dataset.name, parseInt(btn.dataset.delta, 10)));
+    });
   }
 
-  function removeCartItem(name) {
-    cart = cart.filter(i => i.name !== name);
+  function refreshAfterCartChange() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    if (!cart.length) {
-      window.location.reload();
-      return;
-    }
     total = cartTotal();
     renderOrderItems();
     document.getElementById('orderTotal').textContent = formatUSD(total);
     if (cardButton) cardButton.textContent = `Pagar ${formatUSD(total)}`;
+    loadApptServices();
+  }
+
+  function changeOrderQty(name, delta) {
+    const item = cart.find(i => i.name === name);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) {
+      cart = cart.filter(i => i.name !== name);
+      if (!cart.length) { localStorage.setItem(CART_KEY, JSON.stringify(cart)); window.location.reload(); return; }
+    }
+    refreshAfterCartChange();
+  }
+
+  function removeCartItem(name) {
+    cart = cart.filter(i => i.name !== name);
+    if (!cart.length) {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      window.location.reload();
+      return;
+    }
+    refreshAfterCartChange();
   }
 
   renderOrderItems();
