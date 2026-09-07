@@ -273,8 +273,10 @@ app.post('/create-booking', async (req, res) => {
         // perfil del negocio lo permita) — Oh My Wash es un servicio móvil,
         // siempre se hace en la ubicación del cliente.
         locationType: customerAddress ? 'CUSTOMER_LOCATION' : undefined,
+        // Square solo acepta estos sub-campos en booking.address (no admite
+        // "country" como en otras APIs de Square).
         address: customerAddress
-          ? { addressLine1: customerAddress, administrativeDistrictLevel1: 'GA', country: 'US' }
+          ? { addressLine1: customerAddress, administrativeDistrictLevel1: 'GA' }
           : undefined,
         appointmentSegments: segmentList.map(s => ({
           teamMemberId: s.teamMemberId,
