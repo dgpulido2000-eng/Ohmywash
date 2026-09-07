@@ -229,6 +229,7 @@ app.post('/create-booking', async (req, res) => {
     customerName,
     customerEmail,
     customerPhone,
+    customerAddress,
   } = req.body || {};
 
   const segmentList = segments && segments.length
@@ -267,6 +268,9 @@ app.post('/create-booking', async (req, res) => {
         locationId: process.env.SQUARE_LOCATION_ID,
         startAt,
         customerId,
+        address: customerAddress
+          ? { addressLine1: customerAddress, administrativeDistrictLevel1: 'GA', country: 'US' }
+          : undefined,
         appointmentSegments: segmentList.map(s => ({
           teamMemberId: s.teamMemberId,
           serviceVariationId: s.serviceVariationId,

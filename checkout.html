@@ -221,6 +221,15 @@
   const SQUARE_LOCATION_ID = 'L4KR0652S04AJ';
   const BACKEND_URL = 'https://oh-my-wash-server.onrender.com/create-payment';
 
+  // Si el navegador restaura esta página desde su caché (ej. el cliente le
+  // dio "atrás" después de quitar algo del carrito en otra página), el
+  // script no se vuelve a ejecutar y el carrito/total quedan con el valor
+  // viejo aunque localStorage ya esté actualizado. Forzamos una recarga
+  // real para que todo se recalcule desde el carrito actual.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) window.location.reload();
+  });
+
   const content = document.getElementById('checkoutContent');
   let cart = [];
   try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
@@ -288,6 +297,7 @@
           <div class="pay-field"><label>Nombre completo</label><input type="text" id="apptName" placeholder="Tu nombre"></div>
           <div class="pay-field"><label>Correo</label><input type="email" id="apptEmail" placeholder="tu@correo.com"></div>
           <div class="pay-field"><label>Teléfono</label><input type="tel" id="apptPhone" placeholder="+1 678 555 0100"></div>
+          <div class="pay-field"><label>Dirección del servicio</label><input type="text" id="apptAddress" placeholder="Calle, número, ciudad, código postal"></div>
           <button id="apptConfirmBtn" type="button">Confirmar cita</button>
         </div>
         <p id="appt-status"></p>
@@ -654,6 +664,8 @@
     if (!name) { setApptStatus('Escribe tu nombre', 'error'); return; }
     const email = document.getElementById('apptEmail').value.trim();
     const phone = document.getElementById('apptPhone').value.trim();
+    const address = document.getElementById('apptAddress').value.trim();
+    if (!address) { setApptStatus('Escribe la dirección donde se hará el servicio', 'error'); return; }
 
     const slot = apptAvailabilities[apptSelectedIndex];
     const segments = slot.appointmentSegments;
@@ -676,6 +688,7 @@
           customerName: name,
           customerEmail: email || undefined,
           customerPhone: phone || undefined,
+          customerAddress: address,
         }),
       });
       const data = await res.json();
@@ -711,11 +724,12 @@
     const receiptLink = data.receiptUrl
       ? `<p><a class="receipt" href="${data.receiptUrl}" target="_blank" rel="noopener">Ver recibo</a></p>`
       : '';
+    const paymentLine = data.paymentId ? `<p>ID de pago: ${data.paymentId}</p>` : '';
     document.getElementById('checkoutGrid').innerHTML = `
       <div class="panel success-panel">
         <div class="success-icon">✓</div>
-        <h2>¡Pago recibido!</h2>
-        <p>ID de pago: ${data.paymentId}</p>
+        <h2>${data.paymentId ? '¡Pago recibido!' : '¡Cita confirmada!'}</h2>
+        ${paymentLine}
         <p>Total cobrado: ${formatUSD(total)}</p>
         ${receiptLink}
         <p style="margin-top:22px;"><a href="web-oh-my-wash.html" class="btn-primary">Volver al inicio</a></p>
@@ -748,6 +762,20 @@
         setStatus('Agenda tu cita antes de pagar.', 'error');
         return;
       }
+      // Se vuelve a leer el carrito real de localStorage justo antes de
+      // cobrar (no se confía en la variable "total" ya calculada): si algo
+      // se quitó del carrito en otra pestaña/página después de cargar esta,
+      // el monto que se cobra debe reflejar el carrito actual, no uno viejo.
+      let freshCart = [];
+      try { freshCart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { freshCart = []; }
+      total = freshCart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
+
+      if (total <= 0) {
+        setStatus('✅ Cita confirmada — no hay ningún cargo (solo add-ons de precio variable).', 'ok');
+        showSuccess({ paymentId: null, receiptUrl: null });
+        return;
+      }
+
       setStatus('Procesando...', 'info');
       cardButton.disabled = true;
       try {
