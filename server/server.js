@@ -229,8 +229,17 @@ app.post('/create-booking', async (req, res) => {
     customerName,
     customerEmail,
     customerPhone,
-    customerAddress,
+    addressLine1,
+    locality,
+    administrativeDistrictLevel1,
+    postalCode,
   } = req.body || {};
+
+  // Square solo acepta estos sub-campos en address (ni booking.address ni
+  // customer.address admiten "country" como en otras APIs de Square).
+  const address = addressLine1
+    ? { addressLine1, locality, administrativeDistrictLevel1, postalCode }
+    : undefined;
 
   const segmentList = segments && segments.length
     ? segments
@@ -258,6 +267,7 @@ app.post('/create-booking', async (req, res) => {
         givenName: customerName,
         emailAddress: customerEmail || undefined,
         phoneNumber: customerPhone || undefined,
+        address,
       });
       customerId = (createResp.result?.customer ?? createResp.customer)?.id;
     }
@@ -272,12 +282,8 @@ app.post('/create-booking', async (req, res) => {
         // reserva para poder guardar una dirección (no basta con que el
         // perfil del negocio lo permita) — Oh My Wash es un servicio móvil,
         // siempre se hace en la ubicación del cliente.
-        locationType: customerAddress ? 'CUSTOMER_LOCATION' : undefined,
-        // Square solo acepta estos sub-campos en booking.address (no admite
-        // "country" como en otras APIs de Square).
-        address: customerAddress
-          ? { addressLine1: customerAddress, administrativeDistrictLevel1: 'GA' }
-          : undefined,
+        locationType: address ? 'CUSTOMER_LOCATION' : undefined,
+        address,
         appointmentSegments: segmentList.map(s => ({
           teamMemberId: s.teamMemberId,
           serviceVariationId: s.serviceVariationId,

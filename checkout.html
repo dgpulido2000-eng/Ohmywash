@@ -297,7 +297,10 @@
           <div class="pay-field"><label>Nombre completo</label><input type="text" id="apptName" placeholder="Tu nombre"></div>
           <div class="pay-field"><label>Correo</label><input type="email" id="apptEmail" placeholder="tu@correo.com"></div>
           <div class="pay-field"><label>Teléfono</label><input type="tel" id="apptPhone" placeholder="+1 678 555 0100"></div>
-          <div class="pay-field"><label>Dirección del servicio</label><input type="text" id="apptAddress" placeholder="Calle, número, ciudad, código postal"></div>
+          <div class="pay-field"><label>Calle y número</label><input type="text" id="apptAddressLine1" placeholder="123 Main St"></div>
+          <div class="pay-field"><label>Ciudad</label><input type="text" id="apptCity" placeholder="Atlanta"></div>
+          <div class="pay-field"><label>Estado</label><input type="text" id="apptState" value="GA" maxlength="2"></div>
+          <div class="pay-field"><label>Código postal</label><input type="text" id="apptZip" placeholder="30341" inputmode="numeric"></div>
           <button id="apptConfirmBtn" type="button">Confirmar cita</button>
         </div>
         <p id="appt-status"></p>
@@ -664,8 +667,11 @@
     if (!name) { setApptStatus('Escribe tu nombre', 'error'); return; }
     const email = document.getElementById('apptEmail').value.trim();
     const phone = document.getElementById('apptPhone').value.trim();
-    const address = document.getElementById('apptAddress').value.trim();
-    if (!address) { setApptStatus('Escribe la dirección donde se hará el servicio', 'error'); return; }
+    const addressLine1 = document.getElementById('apptAddressLine1').value.trim();
+    const city = document.getElementById('apptCity').value.trim();
+    const state = document.getElementById('apptState').value.trim();
+    const zip = document.getElementById('apptZip').value.trim();
+    if (!addressLine1 || !city || !zip) { setApptStatus('Completa la dirección donde se hará el servicio', 'error'); return; }
 
     const slot = apptAvailabilities[apptSelectedIndex];
     const segments = slot.appointmentSegments;
@@ -688,7 +694,10 @@
           customerName: name,
           customerEmail: email || undefined,
           customerPhone: phone || undefined,
-          customerAddress: address,
+          addressLine1,
+          locality: city,
+          administrativeDistrictLevel1: state || undefined,
+          postalCode: zip,
         }),
       });
       const data = await res.json();
