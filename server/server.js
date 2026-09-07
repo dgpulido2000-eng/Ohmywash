@@ -260,6 +260,19 @@ app.post('/create-booking', async (req, res) => {
         query: { filter: { emailAddress: { exact: customerEmail } } },
       });
       customerId = (searchResp.result?.customers ?? searchResp.customers ?? [])[0]?.id;
+
+      // Si ya existía un cliente con ese correo (de una reserva anterior),
+      // se actualiza con el nombre/teléfono/dirección que se acaba de
+      // escribir en el formulario — si no, la reserva quedaba a nombre de
+      // quien reservó la primera vez con ese correo, sin importar el nombre
+      // que se pusiera esta vez.
+      if (customerId) {
+        await squareClient.customersApi.updateCustomer(customerId, {
+          givenName: customerName,
+          phoneNumber: customerPhone || undefined,
+          address,
+        });
+      }
     }
 
     if (!customerId) {
