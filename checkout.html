@@ -154,7 +154,7 @@
   #card-button:hover, #apptConfirmBtn:hover{background:var(--teal-dark);transform:translateY(-2px);}
   #card-button:disabled, #apptConfirmBtn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
   #payment-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
-  .sandbox-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
+  .payment-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
   .powered-by-light{text-align:center;padding:36px 0 10px;font-size:.8rem;color:#8b9a9c;}
   .powered-by-light b{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal-deep);}
 
@@ -204,12 +204,12 @@
   </div>
 </main>
 
-<script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+<script src="https://web.squarecdn.com/v1/square.js"></script>
 <script>
 (function(){
   const CART_KEY = 'ohMyWashCart';
-  const SQUARE_APP_ID = 'sandbox-sq0idb-Y_FEwLnB58Cs8UkzdMvqeg';
-  const SQUARE_LOCATION_ID = 'LEG36K217PJXD';
+  const SQUARE_APP_ID = 'sq0idp-an9AUhbzuSGcXHZhiw0rfA';
+  const SQUARE_LOCATION_ID = 'L4KR0652S04AJ';
   const BACKEND_URL = 'https://oh-my-wash-server.onrender.com/create-payment';
 
   const content = document.getElementById('checkoutContent');
@@ -289,7 +289,7 @@
         </div>
         <button id="card-button" type="button">Pagar ${formatUSD(total)}</button>
         <p id="payment-status"></p>
-        <p class="sandbox-note">🧪 Entorno de pruebas (Sandbox) — ningún cargo es real.<br>Tarjeta de prueba: 4111 1111 1111 1111 · fecha futura · CVV 111 · ZIP 12345</p>
+        <p class="payment-note">🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.</p>
       </div>
     </div>
   `;

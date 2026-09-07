@@ -13,9 +13,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Por defecto usa producción (dinero real). Para volver a pruebas sin tocar
+// código, pon SQUARE_ENVIRONMENT=sandbox en las variables de entorno de Render
+// (y usa credenciales de sandbox en SQUARE_ACCESS_TOKEN, etc.).
+const squareEnvironment = process.env.SQUARE_ENVIRONMENT === 'sandbox' ? Environment.Sandbox : Environment.Production;
+
 const squareClient = new Client({
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
-  environment: Environment.Sandbox,
+  environment: squareEnvironment,
 });
 
 function bigIntSafe(value) {
