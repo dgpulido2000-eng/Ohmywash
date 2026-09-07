@@ -268,6 +268,11 @@ app.post('/create-booking', async (req, res) => {
         locationId: process.env.SQUARE_LOCATION_ID,
         startAt,
         customerId,
+        // Square exige locationType: CUSTOMER_LOCATION explícitamente en la
+        // reserva para poder guardar una dirección (no basta con que el
+        // perfil del negocio lo permita) — Oh My Wash es un servicio móvil,
+        // siempre se hace en la ubicación del cliente.
+        locationType: customerAddress ? 'CUSTOMER_LOCATION' : undefined,
         address: customerAddress
           ? { addressLine1: customerAddress, administrativeDistrictLevel1: 'GA', country: 'US' }
           : undefined,
