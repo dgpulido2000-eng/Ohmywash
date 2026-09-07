@@ -91,13 +91,16 @@ app.get('/services', async (req, res) => {
       for (const variation of itemData.variations || []) {
         const v = variation.itemVariationData;
         if (!v?.availableForBooking) continue;
+        // Sin precio fijo o sin duración no podemos agendar ni cobrar bien —
+        // se omite hasta que en Square le pongan precio fijo y duración.
+        if (!v.priceMoney || !v.serviceDuration) continue;
         services.push({
           serviceName: itemData.name,
           variationName: v.name,
           serviceVariationId: variation.id,
           serviceVariationVersion: bigIntSafe(variation.version),
-          price: v.priceMoney ? bigIntSafe(v.priceMoney.amount) / 100 : null,
-          durationMinutes: v.serviceDuration ? Math.round(bigIntSafe(v.serviceDuration) / 60000) : null,
+          price: bigIntSafe(v.priceMoney.amount) / 100,
+          durationMinutes: Math.round(bigIntSafe(v.serviceDuration) / 60000),
           teamMemberIds: v.teamMemberIds || [],
         });
       }
