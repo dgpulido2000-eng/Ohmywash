@@ -123,18 +123,22 @@ app.get('/services', async (req, res) => {
 // de disponibilidad: perfil de horario del negocio y de cada miembro del equipo.
 app.get('/debug/booking-setup', async (req, res) => {
   try {
-    const [businessResp, teamResp] = await Promise.all([
+    const [businessResp, teamResp, locationResp] = await Promise.all([
       squareClient.bookingsApi.retrieveBusinessBookingProfile(),
       squareClient.bookingsApi.listTeamMemberBookingProfiles(true),
+      squareClient.locationsApi.retrieveLocation(process.env.SQUARE_LOCATION_ID),
     ]);
 
     const business = businessResp.result?.businessBookingProfile ?? businessResp.businessBookingProfile;
     const teamProfiles = teamResp.result?.teamMemberBookingProfiles ?? teamResp.teamMemberBookingProfiles ?? [];
+    const location = locationResp.result?.location ?? locationResp.location;
 
     res.json({
       success: true,
       businessBookingProfile: deepBigIntToNumber(business),
       teamMemberBookingProfiles: deepBigIntToNumber(teamProfiles),
+      locationBusinessHours: deepBigIntToNumber(location?.businessHours) ?? null,
+      locationTimezone: location?.timezone ?? null,
     });
   } catch (err) {
     console.error('Error en diagnóstico de reservas:', err);
