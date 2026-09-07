@@ -430,7 +430,7 @@
       }
       apptServiceSummary.innerHTML = apptServices.map(s => `
         <span class="appt-service-name">${s.serviceName}</span>
-        <span class="appt-service-meta">$${s.price.toFixed(2)} · ${s.durationMinutes} min</span>
+        <span class="appt-service-meta">${s.price != null ? '$' + s.price.toFixed(2) : 'Precio a confirmar'} · ${s.durationMinutes} min</span>
       `).join('<hr style="width:100%;border:none;border-top:1px dashed var(--teal-light);margin:2px 0;">');
     } catch (err) {
       console.error(err);
