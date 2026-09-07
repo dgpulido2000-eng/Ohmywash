@@ -119,6 +119,30 @@ app.get('/services', async (req, res) => {
   }
 });
 
+// Diagnóstico de solo lectura (sin datos de clientes) para depurar problemas
+// de disponibilidad: perfil de horario del negocio y de cada miembro del equipo.
+app.get('/debug/booking-setup', async (req, res) => {
+  try {
+    const [businessResp, teamResp] = await Promise.all([
+      squareClient.bookingsApi.retrieveBusinessBookingProfile(),
+      squareClient.bookingsApi.listTeamMemberBookingProfiles(true),
+    ]);
+
+    const business = businessResp.result?.businessBookingProfile ?? businessResp.businessBookingProfile;
+    const teamProfiles = teamResp.result?.teamMemberBookingProfiles ?? teamResp.teamMemberBookingProfiles ?? [];
+
+    res.json({
+      success: true,
+      businessBookingProfile: deepBigIntToNumber(business),
+      teamMemberBookingProfiles: deepBigIntToNumber(teamProfiles),
+    });
+  } catch (err) {
+    console.error('Error en diagnóstico de reservas:', err);
+    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
 // Busca horarios disponibles para uno o varios servicios (una sola visita) en un rango de fechas.
 app.post('/availability', async (req, res) => {
   const { serviceVariationId, serviceVariationIds, teamMemberId, startAt, endAt } = req.body || {};
