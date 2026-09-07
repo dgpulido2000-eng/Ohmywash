@@ -115,6 +115,15 @@
   }
   .appt-slot-btn:hover{border-color:var(--teal);}
   .appt-slot-btn.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+  .appt-staff-picker{display:flex;flex-wrap:wrap;gap:10px;}
+  .appt-staff-btn{
+    padding:10px 16px;border-radius:100px;border:1.5px solid #d8e8ea;background:#fff;color:var(--ink);
+    font-weight:600;font-size:.88rem;cursor:pointer;transition:all .2s var(--ease);
+  }
+  .appt-staff-btn:hover{border-color:var(--teal);}
+  .appt-staff-btn.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .appt-staff-picker .appt-staff-empty{font-size:.85rem;color:#8b9a9c;}
   .appt-customer-form{margin-top:22px;padding-top:20px;border-top:1px dashed #e3edee;}
   .appt-confirmed{
     background:var(--teal-pale);border-radius:14px;padding:16px 18px;
@@ -269,6 +278,10 @@
             </div>
           </div>
         </div>
+        <div class="pay-field">
+          <label>Técnico</label>
+          <div id="apptStaffPicker" class="appt-staff-picker"></div>
+        </div>
         <button id="apptSearchBtn" type="button" class="btn-secondary">Buscar horarios disponibles</button>
         <div id="apptSlots" class="appt-slots"></div>
         <div id="apptCustomerForm" class="appt-customer-form" hidden>
@@ -396,6 +409,58 @@
   }
   updateDateLabel();
 
+  // ---------- Selector de técnico ----------
+  // Cada técnico solo trabaja ciertos días/horas (acordado con el negocio,
+  // no algo que Square sepa por sí solo — Square solo conoce el horario
+  // general del local y las citas ya reservadas). Por eso filtramos aquí
+  // quién se puede elegir según el día de la semana, y a la hora de buscar
+  // disponibilidad le pedimos a Square el calendario de esa persona en
+  // concreto, recortando además cualquier horario que se pase de su hora
+  // de salida (relevante sobre todo para Miguel, que corta a las 2pm).
+  const STAFF_SCHEDULE = {
+    'TMqtFAlpFqDV-l_j': { name: 'JP', days: [0, 1, 2, 3, 4, 5, 6], startMin: 9 * 60, endMin: 17 * 60 },
+    'TMP0GRLy0FkLW_bt': { name: 'Jose Castro', days: [6], startMin: 9 * 60, endMin: 17 * 60 },
+    'TMhQVvzCRfnsr5Bf': { name: 'Miguel Alvarado', days: [5], startMin: 9 * 60, endMin: 14 * 60 },
+  };
+  const apptStaffPicker = document.getElementById('apptStaffPicker');
+  let selectedStaffId = null;
+
+  function renderStaffPicker() {
+    const dow = selectedDate.getDay();
+    const eligible = Object.entries(STAFF_SCHEDULE).filter(([, s]) => s.days.includes(dow));
+
+    if (!eligible.length) {
+      apptStaffPicker.innerHTML = '<span class="appt-staff-empty">Ningún técnico trabaja ese día</span>';
+      selectedStaffId = null;
+      return;
+    }
+
+    if (!eligible.some(([id]) => id === selectedStaffId)) {
+      selectedStaffId = eligible[0][0];
+    }
+
+    apptStaffPicker.innerHTML = eligible.map(([id, s]) => `
+      <button type="button" class="appt-staff-btn${id === selectedStaffId ? ' selected' : ''}" data-id="${id}">${s.name}</button>
+    `).join('');
+
+    apptStaffPicker.querySelectorAll('.appt-staff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedStaffId = btn.dataset.id;
+        apptStaffPicker.querySelectorAll('.appt-staff-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+    });
+  }
+  renderStaffPicker();
+
+  function nyMinutesOfDay(date) {
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false });
+    const parts = fmt.formatToParts(date);
+    const h = parseInt(parts.find(p => p.type === 'hour').value, 10) % 24;
+    const m = parseInt(parts.find(p => p.type === 'minute').value, 10);
+    return h * 60 + m;
+  }
+
   function renderCalendar() {
     calMonthLabel.textContent = calViewDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
@@ -423,6 +488,7 @@
         const [y, m, day] = btn.dataset.date.split('-').map(Number);
         selectedDate = new Date(y, m - 1, day);
         updateDateLabel();
+        renderStaffPicker();
         apptCalendar.hidden = true;
         renderCalendar();
       });
@@ -506,6 +572,7 @@
 
   apptSearchBtn.addEventListener('click', async () => {
     if (!apptServices.length) { setApptStatus('No hay servicios para agendar', 'error'); return; }
+    if (!selectedStaffId) { setApptStatus('Ningún técnico trabaja ese día. Elige otra fecha.', 'error'); return; }
     const dateVal = toDateStr(selectedDate);
 
     setApptStatus('Buscando horarios...', 'info');
@@ -525,13 +592,24 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           serviceVariationIds: apptServices.flatMap(s => Array(s.qty || 1).fill(s.serviceVariationId)),
+          teamMemberId: selectedStaffId,
           startAt,
           endAt,
         }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      apptAvailabilities = data.availabilities || [];
+
+      // Square ya filtra por el horario general del local (9am-5pm) y las
+      // citas reales del técnico elegido, pero algunos técnicos salen antes
+      // (ej. Miguel a las 2pm) — eso lo recortamos aquí, comparando cuándo
+      // terminaría la cita (inicio + duración total) contra su hora de salida.
+      const totalDuration = apptServices.reduce((sum, s) => sum + s.durationMinutes * (s.qty || 1), 0);
+      const staffCfg = STAFF_SCHEDULE[selectedStaffId];
+      apptAvailabilities = (data.availabilities || []).filter(a => {
+        const endsAt = new Date(new Date(a.startAt).getTime() + totalDuration * 60000);
+        return nyMinutesOfDay(endsAt) <= staffCfg.endMin;
+      });
 
       if (!apptAvailabilities.length) {
         setApptStatus('No hay horarios disponibles ese día. Prueba otra fecha.', 'error');
