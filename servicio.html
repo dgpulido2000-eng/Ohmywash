@@ -168,6 +168,13 @@
   .footer-logo{background:#fff;border-radius:14px;padding:10px 18px;box-shadow:0 10px 26px rgba(0,0,0,.25);width:fit-content;}
   .footer-logo img{height:38px;width:auto;display:block;}
   .footer-tag{font-size:.85rem;color:var(--teal-light);margin-top:4px;}
+  .social-links{display:flex;gap:10px;margin-top:14px;}
+  .social-badge{
+    width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;letter-spacing:.5px;
+    transition:background .2s var(--ease), transform .2s var(--ease);
+  }
+  .social-badge:hover{background:var(--teal);transform:translateY(-2px);}
   footer nav ul{display:flex;gap:24px;}
   footer nav a{font-size:.9rem;color:rgba(255,255,255,.7);}
   footer nav a:hover{color:#fff;}
@@ -231,6 +238,11 @@
       <div>
         <div class="footer-logo"><img src="assets/oh-my-wash-logo.png" alt="Oh My Wash"></div>
         <div class="footer-tag">We care like it's ours</div>
+        <div class="social-links">
+          <a href="https://www.instagram.com/oh_mywash/" target="_blank" rel="noopener" class="social-badge" aria-label="Instagram">IG</a>
+          <a href="https://www.tiktok.com/@oh_mywash" target="_blank" rel="noopener" class="social-badge" aria-label="TikTok">TT</a>
+          <a href="https://www.facebook.com/people/Oh-my-wash/61553786844335/" target="_blank" rel="noopener" class="social-badge" aria-label="Facebook">FB</a>
+        </div>
       </div>
       <nav><ul>
         <li><a href="web-oh-my-wash.html">Inicio</a></li>

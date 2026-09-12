@@ -377,6 +377,19 @@
   .footer-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;padding-bottom:30px;border-bottom:1px solid rgba(255,255,255,.1);}
   .footer-logo{background:#fff;border-radius:14px;padding:10px 18px;box-shadow:0 10px 26px rgba(0,0,0,.25);width:fit-content;}
   .footer-logo img{height:38px;width:auto;display:block;}
+  .social-links{display:flex;gap:10px;margin-top:14px;}
+  .social-badge{
+    width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;letter-spacing:.5px;
+    transition:background .2s var(--ease), transform .2s var(--ease);
+  }
+  .social-badge:hover{background:var(--teal);transform:translateY(-2px);}
+  .contact-social{margin-top:20px;padding-top:20px;border-top:1px solid #eef4f4;}
+  .contact-social small{display:block;color:#8b9a9c;font-weight:600;margin-bottom:10px;}
+  .contact-social .social-badge{background:var(--teal-pale);color:var(--teal-deep);}
+  .contact-social .social-badge:hover{background:var(--teal);color:#fff;}
+  .map-links{display:flex;gap:14px;margin-top:4px;}
+  .map-links a{font-size:.8rem;font-weight:700;color:var(--teal-deep);text-decoration:underline;}
   footer nav ul{display:flex;gap:24px;}
   footer nav a{font-size:.9rem;color:rgba(255,255,255,.7);}
   footer nav a:hover{color:#fff;}
@@ -639,10 +652,25 @@
           <span class="ico">✦</span>
           <div><small data-i18n="contact.emailLabel">Email</small><a href="mailto:info.ohmywash@gmail.com">info.ohmywash@gmail.com</a></div>
         </div>
-        <a class="contact-row" href="https://www.google.com/maps/search/?api=1&query=Oh+My+Wash+Mobile+Car+Detailing+3450+Miller+Dr+Chamblee+GA+30341" target="_blank" rel="noopener">
+        <div class="contact-row">
           <span class="ico">✦</span>
-          <div><small data-i18n="contact.areaLabel">Zona de servicio</small><span data-i18n="contact.areaValue">Atlanta y alrededores (servicio móvil)</span></div>
-        </a>
+          <div>
+            <small data-i18n="contact.areaLabel">Zona de servicio</small>
+            <span data-i18n="contact.areaValue">Atlanta y alrededores (servicio móvil)</span>
+            <div class="map-links">
+              <a href="https://www.google.com/maps/search/?api=1&query=Oh+My+Wash+Mobile+Car+Detailing+3450+Miller+Dr+Chamblee+GA+30341" target="_blank" rel="noopener">Google Maps</a>
+              <a href="https://maps.apple.com/?address=3450+Miller+Dr,+Chamblee,+GA+30341&q=Oh+My+Wash" target="_blank" rel="noopener">Apple Maps</a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-social">
+          <small data-i18n="contact.followLabel">Síguenos</small>
+          <div class="social-links">
+            <a href="https://www.instagram.com/oh_mywash/" target="_blank" rel="noopener" class="social-badge" aria-label="Instagram">IG</a>
+            <a href="https://www.tiktok.com/@oh_mywash" target="_blank" rel="noopener" class="social-badge" aria-label="TikTok">TT</a>
+            <a href="https://www.facebook.com/people/Oh-my-wash/61553786844335/" target="_blank" rel="noopener" class="social-badge" aria-label="Facebook">FB</a>
+          </div>
+        </div>
       </div>
       <div class="map-visual reveal-scale">
         <div>
@@ -662,6 +690,11 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo"><img src="assets/oh-my-wash-logo.png" alt="Oh My Wash"></div>
+        <div class="social-links">
+          <a href="https://www.instagram.com/oh_mywash/" target="_blank" rel="noopener" class="social-badge" aria-label="Instagram">IG</a>
+          <a href="https://www.tiktok.com/@oh_mywash" target="_blank" rel="noopener" class="social-badge" aria-label="TikTok">TT</a>
+          <a href="https://www.facebook.com/people/Oh-my-wash/61553786844335/" target="_blank" rel="noopener" class="social-badge" aria-label="Facebook">FB</a>
+        </div>
       </div>
       <nav><ul>
         <li><a href="servicios.html" data-i18n="nav.services">Servicios</a></li>
@@ -730,6 +763,7 @@
       'contact.areaValue': 'Atlanta and surrounding areas (mobile service)',
       'contact.mapTitle': 'We come to you',
       'contact.mapSubtitle': '100% mobile service in Atlanta and surrounding areas',
+      'contact.followLabel': 'Follow us',
       'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta and surrounding areas',
       'cart.title': 'Your cart', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
       'cart.note': 'Starting prices — final amount may vary depending on the vehicle.',
@@ -766,6 +800,7 @@
       'contact.areaValue': 'Atlanta y alrededores (servicio móvil)',
       'contact.mapTitle': 'Vamos hasta ti',
       'contact.mapSubtitle': 'Servicio 100% móvil en Atlanta y alrededores',
+      'contact.followLabel': 'Síguenos',
       'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta y alrededores',
       'cart.title': 'Tu carrito', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
       'cart.note': 'Precios de partida — el monto final puede variar según el vehículo.',
