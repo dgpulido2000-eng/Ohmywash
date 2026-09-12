@@ -75,6 +75,12 @@
   nav a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--teal);transition:width .3s var(--ease);}
   nav a:hover::after{width:100%;}
   .header-actions{display:flex;align-items:center;gap:14px;}
+  .lang-switch{display:flex;align-items:center;gap:4px;background:var(--teal-pale);border-radius:100px;padding:3px;}
+  .lang-btn{
+    border:none;background:none;padding:6px 12px;border-radius:100px;font-weight:700;font-size:.8rem;
+    color:var(--teal-deep);cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .lang-btn.active{background:var(--teal);color:#fff;}
   .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
   .burger span{width:24px;height:2.5px;background:var(--teal-deep);border-radius:2px;}
 
@@ -455,23 +461,23 @@
 <section class="about section-pad" id="nosotros">
   <div class="wrap about-grid">
     <div class="about-text reveal">
-      <span class="eyebrow">Sobre nosotros</span>
-      <h2 class="section-title">Cuidamos tu auto<br>como si fuera nuestro</h2>
-      <p>Oh My Wash, LLC es un servicio de detailing móvil que lleva el lavado, encerado, pulido y ceramic coating directo a tu puerta en Atlanta y alrededores. Nada de filas ni esperas — nosotros vamos a donde estés.</p>
-      <p>Desde un interior detailing hasta un ceramic coating de 5 años con corrección de pintura, cada servicio se hace a mano y con el mismo cuidado que le daríamos a nuestro propio auto.</p>
+      <span class="eyebrow" data-i18n="about.eyebrow">Sobre nosotros</span>
+      <h2 class="section-title" data-i18n="about.title">Cuidamos tu auto<br>como si fuera nuestro</h2>
+      <p data-i18n="about.p1">Oh My Wash, LLC es un servicio de detailing móvil que lleva el lavado, encerado, pulido y ceramic coating directo a tu puerta en Atlanta y alrededores. Nada de filas ni esperas — nosotros vamos a donde estés.</p>
+      <p data-i18n="about.p2">Desde un interior detailing hasta un ceramic coating de 5 años con corrección de pintura, cada servicio se hace a mano y con el mismo cuidado que le daríamos a nuestro propio auto.</p>
       <ul class="value-list">
-        <li><span class="ico">✓</span> Servicio 100% móvil — vamos a tu casa u oficina</li>
-        <li><span class="ico">✓</span> Productos y técnicas profesionales de detailing</li>
-        <li><span class="ico">✓</span> Ceramic coating con protección de hasta 5 años</li>
-        <li><span class="ico">✓</span> Trato cercano — "We care like it's ours"</li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value1">Servicio 100% móvil — vamos a tu casa u oficina</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value2">Productos y técnicas profesionales de detailing</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value3">Ceramic coating con protección de hasta 5 años</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value4">Trato cercano — "We care like it's ours"</span></li>
       </ul>
     </div>
     <div class="about-media reveal-scale">
       <div class="about-visual">
-        <span class="placeholder-note">Sustituir por foto real en /assets</span>
+        <span class="placeholder-note" data-i18n="about.photoNote">Sustituir por foto real en /assets</span>
         <div class="tag">
-          <strong>Atlanta y alrededores</strong>
-          <span>Zona de servicio móvil</span>
+          <strong data-i18n="hero.area">Atlanta y alrededores</strong>
+          <span data-i18n="about.tagSub">Zona de servicio móvil</span>
         </div>
       </div>
       <a href="servicios.html" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:18px;">Book Now</a>
@@ -482,8 +488,8 @@
 <section class="staff section-pad" id="equipo">
   <div class="wrap">
     <div class="reveal" style="text-align:center;margin-bottom:50px;">
-      <span class="eyebrow">Nuestro equipo</span>
-      <h2 class="section-title">Las manos detrás del brillo</h2>
+      <span class="eyebrow" data-i18n="staff.eyebrow">Nuestro equipo</span>
+      <h2 class="section-title" data-i18n="staff.title">Las manos detrás del brillo</h2>
     </div>
     <div class="staff-grid stagger">
       <div class="staff-card">
@@ -508,8 +514,8 @@
 <section class="reviews section-pad" id="reviews">
   <div class="wrap">
     <div class="reveal" style="text-align:center;margin-bottom:36px;">
-      <span class="eyebrow">Reseñas</span>
-      <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+      <span class="eyebrow" data-i18n="reviews.eyebrow">Reseñas</span>
+      <h2 class="section-title" data-i18n="reviews.title">Lo que dicen nuestros clientes</h2>
     </div>
 
     <div class="reviews-summary reveal">
@@ -519,8 +525,8 @@
       </div>
       <div class="reviews-divider"></div>
       <div class="reviews-meta">
-        <span class="reviews-count">166 reseñas en Google</span>
-        <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="reviews-google-link">Ver todas en Google →</a>
+        <span class="reviews-count" data-i18n="reviews.count">166 reseñas en Google</span>
+        <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="reviews-google-link" data-i18n="reviews.viewAll">Ver todas en Google →</a>
       </div>
     </div>
 
@@ -530,7 +536,7 @@
           <div class="review-avatar" style="background:#22a89c;">FR</div>
           <div>
             <div class="review-name">Franko Rangel</div>
-            <div class="review-date">Hace 22 horas</div>
+            <div class="review-date" data-i18n="review.date1">Hace 22 horas</div>
           </div>
         </div>
         <div class="review-stars">★★★★★</div>
@@ -541,7 +547,7 @@
           <div class="review-avatar" style="background:#0f6a62;">RK</div>
           <div>
             <div class="review-name">RKH III</div>
-            <div class="review-date">Hace 1 semana</div>
+            <div class="review-date" data-i18n="review.date2">Hace 1 semana</div>
           </div>
         </div>
         <div class="review-stars">★★★★★</div>
@@ -552,7 +558,7 @@
           <div class="review-avatar" style="background:#2ec4b6;">DO</div>
           <div>
             <div class="review-name">David Oden</div>
-            <div class="review-date">Hace 2 semanas</div>
+            <div class="review-date" data-i18n="review.date3">Hace 2 semanas</div>
           </div>
         </div>
         <div class="review-stars">★★★★★</div>
@@ -563,7 +569,7 @@
           <div class="review-avatar" style="background:#1a8f83;">MF</div>
           <div>
             <div class="review-name">Matthew Ferris</div>
-            <div class="review-date">Hace 2 semanas</div>
+            <div class="review-date" data-i18n="review.date4">Hace 2 semanas</div>
           </div>
         </div>
         <div class="review-stars">★★★★★</div>
@@ -574,7 +580,7 @@
           <div class="review-avatar" style="background:#17766c;">SW</div>
           <div>
             <div class="review-name">Scott Walding</div>
-            <div class="review-date">Hace 3 semanas</div>
+            <div class="review-date" data-i18n="review.date5">Hace 3 semanas</div>
           </div>
         </div>
         <div class="review-stars">★★★★★</div>
@@ -585,7 +591,7 @@
           <div class="review-avatar" style="background:#0c4f49;">NR</div>
           <div>
             <div class="review-name">Nithya Rao</div>
-            <div class="review-date">Hace 7 meses</div>
+            <div class="review-date" data-i18n="review.date6">Hace 7 meses</div>
           </div>
         </div>
         <div class="review-stars">★★★★★</div>
@@ -599,11 +605,11 @@
   <div class="strip-track">
     <span>CERAMIC COATING</span><span class="sep">•</span>
     <span>PAINT CORRECTION</span><span class="sep">•</span>
-    <span>DETAILING MÓVIL</span><span class="sep">•</span>
+    <span data-i18n="strip.mobile">DETAILING MÓVIL</span><span class="sep">•</span>
     <span>WE CARE LIKE IT'S OURS</span><span class="sep">•</span>
     <span>CERAMIC COATING</span><span class="sep">•</span>
     <span>PAINT CORRECTION</span><span class="sep">•</span>
-    <span>DETAILING MÓVIL</span><span class="sep">•</span>
+    <span data-i18n="strip.mobile">DETAILING MÓVIL</span><span class="sep">•</span>
     <span>WE CARE LIKE IT'S OURS</span><span class="sep">•</span>
   </div>
 </section>
@@ -611,28 +617,28 @@
 <section class="contact section-pad" id="contacto">
   <div class="wrap">
     <div class="reveal" style="text-align:center;margin-bottom:50px;">
-      <span class="eyebrow">Contacto</span>
-      <h2 class="section-title">Hablemos de tu auto</h2>
+      <span class="eyebrow" data-i18n="contact.eyebrow">Contacto</span>
+      <h2 class="section-title" data-i18n="contact.title">Hablemos de tu auto</h2>
     </div>
     <div class="contact-grid">
       <div class="contact-card reveal">
         <div class="contact-row">
           <span class="ico">✦</span>
-          <div><small>Llámanos o escríbenos</small><a href="tel:+16788955812">+1 678-895-5812</a></div>
+          <div><small data-i18n="contact.phoneLabel">Llámanos o escríbenos</small><a href="tel:+16788955812">+1 678-895-5812</a></div>
         </div>
         <div class="contact-row">
           <span class="ico">✦</span>
-          <div><small>Email</small><a href="mailto:info.ohmywash@gmail.com">info.ohmywash@gmail.com</a></div>
+          <div><small data-i18n="contact.emailLabel">Email</small><a href="mailto:info.ohmywash@gmail.com">info.ohmywash@gmail.com</a></div>
         </div>
         <a class="contact-row" href="https://www.google.com/maps/search/?api=1&query=Oh+My+Wash+Mobile+Car+Detailing+3450+Miller+Dr+Chamblee+GA+30341" target="_blank" rel="noopener">
           <span class="ico">✦</span>
-          <div><small>Zona de servicio</small><span>Atlanta y alrededores (servicio móvil)</span></div>
+          <div><small data-i18n="contact.areaLabel">Zona de servicio</small><span data-i18n="contact.areaValue">Atlanta y alrededores (servicio móvil)</span></div>
         </a>
       </div>
       <div class="map-visual reveal-scale">
         <div>
-          <h3>Vamos hasta ti</h3>
-          <p>Servicio 100% móvil en Atlanta y alrededores</p>
+          <h3 data-i18n="contact.mapTitle">Vamos hasta ti</h3>
+          <p data-i18n="contact.mapSubtitle">Servicio 100% móvil en Atlanta y alrededores</p>
         </div>
       </div>
     </div>
@@ -649,13 +655,13 @@
         <div class="footer-logo"><img src="assets/oh-my-wash-logo.png" alt="Oh My Wash"></div>
       </div>
       <nav><ul>
-        <li><a href="servicios.html">Servicios</a></li>
-        <li><a href="#nosotros">Nosotros</a></li>
-        <li><a href="#contacto">Contacto</a></li>
+        <li><a href="servicios.html" data-i18n="nav.services">Servicios</a></li>
+        <li><a href="#nosotros" data-i18n="nav.about">Nosotros</a></li>
+        <li><a href="#contacto" data-i18n="nav.contact">Contacto</a></li>
       </ul></nav>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Oh My Wash, LLC — Atlanta y alrededores</span>
+      <span data-i18n="footer.copyright">© 2026 Oh My Wash, LLC — Atlanta y alrededores</span>
       <span>+1 678-895-5812 · info.ohmywash@gmail.com</span>
     </div>
     <div class="powered-by">Powered by <b>NEXO GROWTH</b></div>
@@ -665,19 +671,118 @@
 <div class="cart-overlay" id="cartOverlay"></div>
 <aside class="cart-drawer" id="cartDrawer">
   <div class="cart-drawer-header">
-    <h3>Tu carrito</h3>
+    <h3 data-i18n="cart.title">Tu carrito</h3>
     <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">✕</button>
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-footer">
-    <div class="cart-total-row"><span>Total</span><span id="cartTotal">$0.00</span></div>
-    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;justify-content:center;background:var(--teal);color:#fff;" disabled>Checkout →</button>
-    <p class="cart-note">Precios de partida — el monto final puede variar según el vehículo.</p>
+    <div class="cart-total-row"><span data-i18n="cart.totalLabel">Total</span><span id="cartTotal">$0.00</span></div>
+    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;justify-content:center;background:var(--teal);color:#fff;" disabled data-i18n="cart.checkout">Checkout →</button>
+    <p class="cart-note" data-i18n="cart.note">Precios de partida — el monto final puede variar según el vehículo.</p>
   </div>
 </aside>
 
 <script>
 (function(){
+  // ---------- Idioma (EN/ES) ----------
+  // Todo el texto traducible tiene un atributo data-i18n="clave" en el HTML.
+  // applyLanguage() recorre esos elementos y les pone el texto del idioma
+  // activo. El idioma se guarda en localStorage para que se mantenga al
+  // navegar entre páginas. Por defecto el sitio abre en inglés.
+  const translations = {
+    en: {
+      'nav.home': 'Home', 'nav.services': 'Services', 'nav.team': 'Team', 'nav.reviews': 'Reviews', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'hero.area': 'Atlanta and surrounding areas',
+      'hero.subtitle': 'We wash, polish, and protect your car wherever you are. Full detailing and ceramic coating at your doorstep, with the same care you\'d give your own.',
+      'hero.call': 'Call', 'hero.viewServices': 'View services',
+      'about.eyebrow': 'About us',
+      'about.title': 'We care for your car<br>like it\'s our own',
+      'about.p1': 'Oh My Wash, LLC is a mobile detailing service that brings washing, waxing, polishing, and ceramic coating straight to your door in Atlanta and surrounding areas. No lines, no waiting — we come to you.',
+      'about.p2': 'From an interior detailing to a 5-year ceramic coating with paint correction, every service is done by hand with the same care we\'d give our own car.',
+      'about.value1': 'A 100% mobile service — we come to your home or office',
+      'about.value2': 'Professional detailing products and techniques',
+      'about.value3': 'Ceramic coating with up to 5 years of protection',
+      'about.value4': 'Personal care — "We care like it\'s ours"',
+      'about.photoNote': 'Replace with real photo in /assets',
+      'about.tagSub': 'Mobile service area',
+      'staff.eyebrow': 'Our team',
+      'staff.title': 'The hands behind the shine',
+      'reviews.eyebrow': 'Reviews',
+      'reviews.title': 'What our customers say',
+      'reviews.count': '166 reviews on Google',
+      'reviews.viewAll': 'See all on Google →',
+      'review.date1': '22 hours ago', 'review.date2': '1 week ago', 'review.date3': '2 weeks ago', 'review.date4': '2 weeks ago', 'review.date5': '3 weeks ago', 'review.date6': '7 months ago',
+      'strip.mobile': 'MOBILE DETAILING',
+      'contact.eyebrow': 'Contact',
+      'contact.title': 'Let\'s talk about your car',
+      'contact.phoneLabel': 'Call or text us',
+      'contact.emailLabel': 'Email',
+      'contact.areaLabel': 'Service area',
+      'contact.areaValue': 'Atlanta and surrounding areas (mobile service)',
+      'contact.mapTitle': 'We come to you',
+      'contact.mapSubtitle': '100% mobile service in Atlanta and surrounding areas',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta and surrounding areas',
+      'cart.title': 'Your cart', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Starting prices — final amount may vary depending on the vehicle.',
+      'cart.emptyTitle': 'Your cart is empty', 'cart.emptyHint': 'Add a service from the menu',
+    },
+    es: {
+      'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.team': 'Equipo', 'nav.reviews': 'Reseñas', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
+      'hero.area': 'Atlanta y alrededores',
+      'hero.subtitle': 'Lavamos, pulimos y protegemos tu auto donde estés. Detailing completo y ceramic coating a domicilio, con el mismo cuidado que le darías al tuyo.',
+      'hero.call': 'Llamar', 'hero.viewServices': 'Ver servicios',
+      'about.eyebrow': 'Sobre nosotros',
+      'about.title': 'Cuidamos tu auto<br>como si fuera nuestro',
+      'about.p1': 'Oh My Wash, LLC es un servicio de detailing móvil que lleva el lavado, encerado, pulido y ceramic coating directo a tu puerta en Atlanta y alrededores. Nada de filas ni esperas — nosotros vamos a donde estés.',
+      'about.p2': 'Desde un interior detailing hasta un ceramic coating de 5 años con corrección de pintura, cada servicio se hace a mano y con el mismo cuidado que le daríamos a nuestro propio auto.',
+      'about.value1': 'Servicio 100% móvil — vamos a tu casa u oficina',
+      'about.value2': 'Productos y técnicas profesionales de detailing',
+      'about.value3': 'Ceramic coating con protección de hasta 5 años',
+      'about.value4': 'Trato cercano — "We care like it\'s ours"',
+      'about.photoNote': 'Sustituir por foto real en /assets',
+      'about.tagSub': 'Zona de servicio móvil',
+      'staff.eyebrow': 'Nuestro equipo',
+      'staff.title': 'Las manos detrás del brillo',
+      'reviews.eyebrow': 'Reseñas',
+      'reviews.title': 'Lo que dicen nuestros clientes',
+      'reviews.count': '166 reseñas en Google',
+      'reviews.viewAll': 'Ver todas en Google →',
+      'review.date1': 'Hace 22 horas', 'review.date2': 'Hace 1 semana', 'review.date3': 'Hace 2 semanas', 'review.date4': 'Hace 2 semanas', 'review.date5': 'Hace 3 semanas', 'review.date6': 'Hace 7 meses',
+      'strip.mobile': 'DETAILING MÓVIL',
+      'contact.eyebrow': 'Contacto',
+      'contact.title': 'Hablemos de tu auto',
+      'contact.phoneLabel': 'Llámanos o escríbenos',
+      'contact.emailLabel': 'Email',
+      'contact.areaLabel': 'Zona de servicio',
+      'contact.areaValue': 'Atlanta y alrededores (servicio móvil)',
+      'contact.mapTitle': 'Vamos hasta ti',
+      'contact.mapSubtitle': 'Servicio 100% móvil en Atlanta y alrededores',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta y alrededores',
+      'cart.title': 'Tu carrito', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Precios de partida — el monto final puede variar según el vehículo.',
+      'cart.emptyTitle': 'Tu carrito está vacío', 'cart.emptyHint': 'Agrega un servicio desde el menú',
+    },
+  };
+
+  let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    const dict = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (dict[key] != null) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    localStorage.setItem('ohMyWashLang', lang);
+    renderCart();
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => applyLanguage(b.dataset.lang));
+  });
+
   // Header shrink + burger menu
   const header = document.getElementById('siteHeader');
   window.addEventListener('scroll', () => {
@@ -771,7 +876,7 @@
     cartBadgeEl.style.display = count > 0 ? 'flex' : 'none';
 
     if (!cart.length) {
-      cartItemsEl.innerHTML = '<div class="cart-empty"><p>Tu carrito está vacío</p><small>Agrega un servicio desde el menú</small></div>';
+      cartItemsEl.innerHTML = `<div class="cart-empty"><p>${translations[currentLang]['cart.emptyTitle']}</p><small>${translations[currentLang]['cart.emptyHint']}</small></div>`;
       cartCheckoutBtn.disabled = true;
     } else {
       cartItemsEl.innerHTML = cart.map(i => `
@@ -836,7 +941,7 @@
     window.location.href = 'checkout.html';
   });
 
-  renderCart();
+  applyLanguage(currentLang);
 })();
 </script>
 
