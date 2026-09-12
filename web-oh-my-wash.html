@@ -76,6 +76,7 @@
   nav a:hover::after{width:100%;}
   .header-actions{display:flex;align-items:center;gap:14px;}
   .lang-switch{display:flex;align-items:center;gap:4px;background:var(--teal-pale);border-radius:100px;padding:3px;}
+  .lang-switch-mobile{display:none;}
   .lang-btn{
     border:none;background:none;padding:6px 12px;border-radius:100px;font-weight:700;font-size:.8rem;
     color:var(--teal-deep);cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
@@ -398,8 +399,10 @@
     .about-visual{height:300px;}
     header{padding:14px 20px;}
     body.nav-open .cart-btn{display:none;}
-    .lang-switch{display:none;}
-    body.nav-open .lang-switch{display:flex;}
+    .lang-switch-desktop{display:none;}
+    .lang-switch-mobile{
+      display:flex;position:absolute;top:20px;right:22px;
+    }
   }
 </style>
 </head>
@@ -415,6 +418,10 @@
   <nav>
     <ul id="navList">
       <button class="nav-close" id="navClose" aria-label="Cerrar menú">✕</button>
+      <div class="lang-switch lang-switch-mobile">
+        <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+        <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+      </div>
       <li><a href="web-oh-my-wash.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
       <li><a href="servicios.html" class="nav-link" data-i18n="nav.services">Servicios</a></li>
       <li><a href="#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
@@ -424,7 +431,7 @@
     </ul>
   </nav>
   <div class="header-actions">
-    <div class="lang-switch">
+    <div class="lang-switch lang-switch-desktop">
       <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
       <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
     </div>
