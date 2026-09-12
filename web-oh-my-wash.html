@@ -407,15 +407,19 @@
   <nav>
     <ul id="navList">
       <button class="nav-close" id="navClose" aria-label="Cerrar menú">✕</button>
-      <li><a href="web-oh-my-wash.html#top" class="nav-link">Home</a></li>
-      <li><a href="servicios.html" class="nav-link">Servicios</a></li>
-      <li><a href="#equipo" class="nav-link">Equipo</a></li>
-      <li><a href="#reviews" class="nav-link">Reseñas</a></li>
-      <li><a href="#nosotros" class="nav-link">Nosotros</a></li>
-      <li><a href="#contacto" class="nav-link">Contacto</a></li>
+      <li><a href="web-oh-my-wash.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
+      <li><a href="servicios.html" class="nav-link" data-i18n="nav.services">Servicios</a></li>
+      <li><a href="#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
+      <li><a href="#reviews" class="nav-link" data-i18n="nav.reviews">Reseñas</a></li>
+      <li><a href="#nosotros" class="nav-link" data-i18n="nav.about">Nosotros</a></li>
+      <li><a href="#contacto" class="nav-link" data-i18n="nav.contact">Contacto</a></li>
     </ul>
   </nav>
   <div class="header-actions">
+    <div class="lang-switch">
+      <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+      <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+    </div>
     <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       <span class="cart-badge" id="cartBadge">0</span>
@@ -432,14 +436,14 @@
   <div class="brand-logo reveal-scale in">
     <img src="assets/oh-my-wash-logo-hero.png" alt="Oh My Wash — we care like it's ours" class="brand-logo-img">
   </div>
-  <div class="hero-eyebrow">Mobile car detailing · Atlanta y alrededores</div>
+  <div class="hero-eyebrow">Mobile car detailing · <span data-i18n="hero.area">Atlanta y alrededores</span></div>
   <h1>OH MY <span>WASH</span></h1>
   <p class="hero-tagline">"We care like it's ours"</p>
-  <p>Lavamos, pulimos y protegemos tu auto donde estés. Detailing completo y ceramic coating a domicilio, con el mismo cuidado que le darías al tuyo.</p>
+  <p data-i18n="hero.subtitle">Lavamos, pulimos y protegemos tu auto donde estés. Detailing completo y ceramic coating a domicilio, con el mismo cuidado que le darías al tuyo.</p>
   <div class="hero-ctas">
-    <a href="tel:+16788955812" class="btn btn-ghost">Llamar</a>
+    <a href="tel:+16788955812" class="btn btn-ghost" data-i18n="hero.call">Llamar</a>
     <a href="servicios.html" class="btn btn-solid">Book Now</a>
-    <a href="servicios.html" class="btn btn-ghost">Ver servicios</a>
+    <a href="servicios.html" class="btn btn-ghost" data-i18n="hero.viewServices">Ver servicios</a>
   </div>
   <div class="scroll-cue"><span>SCROLL</span><div class="line"></div></div>
 </section>
