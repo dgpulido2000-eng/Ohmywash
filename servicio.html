@@ -182,11 +182,12 @@
     nav ul.open{right:0;}
     .burger{display:flex;}
     .nav-close{
-      display:flex;position:absolute;top:20px;right:22px;width:38px;height:38px;border-radius:50%;
+      display:flex;position:absolute;top:20px;left:22px;width:38px;height:38px;border-radius:50%;
       background:var(--teal-pale);color:var(--teal-deep);border:none;font-size:1.15rem;cursor:pointer;
       align-items:center;justify-content:center;
     }
     header{padding:14px 20px;}
+    body.nav-open .cart-btn{display:none;}
     .add-bar-inner{justify-content:center;text-align:center;}
     #addToCartBtn{width:100%;}
   }
@@ -565,9 +566,18 @@
   const burger = document.getElementById('burger');
   const navList = document.getElementById('navList');
   const navClose = document.getElementById('navClose');
-  burger.addEventListener('click', () => navList.classList.toggle('open'));
-  navClose.addEventListener('click', () => navList.classList.remove('open'));
-  document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => navList.classList.remove('open')));
+  burger.addEventListener('click', () => {
+    navList.classList.toggle('open');
+    document.body.classList.toggle('nav-open', navList.classList.contains('open'));
+  });
+  navClose.addEventListener('click', () => {
+    navList.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  });
+  document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => {
+    navList.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  }));
 
   // ---------- Carrito ----------
   const CART_KEY = 'ohMyWashCart';
