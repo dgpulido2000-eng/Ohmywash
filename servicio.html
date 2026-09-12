@@ -583,7 +583,7 @@
     cartBadgeEl.style.display = count > 0 ? 'flex' : 'none';
 
     if (!cart.length) {
-      cartItemsEl.innerHTML = '<div class="cart-empty"><span>🧴</span><p>Tu carrito está vacío</p><small>Agrega un servicio desde el menú</small></div>';
+      cartItemsEl.innerHTML = '<div class="cart-empty"><p>Tu carrito está vacío</p><small>Agrega un servicio desde el menú</small></div>';
       cartCheckoutBtn.disabled = true;
     } else {
       cartItemsEl.innerHTML = cart.map(i => `
