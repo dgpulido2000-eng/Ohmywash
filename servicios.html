@@ -121,6 +121,34 @@
   .cart-footer{padding:20px 26px 26px;border-top:1px solid #eef4f4;}
   .cart-total-row{display:flex;justify-content:space-between;align-items:center;font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;color:var(--ink);margin-bottom:16px;}
   .cart-note{font-size:.74rem;color:#8b9a9c;text-align:center;margin-top:12px;line-height:1.5;}
+
+  /* ---------- Modal de add-ons antes del checkout ---------- */
+  .addon-modal-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:300;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .addon-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .addon-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(480px,92vw);
+    max-height:85vh;overflow-y:auto;background:#fff;border-radius:24px;box-shadow:var(--shadow);
+    z-index:301;padding:28px;opacity:0;pointer-events:none;transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .addon-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .addon-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .addon-modal-header h3{font-size:1.2rem;font-weight:700;color:var(--ink);}
+  .addon-modal-close{background:none;border:none;font-size:1.1rem;cursor:pointer;color:#8b9a9c;width:32px;height:32px;border-radius:50%;flex:0 0 32px;transition:background .2s var(--ease);}
+  .addon-modal-close:hover{background:var(--teal-pale);color:var(--teal-deep);}
+  .addon-modal-hint{font-size:.85rem;color:#8b9a9c;margin-top:6px;margin-bottom:20px;}
+  .addon-modal-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+  .addon-modal-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:14px;background:var(--off);}
+  .addon-modal-item-name{font-weight:600;font-size:.92rem;color:var(--ink);}
+  .addon-modal-item-meta{font-size:.78rem;color:#8b9a9c;margin-top:2px;}
+  .addon-modal-add-btn{
+    flex:0 0 auto;padding:9px 16px;border-radius:100px;border:1.5px solid var(--teal);background:#fff;
+    color:var(--teal-deep);font-weight:600;font-size:.82rem;cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .addon-modal-add-btn:hover{background:var(--teal);color:#fff;}
+  .addon-modal-add-btn:disabled{background:var(--teal-pale);border-color:var(--teal-pale);color:var(--teal-deep);cursor:default;opacity:.8;}
   .btn{
     padding:15px 30px;border-radius:100px;font-weight:600;font-size:1rem;cursor:pointer;border:none;
     transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s;
@@ -429,6 +457,17 @@
   </div>
 </aside>
 
+<div class="addon-modal-overlay" id="addonModalOverlay"></div>
+<div class="addon-modal" id="addonModal" hidden>
+  <div class="addon-modal-header">
+    <h3>¿Quieres agregar algún extra?</h3>
+    <button class="addon-modal-close" id="addonModalClose" aria-label="Cerrar">✕</button>
+  </div>
+  <p class="addon-modal-hint">Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.</p>
+  <div class="addon-modal-list" id="addonModalList"></div>
+  <button class="btn btn-solid" id="addonModalContinue" style="width:100%;justify-content:center;">Continuar al checkout →</button>
+</div>
+
 <script>
 (function(){
   const header = document.getElementById('siteHeader');
@@ -490,6 +529,83 @@
   function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
   function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
 
+  // ---------- Modal de add-ons antes del checkout ----------
+  // Cada servicio ya trae incluidos ciertos extras (ej. Wax & Engine ya
+  // incluye la limpieza del motor), así que no tiene sentido ofrecerlos de
+  // nuevo como add-on. Este mapa dice, por nombre base del servicio (sin el
+  // tamaño de auto entre paréntesis), qué add-ons NO se deben mostrar.
+  const ADDON_EXCLUSIONS = {
+    'Oh My Wash | Wax & Engine': ['Engine Bay Cleaning'],
+    'All In One': ['Upholstery Cleaning'],
+    'Interior Detailing': ['Upholstery Cleaning'],
+    'Oh My Wash | Full Detailing': ['Upholstery Cleaning', 'Stain Removal'],
+  };
+  const ADDON_CATALOG = [
+    { name: 'Stain Removal', duration: '2h 30m' },
+    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h' },
+    { name: 'Engine Bay Cleaning', duration: '1h 30m' },
+    { name: 'Upholstery Cleaning', duration: '2h 40m' },
+    { name: 'Carpet Cleaning', duration: '1h 30m' },
+  ];
+
+  function getAvailableAddons() {
+    const excluded = new Set();
+    cart.forEach(item => {
+      for (const key in ADDON_EXCLUSIONS) {
+        if (item.name.indexOf(key) === 0) {
+          ADDON_EXCLUSIONS[key].forEach(a => excluded.add(a));
+        }
+      }
+    });
+    return ADDON_CATALOG.filter(a => !excluded.has(a.name) && !cart.some(i => i.name === a.name));
+  }
+
+  const addonModalOverlay = document.getElementById('addonModalOverlay');
+  const addonModal = document.getElementById('addonModal');
+  const addonModalList = document.getElementById('addonModalList');
+  const addonModalContinue = document.getElementById('addonModalContinue');
+  const addonModalClose = document.getElementById('addonModalClose');
+
+  function openAddonModal() {
+    const available = getAvailableAddons();
+    addonModalList.innerHTML = available.map(a => `
+      <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
+        <div>
+          <div class="addon-modal-item-name">${a.name}</div>
+          <div class="addon-modal-item-meta">${a.duration} · Precio variable</div>
+        </div>
+        <button type="button" class="addon-modal-add-btn">+ Agregar</button>
+      </div>
+    `).join('');
+    addonModalList.querySelectorAll('.addon-modal-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.closest('.addon-modal-item').dataset.addonName;
+        addToCart(name, null);
+        btn.disabled = true;
+        btn.textContent = 'Agregado ✓';
+      });
+    });
+    addonModal.hidden = false;
+    addonModalOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      addonModal.classList.add('open');
+      addonModalOverlay.classList.add('open');
+    });
+  }
+
+  function closeAddonModal() {
+    addonModal.classList.remove('open');
+    addonModalOverlay.classList.remove('open');
+    setTimeout(() => { addonModal.hidden = true; addonModalOverlay.hidden = true; }, 300);
+  }
+
+  addonModalClose.addEventListener('click', closeAddonModal);
+  addonModalOverlay.addEventListener('click', closeAddonModal);
+  addonModalContinue.addEventListener('click', () => {
+    window.location.href = 'checkout.html';
+  });
+
+
   function renderCart(){
     const count = cart.reduce((sum, i) => sum + i.qty, 0);
     cartBadgeEl.textContent = count;
@@ -525,6 +641,15 @@
     cartTotalEl.textContent = formatUSD(cartTotal());
   }
 
+  function addToCart(name, price){
+    const existing = cart.find(i => i.name === name);
+    if (existing) existing.qty += 1;
+    else cart.push({ name, price, qty: 1 });
+    saveCart();
+    renderCart();
+    openCart();
+  }
+
   function changeQty(name, delta){
     const item = cart.find(i => i.name === name);
     if (!item) return;
@@ -545,7 +670,11 @@
   cartOverlay.addEventListener('click', closeCart);
   cartCheckoutBtn.addEventListener('click', () => {
     if (!cart.length) return;
-    window.location.href = 'checkout.html';
+    if (getAvailableAddons().length) {
+      openAddonModal();
+    } else {
+      window.location.href = 'checkout.html';
+    }
   });
 
   renderCart();
