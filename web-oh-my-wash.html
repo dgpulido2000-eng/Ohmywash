@@ -388,8 +388,23 @@
   .contact-social small{display:block;color:#8b9a9c;font-weight:600;margin-bottom:10px;}
   .contact-social .social-badge{background:var(--teal-pale);color:var(--teal-deep);}
   .contact-social .social-badge:hover{background:var(--teal);color:#fff;}
-  .map-links{display:flex;gap:14px;margin-top:4px;}
-  .map-links a{font-size:.8rem;font-weight:700;color:var(--teal-deep);text-decoration:underline;}
+  .map-picker-wrap{position:relative;}
+  .map-picker-btn{
+    background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;
+    text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+    transition:text-decoration-color .2s var(--ease);
+  }
+  .map-picker-btn:hover{text-decoration-color:currentColor;}
+  .map-picker-menu{
+    position:absolute;top:calc(100% + 8px);left:0;z-index:10;background:#fff;border-radius:12px;
+    box-shadow:var(--shadow);padding:8px;display:flex;flex-direction:column;gap:2px;min-width:170px;
+  }
+  .map-picker-menu[hidden]{display:none;}
+  .map-picker-menu a{
+    padding:10px 14px;border-radius:8px;font-size:.88rem;font-weight:600;color:var(--ink);
+    transition:background .2s var(--ease);
+  }
+  .map-picker-menu a:hover{background:var(--teal-pale);color:var(--teal-deep);}
   footer nav ul{display:flex;gap:24px;}
   footer nav a{font-size:.9rem;color:rgba(255,255,255,.7);}
   footer nav a:hover{color:#fff;}
@@ -654,10 +669,10 @@
         </div>
         <div class="contact-row">
           <span class="ico">✦</span>
-          <div>
+          <div class="map-picker-wrap">
             <small data-i18n="contact.areaLabel">Zona de servicio</small>
-            <span data-i18n="contact.areaValue">Atlanta y alrededores (servicio móvil)</span>
-            <div class="map-links">
+            <button type="button" class="map-picker-btn" id="mapPickerBtn" data-i18n="contact.areaValue">Atlanta y alrededores (servicio móvil)</button>
+            <div class="map-picker-menu" id="mapPickerMenu" hidden>
               <a href="https://www.google.com/maps/search/?api=1&query=Oh+My+Wash+Mobile+Car+Detailing+3450+Miller+Dr+Chamblee+GA+30341" target="_blank" rel="noopener">Google Maps</a>
               <a href="https://maps.apple.com/?address=3450+Miller+Dr,+Chamblee,+GA+30341&q=Oh+My+Wash" target="_blank" rel="noopener">Apple Maps</a>
             </div>
@@ -975,6 +990,18 @@
 
   document.querySelectorAll('.add-cart-btn').forEach(btn => {
     btn.addEventListener('click', () => addToCart(btn.dataset.name, parseFloat(btn.dataset.price)));
+  });
+
+  const mapPickerBtn = document.getElementById('mapPickerBtn');
+  const mapPickerMenu = document.getElementById('mapPickerMenu');
+  mapPickerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    mapPickerMenu.hidden = !mapPickerMenu.hidden;
+  });
+  document.addEventListener('click', (e) => {
+    if (!mapPickerMenu.hidden && !mapPickerMenu.contains(e.target) && e.target !== mapPickerBtn) {
+      mapPickerMenu.hidden = true;
+    }
   });
 
   document.getElementById('cartBtn').addEventListener('click', openCart);
