@@ -69,6 +69,13 @@
   nav a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--teal);transition:width .3s var(--ease);}
   nav a:hover::after, nav a.active::after{width:100%;}
   .header-actions{display:flex;align-items:center;gap:14px;}
+  .lang-switch{display:flex;align-items:center;gap:4px;background:var(--teal-pale);border-radius:100px;padding:3px;}
+  .lang-switch-mobile{display:none;}
+  .lang-btn{
+    border:none;background:none;padding:6px 12px;border-radius:100px;font-weight:700;font-size:.8rem;
+    color:var(--teal-deep);cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .lang-btn.active{background:var(--teal);color:#fff;}
   .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
   .burger span{width:24px;height:2.5px;background:var(--teal-deep);border-radius:2px;}
 
@@ -247,6 +254,10 @@
     }
     header{padding:14px 20px;}
     body.nav-open .cart-btn{display:none;}
+    .lang-switch-desktop{display:none;}
+    .lang-switch-mobile{
+      display:flex;position:absolute;top:20px;right:22px;
+    }
   }
 </style>
 </head>
@@ -262,14 +273,22 @@
   <nav>
     <ul id="navList">
       <button class="nav-close" id="navClose" aria-label="Cerrar menú">✕</button>
-      <li><a href="web-oh-my-wash.html#top" class="nav-link">Home</a></li>
-      <li><a href="servicios.html" class="nav-link active">Servicios</a></li>
-      <li><a href="web-oh-my-wash.html#equipo" class="nav-link">Equipo</a></li>
-      <li><a href="web-oh-my-wash.html#nosotros" class="nav-link">Nosotros</a></li>
-      <li><a href="web-oh-my-wash.html#contacto" class="nav-link">Contacto</a></li>
+      <div class="lang-switch lang-switch-mobile">
+        <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+        <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+      </div>
+      <li><a href="web-oh-my-wash.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
+      <li><a href="servicios.html" class="nav-link active" data-i18n="nav.services">Servicios</a></li>
+      <li><a href="web-oh-my-wash.html#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
+      <li><a href="web-oh-my-wash.html#nosotros" class="nav-link" data-i18n="nav.about">Nosotros</a></li>
+      <li><a href="web-oh-my-wash.html#contacto" class="nav-link" data-i18n="nav.contact">Contacto</a></li>
     </ul>
   </nav>
   <div class="header-actions">
+    <div class="lang-switch lang-switch-desktop">
+      <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+      <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+    </div>
     <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       <span class="cart-badge" id="cartBadge">0</span>
@@ -280,63 +299,63 @@
 
 <section class="page-banner">
   <div class="wrap">
-    <a href="web-oh-my-wash.html" class="back-link">‹ Volver al inicio</a>
-    <span class="eyebrow">Menú de servicios</span>
-    <h1>Elige tu nivel de brillo</h1>
-    <p>Detailing móvil, ceramic coating y corrección de pintura en Atlanta y alrededores. Agrega lo que necesites al carrito y reserva en un solo paso.</p>
+    <a href="web-oh-my-wash.html" class="back-link" data-i18n="banner.back">‹ Volver al inicio</a>
+    <span class="eyebrow" data-i18n="banner.eyebrow">Menú de servicios</span>
+    <h1 data-i18n="banner.title">Elige tu nivel de brillo</h1>
+    <p data-i18n="banner.subtitle">Detailing móvil, ceramic coating y corrección de pintura en Atlanta y alrededores. Agrega lo que necesites al carrito y reserva en un solo paso.</p>
   </div>
 </section>
 
 <section class="services section-pad" id="servicios">
   <div class="wrap">
     <div class="reveal in" style="text-align:center;">
-      <p class="section-sub" style="margin-left:auto;margin-right:auto;">Todos los precios son de partida ("+") — el precio final depende del tamaño y estado del vehículo.</p>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto;" data-i18n="services.priceNote">Todos los precios son de partida ("+") — el precio final depende del tamaño y estado del vehículo.</p>
     </div>
 
     <div class="tabs reveal in" id="tabs">
-      <button class="tab-btn active" data-tab="detailing">Detailing</button>
-      <button class="tab-btn" data-tab="ceramic">Ceramic Coating</button>
-      <button class="tab-btn" data-tab="paint">Paint Correction</button>
-      <button class="tab-btn" data-tab="addons">Add-ons</button>
+      <button class="tab-btn active" data-tab="detailing" data-i18n="tabs.detailing">Detailing</button>
+      <button class="tab-btn" data-tab="ceramic" data-i18n="tabs.ceramic">Ceramic Coating</button>
+      <button class="tab-btn" data-tab="paint" data-i18n="tabs.paint">Paint Correction</button>
+      <button class="tab-btn" data-tab="addons" data-i18n="tabs.addons">Add-ons</button>
     </div>
 
     <div class="tab-panel active" id="panel-detailing">
       <div class="card-grid stagger in">
         <a class="card" href="servicio.html?id=in-n-out">
           <h3>Oh My Wash | In-N-Out</h3>
-          <p>Hand wash, bug removal y acabado rápido para tu auto en movimiento.</p>
+          <p data-i18n="card.inNOut.desc">Hand wash, bug removal y acabado rápido para tu auto en movimiento.</p>
           <div class="card-footer"><span class="price">$100+</span><span class="duration">2 hrs+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=wax-protection">
           <h3>Oh My Wash | Wax Protection</h3>
-          <p>Hand wash, bug removal y una capa de cera para proteger el brillo.</p>
+          <p data-i18n="card.waxProtection.desc">Hand wash, bug removal y una capa de cera para proteger el brillo.</p>
           <div class="card-footer"><span class="price">$125+</span><span class="duration">2h 15m+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=interior-detailing">
-          <h3>Interior Detailing</h3>
-          <p>Limpieza de plásticos interiores y protección UV...</p>
+          <h3 data-i18n="card.interiorDetailing.title">Interior Detailing</h3>
+          <p data-i18n="card.interiorDetailing.desc">Limpieza de plásticos interiores y protección UV...</p>
           <div class="card-footer"><span class="price">$150+</span><span class="duration">2 hrs</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=wax-engine">
           <h3>Oh My Wash | Wax &amp; Engine</h3>
-          <p>Hand wash, bug removal y limpieza de motor incluida.</p>
+          <p data-i18n="card.waxEngine.desc">Hand wash, bug removal y limpieza de motor incluida.</p>
           <div class="card-footer"><span class="price">$180+</span><span class="duration">2h 30m+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=all-in-one">
-          <h3>All In One</h3>
-          <p>Combina un brillo increíble y protección duradera con micro-abrasivos avanzados...</p>
+          <h3 data-i18n="card.allInOne.title">All In One</h3>
+          <p data-i18n="card.allInOne.desc">Combina un brillo increíble y protección duradera con micro-abrasivos avanzados...</p>
           <div class="card-footer"><span class="price">$200+</span><span class="duration">3 hrs+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=full-detailing">
           <h3>Oh My Wash | Full Detailing</h3>
-          <p>Hand wash, bug removal y detailing completo por dentro y por fuera.</p>
+          <p data-i18n="card.fullDetailing.desc">Hand wash, bug removal y detailing completo por dentro y por fuera.</p>
           <div class="card-footer"><span class="price">$275+</span><span class="duration">3 hrs+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
       </div>
     </div>
@@ -344,22 +363,22 @@
     <div class="tab-panel" id="panel-ceramic">
       <div class="card-grid stagger in">
         <a class="card" href="servicio.html?id=ceramic-2y">
-          <h3>Ceramic Coating · 2 años</h3>
-          <p>Sin corrección de pintura. Acabado ultra duro, resistente al clima y de alto brillo.</p>
+          <h3 data-i18n="card.ceramic2y.title">Ceramic Coating · 2 años</h3>
+          <p data-i18n="card.ceramic2y.desc">Sin corrección de pintura. Acabado ultra duro, resistente al clima y de alto brillo.</p>
           <div class="card-footer"><span class="price">$300+</span><span class="duration">3 hrs+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=ceramic-5y">
-          <h3>Ceramic Coating · 5 años</h3>
-          <p>Sin corrección de pintura. Protección repelente a la suciedad, a prueba de agua y aceite.</p>
+          <h3 data-i18n="card.ceramic5y.title">Ceramic Coating · 5 años</h3>
+          <p data-i18n="card.ceramic5y.desc">Sin corrección de pintura. Protección repelente a la suciedad, a prueba de agua y aceite.</p>
           <div class="card-footer"><span class="price">$400+</span><span class="duration">30 min+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
         <a class="card" href="servicio.html?id=ceramic-5y-correction">
-          <h3>Ceramic Coating · 5 años + corrección</h3>
-          <p>Incluye corrección de pintura previa al sellado cerámico para un acabado impecable.</p>
+          <h3 data-i18n="card.ceramic5yCorrection.title">Ceramic Coating · 5 años + corrección</h3>
+          <p data-i18n="card.ceramic5yCorrection.desc">Incluye corrección de pintura previa al sellado cerámico para un acabado impecable.</p>
           <div class="card-footer"><span class="price">$600+</span><span class="duration">6 hrs+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
       </div>
     </div>
@@ -368,51 +387,51 @@
       <div class="card-grid stagger in">
         <a class="card" style="max-width:420px;" href="servicio.html?id=paint-correction">
           <h3>Paint Correction</h3>
-          <p>Elimina entre el 70%–85% de remolinos, rayones leves e imperfecciones de tu pintura...</p>
+          <p data-i18n="card.paintCorrection.desc">Elimina entre el 70%–85% de remolinos, rayones leves e imperfecciones de tu pintura...</p>
           <div class="card-footer"><span class="price">$450+</span><span class="duration">5 hrs+</span></div>
-          <span class="card-book">Ver opciones y precios →</span>
+          <span class="card-book" data-i18n="card.seeOptions">Ver opciones y precios →</span>
         </a>
       </div>
     </div>
 
     <div class="tab-panel" id="panel-addons">
-      <p style="color:#5c6b6e;margin-bottom:24px;max-width:640px;">Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se cobra por la web.</p>
+      <p style="color:#5c6b6e;margin-bottom:24px;max-width:640px;" data-i18n="addons.intro">Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se cobra por la web.</p>
       <div class="card-grid stagger in">
         <a class="card addon-card" href="servicio.html?id=stain-removal">
           <h3>Stain Removal</h3>
-          <p>Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.</p>
-          <div class="card-footer"><span class="price">Precio variable</span><span class="duration">2h 30m</span></div>
-          <span class="card-book">Ver detalles →</span>
+          <p data-i18n="card.stainRemoval.desc">Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.</p>
+          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">2h 30m</span></div>
+          <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=headlight-restoration">
           <h3>Headlight Restoration with Ceramic Coating</h3>
-          <p>Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.</p>
-          <div class="card-footer"><span class="price">Precio variable</span><span class="duration">1 hr</span></div>
-          <span class="card-book">Ver detalles →</span>
+          <p data-i18n="card.headlightRestoration.desc">Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.</p>
+          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">1 hr</span></div>
+          <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=engine-bay-cleaning">
           <h3>Engine Bay Cleaning</h3>
-          <p>Limpieza y desengrasado profundo del compartimento del motor.</p>
-          <div class="card-footer"><span class="price">Precio variable</span><span class="duration">1h 30m</span></div>
-          <span class="card-book">Ver detalles →</span>
+          <p data-i18n="card.engineBayCleaning.desc">Limpieza y desengrasado profundo del compartimento del motor.</p>
+          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">1h 30m</span></div>
+          <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=upholstery-cleaning">
           <h3>Upholstery Cleaning</h3>
-          <p>Limpieza profunda de asientos y tapicería de tela.</p>
-          <div class="card-footer"><span class="price">Precio variable</span><span class="duration">2h 40m</span></div>
-          <span class="card-book">Ver detalles →</span>
+          <p data-i18n="card.upholsteryCleaning.desc">Limpieza profunda de asientos y tapicería de tela.</p>
+          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">2h 40m</span></div>
+          <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=carpet-cleaning">
           <h3>Carpet Cleaning</h3>
-          <p>Limpieza profunda de alfombras y tapetes interiores.</p>
-          <div class="card-footer"><span class="price">Precio variable</span><span class="duration">1h 30m</span></div>
-          <span class="card-book">Ver detalles →</span>
+          <p data-i18n="card.carpetCleaning.desc">Limpieza profunda de alfombras y tapetes interiores.</p>
+          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">1h 30m</span></div>
+          <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:20px;">
-      <a href="https://oh-my-wash-llc.square.site/" target="_blank" rel="noopener" class="card-book" style="font-size:1rem;">Ver todos los horarios y reservar en línea →</a>
+      <a href="https://oh-my-wash-llc.square.site/" target="_blank" rel="noopener" class="card-book" style="font-size:1rem;" data-i18n="services.bookOnline">Ver todos los horarios y reservar en línea →</a>
     </div>
   </div>
 </section>
@@ -430,13 +449,13 @@
         </div>
       </div>
       <nav><ul>
-        <li><a href="web-oh-my-wash.html">Inicio</a></li>
-        <li><a href="web-oh-my-wash.html#nosotros">Nosotros</a></li>
-        <li><a href="web-oh-my-wash.html#contacto">Contacto</a></li>
+        <li><a href="web-oh-my-wash.html" data-i18n="footer.home">Inicio</a></li>
+        <li><a href="web-oh-my-wash.html#nosotros" data-i18n="nav.about">Nosotros</a></li>
+        <li><a href="web-oh-my-wash.html#contacto" data-i18n="nav.contact">Contacto</a></li>
       </ul></nav>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Oh My Wash, LLC — Atlanta y alrededores</span>
+      <span data-i18n="footer.copyright">© 2026 Oh My Wash, LLC — Atlanta y alrededores</span>
       <span>+1 678-895-5812 · info.ohmywash@gmail.com</span>
     </div>
     <div class="powered-by">Powered by <b>NEXO GROWTH</b></div>
@@ -446,30 +465,139 @@
 <div class="cart-overlay" id="cartOverlay"></div>
 <aside class="cart-drawer" id="cartDrawer">
   <div class="cart-drawer-header">
-    <h3>Tu carrito</h3>
+    <h3 data-i18n="cart.title">Tu carrito</h3>
     <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">✕</button>
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-footer">
-    <div class="cart-total-row"><span>Total</span><span id="cartTotal">$0.00</span></div>
-    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;justify-content:center;" disabled>Checkout →</button>
-    <p class="cart-note">Precios de partida — el monto final puede variar según el vehículo.</p>
+    <div class="cart-total-row"><span data-i18n="cart.totalLabel">Total</span><span id="cartTotal">$0.00</span></div>
+    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;justify-content:center;" disabled data-i18n="cart.checkout">Checkout →</button>
+    <p class="cart-note" data-i18n="cart.note">Precios de partida — el monto final puede variar según el vehículo.</p>
   </div>
 </aside>
 
 <div class="addon-modal-overlay" id="addonModalOverlay"></div>
 <div class="addon-modal" id="addonModal" hidden>
   <div class="addon-modal-header">
-    <h3>¿Quieres agregar algún extra?</h3>
+    <h3 data-i18n="addon.modalTitle">¿Quieres agregar algún extra?</h3>
     <button class="addon-modal-close" id="addonModalClose" aria-label="Cerrar">✕</button>
   </div>
-  <p class="addon-modal-hint">Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.</p>
+  <p class="addon-modal-hint" data-i18n="addon.modalHint">Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.</p>
   <div class="addon-modal-list" id="addonModalList"></div>
-  <button class="btn btn-solid" id="addonModalContinue" style="width:100%;justify-content:center;">Continuar al checkout →</button>
+  <button class="btn btn-solid" id="addonModalContinue" style="width:100%;justify-content:center;" data-i18n="addon.modalContinue">Continuar al checkout →</button>
 </div>
 
 <script>
 (function(){
+  // ---------- Idioma (EN/ES) ----------
+  const translations = {
+    en: {
+      'nav.home': 'Home', 'nav.services': 'Services', 'nav.team': 'Team', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'banner.back': '‹ Back to home',
+      'banner.eyebrow': 'Services menu',
+      'banner.title': 'Choose your level of shine',
+      'banner.subtitle': 'Mobile detailing, ceramic coating, and paint correction in Atlanta and surrounding areas. Add what you need to the cart and book in one step.',
+      'services.priceNote': 'All prices are starting prices ("+") — final price depends on the size and condition of the vehicle.',
+      'services.bookOnline': 'See all available times and book online →',
+      'tabs.detailing': 'Detailing', 'tabs.ceramic': 'Ceramic Coating', 'tabs.paint': 'Paint Correction', 'tabs.addons': 'Add-ons',
+      'card.seeOptions': 'See options and prices →',
+      'card.seeDetails': 'See details →',
+      'card.inNOut.desc': 'Hand wash, bug removal, and a quick finish for your car on the go.',
+      'card.waxProtection.desc': 'Hand wash, bug removal, and a wax layer to protect the shine.',
+      'card.interiorDetailing.title': 'Interior Detailing',
+      'card.interiorDetailing.desc': 'Interior plastic cleaning and UV protection...',
+      'card.waxEngine.desc': 'Hand wash, bug removal, and engine bay cleaning included.',
+      'card.allInOne.title': 'All In One',
+      'card.allInOne.desc': 'Combines incredible shine and long-lasting protection with advanced micro-abrasives...',
+      'card.fullDetailing.desc': 'Hand wash, bug removal, and complete detailing inside and out.',
+      'card.ceramic2y.title': 'Ceramic Coating · 2 Years',
+      'card.ceramic2y.desc': 'Without paint correction. Ultra-hard finish, weather-resistant and high-gloss.',
+      'card.ceramic5y.title': 'Ceramic Coating · 5 Years',
+      'card.ceramic5y.desc': 'Without paint correction. Dirt-repellent protection, water and oil resistant.',
+      'card.ceramic5yCorrection.title': 'Ceramic Coating · 5 Years + Correction',
+      'card.ceramic5yCorrection.desc': 'Includes paint correction before the ceramic seal for a flawless finish.',
+      'card.paintCorrection.desc': 'Removes 70%–85% of swirl marks, light scratches, and imperfections in your paint...',
+      'addons.intro': 'Extras that can be added to any service. Price is quoted and charged on-site with the technician — not charged through the website.',
+      'card.stainRemoval.desc': 'Removal of tough stains from upholstery, carpets, or interior surfaces.',
+      'card.headlightRestoration.desc': 'Restoration of foggy or yellowed headlights, sealed with ceramic for lasting protection.',
+      'card.engineBayCleaning.desc': 'Deep cleaning and degreasing of the engine bay.',
+      'card.upholsteryCleaning.desc': 'Deep cleaning of seats and fabric upholstery.',
+      'card.carpetCleaning.desc': 'Deep cleaning of interior carpets and mats.',
+      'footer.home': 'Home',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta and surrounding areas',
+      'cart.title': 'Your cart', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Starting prices — final amount may vary depending on the vehicle.',
+      'cart.emptyTitle': 'Your cart is empty', 'cart.emptyHint': 'Add a service from the menu',
+      'cart.variablePrice': 'Variable price',
+      'addon.modalTitle': 'Want to add an extra?',
+      'addon.modalHint': 'Extras compatible with your service — quoted on-site, not charged here.',
+      'addon.modalContinue': 'Continue to checkout →',
+      'addon.add': 'Add', 'addon.added': 'Added ✓',
+    },
+    es: {
+      'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.team': 'Equipo', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
+      'banner.back': '‹ Volver al inicio',
+      'banner.eyebrow': 'Menú de servicios',
+      'banner.title': 'Elige tu nivel de brillo',
+      'banner.subtitle': 'Detailing móvil, ceramic coating y corrección de pintura en Atlanta y alrededores. Agrega lo que necesites al carrito y reserva en un solo paso.',
+      'services.priceNote': 'Todos los precios son de partida ("+") — el precio final depende del tamaño y estado del vehículo.',
+      'services.bookOnline': 'Ver todos los horarios y reservar en línea →',
+      'tabs.detailing': 'Detailing', 'tabs.ceramic': 'Ceramic Coating', 'tabs.paint': 'Paint Correction', 'tabs.addons': 'Add-ons',
+      'card.seeOptions': 'Ver opciones y precios →',
+      'card.seeDetails': 'Ver detalles →',
+      'card.inNOut.desc': 'Hand wash, bug removal y acabado rápido para tu auto en movimiento.',
+      'card.waxProtection.desc': 'Hand wash, bug removal y una capa de cera para proteger el brillo.',
+      'card.interiorDetailing.title': 'Interior Detailing',
+      'card.interiorDetailing.desc': 'Limpieza de plásticos interiores y protección UV...',
+      'card.waxEngine.desc': 'Hand wash, bug removal y limpieza de motor incluida.',
+      'card.allInOne.title': 'All In One',
+      'card.allInOne.desc': 'Combina un brillo increíble y protección duradera con micro-abrasivos avanzados...',
+      'card.fullDetailing.desc': 'Hand wash, bug removal y detailing completo por dentro y por fuera.',
+      'card.ceramic2y.title': 'Ceramic Coating · 2 años',
+      'card.ceramic2y.desc': 'Sin corrección de pintura. Acabado ultra duro, resistente al clima y de alto brillo.',
+      'card.ceramic5y.title': 'Ceramic Coating · 5 años',
+      'card.ceramic5y.desc': 'Sin corrección de pintura. Protección repelente a la suciedad, a prueba de agua y aceite.',
+      'card.ceramic5yCorrection.title': 'Ceramic Coating · 5 años + corrección',
+      'card.ceramic5yCorrection.desc': 'Incluye corrección de pintura previa al sellado cerámico para un acabado impecable.',
+      'card.paintCorrection.desc': 'Elimina entre el 70%–85% de remolinos, rayones leves e imperfecciones de tu pintura...',
+      'addons.intro': 'Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se cobra por la web.',
+      'card.stainRemoval.desc': 'Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.',
+      'card.headlightRestoration.desc': 'Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.',
+      'card.engineBayCleaning.desc': 'Limpieza y desengrasado profundo del compartimento del motor.',
+      'card.upholsteryCleaning.desc': 'Limpieza profunda de asientos y tapicería de tela.',
+      'card.carpetCleaning.desc': 'Limpieza profunda de alfombras y tapetes interiores.',
+      'footer.home': 'Inicio',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta y alrededores',
+      'cart.title': 'Tu carrito', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Precios de partida — el monto final puede variar según el vehículo.',
+      'cart.emptyTitle': 'Tu carrito está vacío', 'cart.emptyHint': 'Agrega un servicio desde el menú',
+      'cart.variablePrice': 'Precio variable',
+      'addon.modalTitle': '¿Quieres agregar algún extra?',
+      'addon.modalHint': 'Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.',
+      'addon.modalContinue': 'Continuar al checkout →',
+      'addon.add': 'Agregar', 'addon.added': 'Agregado ✓',
+    },
+  };
+
+  let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    const dict = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (dict[key] != null) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    localStorage.setItem('ohMyWashLang', lang);
+    renderCart();
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => applyLanguage(b.dataset.lang));
+  });
+
   const header = document.getElementById('siteHeader');
   window.addEventListener('scroll', () => {
     header.classList.toggle('scrolled', window.scrollY > 40);
@@ -572,9 +700,9 @@
       <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
         <div>
           <div class="addon-modal-item-name">${a.name}</div>
-          <div class="addon-modal-item-meta">${a.duration} · Precio variable</div>
+          <div class="addon-modal-item-meta">${a.duration} · ${translations[currentLang]['cart.variablePrice']}</div>
         </div>
-        <button type="button" class="addon-modal-add-btn">+ Agregar</button>
+        <button type="button" class="addon-modal-add-btn">+ ${translations[currentLang]['addon.add']}</button>
       </div>
     `).join('');
     addonModalList.querySelectorAll('.addon-modal-add-btn').forEach(btn => {
@@ -582,7 +710,7 @@
         const name = btn.closest('.addon-modal-item').dataset.addonName;
         addToCart(name, null);
         btn.disabled = true;
-        btn.textContent = 'Agregado ✓';
+        btn.textContent = translations[currentLang]['addon.added'];
       });
     });
     addonModal.hidden = false;
@@ -612,14 +740,14 @@
     cartBadgeEl.style.display = count > 0 ? 'flex' : 'none';
 
     if (!cart.length) {
-      cartItemsEl.innerHTML = '<div class="cart-empty"><p>Tu carrito está vacío</p><small>Agrega un servicio desde el menú</small></div>';
+      cartItemsEl.innerHTML = `<div class="cart-empty"><p>${translations[currentLang]['cart.emptyTitle']}</p><small>${translations[currentLang]['cart.emptyHint']}</small></div>`;
       cartCheckoutBtn.disabled = true;
     } else {
       cartItemsEl.innerHTML = cart.map(i => `
         <div class="cart-item">
           <div class="cart-item-info">
             <span class="cart-item-name">${i.name}</span>
-            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</span>
+            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : translations[currentLang]['cart.variablePrice']}</span>
           </div>
           <div class="cart-item-controls">
             <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>
@@ -677,7 +805,7 @@
     }
   });
 
-  renderCart();
+  applyLanguage(currentLang);
 })();
 </script>
 
