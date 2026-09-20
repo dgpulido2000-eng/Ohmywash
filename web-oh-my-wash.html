@@ -332,14 +332,19 @@
 
   /* ---------- Staff ---------- */
   .staff{background:var(--off);}
-  .staff-carousel-wrap{display:flex;align-items:center;gap:14px;max-width:1040px;margin:0 auto;}
+  .staff-carousel-wrap{display:flex;align-items:center;gap:14px;max-width:1120px;margin:0 auto;}
   .staff-carousel{
-    display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
-    padding:8px 4px 20px;-webkit-overflow-scrolling:touch;flex:1;
+    display:flex;gap:28px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+    padding:8px 4px;-webkit-overflow-scrolling:touch;flex:1;
+    scrollbar-width:none;-ms-overflow-style:none;
   }
-  .staff-carousel::-webkit-scrollbar{height:6px;}
-  .staff-carousel::-webkit-scrollbar-track{background:transparent;}
-  .staff-carousel::-webkit-scrollbar-thumb{background:var(--teal-light);border-radius:10px;}
+  .staff-carousel::-webkit-scrollbar{display:none;}
+  .staff-dots{display:flex;justify-content:center;gap:9px;margin-top:22px;}
+  .staff-dot{
+    width:9px;height:9px;border-radius:50%;background:var(--teal-pale);border:none;padding:0;cursor:pointer;
+    transition:background .2s var(--ease), transform .2s var(--ease);
+  }
+  .staff-dot.active{background:var(--teal);transform:scale(1.35);}
   .staff-nav{
     flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:none;background:var(--teal-pale);color:var(--teal-deep);
     font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;
@@ -347,14 +352,14 @@
   }
   .staff-nav:hover{background:var(--teal);color:#fff;}
   .staff-card{
-    background:#fff;border-radius:22px;padding:30px 24px;text-align:center;
+    background:#fff;border-radius:26px;padding:42px 30px;text-align:center;
     box-shadow:0 6px 22px rgba(20,50,55,.07);
     transition:transform .35s var(--ease), box-shadow .35s var(--ease);
-    scroll-snap-align:center;flex:0 0 auto;width:220px;
+    scroll-snap-align:center;flex:0 0 auto;width:300px;
   }
   .staff-card:hover{transform:translateY(-8px);box-shadow:0 22px 40px rgba(20,50,55,.15);}
   .staff-photo{
-    width:128px;height:128px;border-radius:50%;margin:0 auto 18px;overflow:hidden;
+    width:180px;height:180px;border-radius:50%;margin:0 auto 22px;overflow:hidden;
     border:4px solid var(--teal-pale);box-shadow:0 8px 20px rgba(20,50,55,.12);
   }
   .staff-photo img{width:100%;height:100%;object-fit:cover;}
@@ -363,7 +368,7 @@
     background:linear-gradient(150deg, var(--teal-light), var(--teal-deep));
     color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:1.8rem;
   }
-  .staff-name{font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .staff-name{font-family:'Inter',sans-serif;font-weight:700;font-size:1.35rem;color:var(--ink);}
 
   /* ---------- Reviews ---------- */
   .reviews{background:#fff;}
@@ -490,6 +495,8 @@
     .about-grid, .contact-grid{grid-template-columns:1fr;}
     .about-visual{height:300px;}
     .staff-nav{display:none;}
+    .staff-card{width:220px;padding:30px 22px;}
+    .staff-photo{width:128px;height:128px;}
     header{padding:14px 20px;}
     body.nav-open .cart-btn{display:none;}
     .lang-switch-desktop{display:none;}
@@ -675,6 +682,7 @@
       </div>
       <button type="button" class="staff-nav staff-nav-next" id="staffNext" aria-label="Siguiente">›</button>
     </div>
+    <div class="staff-dots" id="staffDots"></div>
     <div style="text-align:center;margin-top:36px;">
       <a href="servicios.html" class="btn btn-teal">Book Now</a>
     </div>
@@ -1100,15 +1108,35 @@
   const staffCarousel = document.getElementById('staffCarousel');
   const staffPrev = document.getElementById('staffPrev');
   const staffNext = document.getElementById('staffNext');
-  if (staffCarousel && staffPrev && staffNext) {
+  const staffDots = document.getElementById('staffDots');
+  if (staffCarousel && staffPrev && staffNext && staffDots) {
+    const staffCards = Array.from(staffCarousel.querySelectorAll('.staff-card'));
     const staffScrollStep = () => {
       const card = staffCarousel.querySelector('.staff-card');
       if (!card) return 240;
-      const gap = parseFloat(getComputedStyle(staffCarousel).columnGap) || 24;
+      const gap = parseFloat(getComputedStyle(staffCarousel).columnGap) || 28;
       return card.getBoundingClientRect().width + gap;
     };
     staffPrev.addEventListener('click', () => staffCarousel.scrollBy({ left: -staffScrollStep(), behavior: 'smooth' }));
     staffNext.addEventListener('click', () => staffCarousel.scrollBy({ left: staffScrollStep(), behavior: 'smooth' }));
+
+    staffDots.innerHTML = staffCards.map((_, i) => `<button type="button" class="staff-dot${i === 0 ? ' active' : ''}" aria-label="${i + 1}"></button>`).join('');
+    const dotEls = Array.from(staffDots.children);
+    dotEls.forEach((dot, i) => {
+      dot.addEventListener('click', () => staffCards[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
+    });
+
+    let staffScrollTicking = false;
+    staffCarousel.addEventListener('scroll', () => {
+      if (staffScrollTicking) return;
+      staffScrollTicking = true;
+      requestAnimationFrame(() => {
+        const step = staffScrollStep();
+        const activeIndex = Math.max(0, Math.min(staffCards.length - 1, Math.round(staffCarousel.scrollLeft / step)));
+        dotEls.forEach((dot, i) => dot.classList.toggle('active', i === activeIndex));
+        staffScrollTicking = false;
+      });
+    }, { passive: true });
   }
 
   // ---------- Carrito ----------
