@@ -171,6 +171,37 @@
   .addon-modal-add-btn:hover{background:var(--teal);color:#fff;}
   .addon-modal-add-btn:disabled{background:var(--teal-pale);border-color:var(--teal-pale);color:var(--teal-deep);cursor:default;opacity:.8;}
 
+  /* ---------- Modal de biografía del equipo ---------- */
+  .staff-card{cursor:pointer;}
+  .staff-modal-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:300;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .staff-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .staff-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(560px,92vw);
+    max-height:85vh;overflow-y:auto;background:#fff;border-radius:26px;box-shadow:var(--shadow);
+    z-index:301;padding:40px 36px;text-align:center;opacity:0;pointer-events:none;
+    transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .staff-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .staff-modal-close{
+    position:absolute;top:18px;right:18px;background:var(--teal-pale);border:none;color:var(--teal-deep);
+    width:34px;height:34px;border-radius:50%;font-size:1.05rem;cursor:pointer;transition:background .2s var(--ease);
+  }
+  .staff-modal-close:hover{background:var(--teal);color:#fff;}
+  .staff-modal-photo{
+    width:120px;height:120px;border-radius:50%;margin:0 auto 18px;overflow:hidden;
+    border:4px solid var(--teal-pale);box-shadow:0 8px 20px rgba(20,50,55,.12);
+  }
+  .staff-modal-photo img{width:100%;height:100%;object-fit:cover;}
+  .staff-modal-name{font-family:'Inter',sans-serif;font-weight:700;font-size:1.35rem;color:var(--ink);}
+  .staff-modal-role{color:var(--teal-deep);font-weight:700;font-size:.9rem;letter-spacing:.3px;margin-top:4px;margin-bottom:22px;}
+  .staff-modal-bio{text-align:left;color:#5c6b6e;font-size:.95rem;line-height:1.7;}
+  .staff-modal-bio p{margin-bottom:14px;}
+  .staff-modal-bio p:last-child{margin-bottom:0;}
+  .staff-modal-bio .bio-soon{text-align:center;color:#8b9a9c;font-style:italic;}
+
   /* ---------- Hero ---------- */
   .hero{
     position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -663,19 +694,19 @@
     <div class="staff-carousel-wrap">
       <button type="button" class="staff-nav staff-nav-prev" id="staffPrev" aria-label="Anterior">‹</button>
       <div class="staff-carousel stagger" id="staffCarousel">
-        <div class="staff-card">
+        <div class="staff-card" data-staff="jp" tabindex="0" role="button">
           <div class="staff-photo" data-initials="JP"><img src="assets/staff-jp.jpg" alt="JP — equipo Oh My Wash"></div>
           <div class="staff-name">JP</div>
         </div>
-        <div class="staff-card">
+        <div class="staff-card" data-staff="joseMiguel" tabindex="0" role="button">
           <div class="staff-photo" data-initials="JM"><img src="assets/staff-jose-miguel.jpg" alt="Jose Miguel — equipo Oh My Wash"></div>
           <div class="staff-name">Jose Miguel</div>
         </div>
-        <div class="staff-card">
+        <div class="staff-card" data-staff="miguel" tabindex="0" role="button">
           <div class="staff-photo" data-initials="M"><img src="assets/staff-miguel.jpg" alt="Miguel — equipo Oh My Wash"></div>
           <div class="staff-name">Miguel</div>
         </div>
-        <div class="staff-card">
+        <div class="staff-card" data-staff="mariaJuliana" tabindex="0" role="button">
           <div class="staff-photo" data-initials="MJ"><img src="assets/staff-maria-juliana.jpg" alt="Maria Juliana — equipo Oh My Wash"></div>
           <div class="staff-name">Maria Juliana</div>
         </div>
@@ -891,6 +922,15 @@
   <button class="btn btn-solid" id="addonModalContinue" style="width:100%;justify-content:center;" data-i18n="addon.modalContinue">Continuar al checkout →</button>
 </div>
 
+<div class="staff-modal-overlay" id="staffModalOverlay"></div>
+<div class="staff-modal" id="staffModal" hidden>
+  <button class="staff-modal-close" id="staffModalClose" aria-label="Cerrar">✕</button>
+  <div class="staff-modal-photo" id="staffModalPhoto"></div>
+  <h3 class="staff-modal-name" id="staffModalName"></h3>
+  <div class="staff-modal-role" id="staffModalRole"></div>
+  <div class="staff-modal-bio" id="staffModalBio"></div>
+</div>
+
 <script>
 (function(){
   // ---------- Idioma (EN/ES) ----------
@@ -1030,6 +1070,7 @@
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
     localStorage.setItem('ohMyWashLang', lang);
     renderCart();
+    if (openStaffId) renderStaffModal();
   }
 
   document.querySelectorAll('.lang-btn').forEach(b => {
@@ -1138,6 +1179,119 @@
       });
     }, { passive: true });
   }
+
+  // ---------- Modal de biografía del equipo ----------
+  // Por ahora solo los dueños (Jose Miguel y Miguel) tienen biografía; JP y
+  // Maria Juliana solo muestran su puesto hasta que tengamos su biografía.
+  const STAFF_DATA = {
+    jp: {
+      photo: 'assets/staff-jp.jpg', initials: 'JP', name: 'JP',
+      role: { en: 'Washer', es: 'Lavador' },
+      bio: null,
+    },
+    joseMiguel: {
+      photo: 'assets/staff-jose-miguel.jpg', initials: 'JM', name: 'Jose Miguel',
+      role: { en: 'Owner / Washer', es: 'Dueño / Lavador' },
+      bio: {
+        en: [
+          "José was born and raised in Mérida, Venezuela, where his passion for cars began at an early age. Growing up, he watched his uncle compete in rally racing, which sparked his interest in the automotive world. During his youth, José also played table tennis professionally and had the honor of representing Venezuela in international competitions across several countries. This experience helped shape his discipline, focus, and commitment to excellence.",
+          "More than 10 years ago, José moved to the United States and began building a career in the manufacturing industry. With over eight years of experience, he has worked in the production, inspection, and quality control of high-precision components for the aerospace industry and other specialized fields. This background has given him a sharp eye for detail and a strong appreciation for accuracy and high-quality workmanship.",
+          "Inspired by the passion he shared with his uncle, they founded Oh My Wash together. José is certified in professional auto detailing, paint correction and ceramic coating, combining his technical knowledge and quality-control experience to deliver exceptional results and care for every vehicle with precision and dedication.",
+          "In his free time, José enjoys playing soccer, hiking, and spending time with his family and his Goldendoodle, Rio.",
+        ],
+        es: [
+          "José nació y creció en Mérida, Venezuela, donde su pasión por los autos comenzó desde muy joven. Cuando era niño, veía a su tío competir en carreras de rally, lo que despertó su interés por el mundo automotriz. Durante su juventud, José también jugó tenis de mesa de forma profesional y tuvo el honor de representar a Venezuela en competencias internacionales en varios países. Esa experiencia ayudó a formar su disciplina, enfoque y compromiso con la excelencia.",
+          "Hace más de 10 años, José se mudó a Estados Unidos y comenzó a construir una carrera en la industria manufacturera. Con más de ocho años de experiencia, ha trabajado en producción, inspección y control de calidad de componentes de alta precisión para la industria aeroespacial y otros sectores especializados. Esta experiencia le ha dado un ojo agudo para el detalle y un fuerte aprecio por la precisión y el trabajo de alta calidad.",
+          "Inspirado por la pasión que compartía con su tío, juntos fundaron Oh My Wash. José está certificado en detailing automotriz profesional, corrección de pintura y ceramic coating, combinando su conocimiento técnico y su experiencia en control de calidad para ofrecer resultados excepcionales y cuidar cada vehículo con precisión y dedicación.",
+          "En su tiempo libre, a José le gusta jugar fútbol, hacer senderismo, y pasar tiempo con su familia y su Goldendoodle, Rio.",
+        ],
+      },
+    },
+    miguel: {
+      photo: 'assets/staff-miguel.jpg', initials: 'M', name: 'Miguel',
+      role: { en: 'Owner / Washer', es: 'Dueño / Lavador' },
+      bio: {
+        en: [
+          "Miguel is originally from Mérida, Venezuela, and moved to the United States eight years ago to build a new future for himself and his family.",
+          "His passion for cars has been a constant throughout his life. Long before starting his career in the automotive industry, Miguel was deeply involved in motorsports. For several years, he served as a rally co-driver, proudly representing Venezuela and carrying his country's name across different countries and international competitions. This experience strengthened his love for cars while teaching him the importance of precision, teamwork, preparation, and attention to detail.",
+          "Before coming to the United States, Miguel worked as a Sales Manager for companies in the automotive industry and also owned and operated his own business. Throughout his career, he has always been recognized for his exceptional customer service, strong business sense, and commitment to understanding and meeting his customers' needs.",
+          "After moving to the United States, Miguel trained as a CNC Machine Operator and quickly established himself through his strong work ethic, attention to detail, and dedication to exceeding customer expectations. He has worked for two well-respected companies in the Atlanta area, gaining valuable experience in precision manufacturing, quality, and customer-focused operations.",
+          "Miguel's passion for entrepreneurship, combined with his lifelong love for cars and his forward-thinking vision, eventually inspired him to pursue a new opportunity. Together with his nephew, he founded Oh My Wash in 2023, turning their shared passion for cars into a family-owned car detailing business.",
+          "With his previous experience managing businesses and his commitment to continuous learning, Miguel pursued professional training and completed several courses in the car detailing industry. He brings the same precision, dedication, and attention to detail that have defined his career into every vehicle he works on.",
+          "For Miguel, car detailing is more than simply cleaning a vehicle—it is a way to combine his lifelong passion for cars, his entrepreneurial spirit, and his commitment to providing customers with an exceptional experience.",
+          "Outside of work, Miguel enjoys spending time with his family, riding his bicycle, and relaxing at the beach. Family, hard work, and a lifelong passion for cars are at the heart of everything he does.",
+        ],
+        es: [
+          "Miguel es originario de Mérida, Venezuela, y se mudó a Estados Unidos hace ocho años para construir un nuevo futuro para él y su familia.",
+          "Su pasión por los autos ha sido una constante a lo largo de su vida. Mucho antes de iniciar su carrera en la industria automotriz, Miguel estuvo muy involucrado en el mundo del motorsport. Durante varios años se desempeñó como copiloto de rally, representando con orgullo a Venezuela y llevando el nombre de su país por distintos países y competencias internacionales. Esa experiencia fortaleció su amor por los autos y le enseñó la importancia de la precisión, el trabajo en equipo, la preparación y la atención al detalle.",
+          "Antes de llegar a Estados Unidos, Miguel trabajó como Gerente de Ventas para empresas de la industria automotriz y también fue dueño y operó su propio negocio. A lo largo de su carrera, siempre ha sido reconocido por su excepcional servicio al cliente, su visión de negocio y su compromiso por entender y satisfacer las necesidades de sus clientes.",
+          "Después de mudarse a Estados Unidos, Miguel se capacitó como Operador de Máquinas CNC y rápidamente se destacó por su fuerte ética de trabajo, atención al detalle y dedicación a superar las expectativas de sus clientes. Ha trabajado para dos empresas reconocidas del área de Atlanta, ganando experiencia valiosa en manufactura de precisión, calidad y operaciones enfocadas en el cliente.",
+          "La pasión de Miguel por emprender, junto con su amor de toda la vida por los autos y su visión a futuro, eventualmente lo inspiraron a buscar una nueva oportunidad. Junto a su sobrino, fundó Oh My Wash en 2023, convirtiendo su pasión compartida por los autos en un negocio familiar de detailing automotriz.",
+          "Con su experiencia previa administrando negocios y su compromiso con el aprendizaje continuo, Miguel realizó capacitación profesional y completó varios cursos en la industria del detailing automotriz. Aporta la misma precisión, dedicación y atención al detalle que han definido su carrera en cada vehículo en el que trabaja.",
+          "Para Miguel, el detailing automotriz es mucho más que simplemente limpiar un vehículo — es una forma de combinar su pasión de toda la vida por los autos, su espíritu emprendedor y su compromiso de ofrecerle a los clientes una experiencia excepcional.",
+          "Fuera del trabajo, Miguel disfruta pasar tiempo con su familia, andar en bicicleta y relajarse en la playa. La familia, el trabajo duro y una pasión de toda la vida por los autos son el centro de todo lo que hace.",
+        ],
+      },
+    },
+    mariaJuliana: {
+      photo: 'assets/staff-maria-juliana.jpg', initials: 'MJ', name: 'Maria Juliana',
+      role: { en: 'Operations Assistant', es: 'Asistente de Operaciones' },
+      bio: null,
+    },
+  };
+
+  const staffModalOverlay = document.getElementById('staffModalOverlay');
+  const staffModal = document.getElementById('staffModal');
+  const staffModalClose = document.getElementById('staffModalClose');
+  const staffModalPhoto = document.getElementById('staffModalPhoto');
+  const staffModalName = document.getElementById('staffModalName');
+  const staffModalRole = document.getElementById('staffModalRole');
+  const staffModalBio = document.getElementById('staffModalBio');
+  let openStaffId = null;
+
+  function renderStaffModal() {
+    const person = STAFF_DATA[openStaffId];
+    if (!person) return;
+    staffModalPhoto.innerHTML = `<img src="${person.photo}" alt="${person.name}">`;
+    const modalImg = staffModalPhoto.querySelector('img');
+    modalImg.addEventListener('error', () => {
+      staffModalPhoto.innerHTML = `<div class="avatar-fallback">${person.initials}</div>`;
+    });
+    staffModalName.textContent = person.name;
+    staffModalRole.textContent = person.role[currentLang];
+    if (person.bio) {
+      staffModalBio.innerHTML = person.bio[currentLang].map(p => `<p>${p}</p>`).join('');
+    } else {
+      staffModalBio.innerHTML = `<p class="bio-soon">${currentLang === 'en' ? 'Biography coming soon.' : 'Biografía próximamente.'}</p>`;
+    }
+  }
+
+  function openStaffModal(id) {
+    if (!STAFF_DATA[id]) return;
+    openStaffId = id;
+    renderStaffModal();
+    staffModal.hidden = false;
+    staffModalOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      staffModal.classList.add('open');
+      staffModalOverlay.classList.add('open');
+    });
+  }
+
+  function closeStaffModal() {
+    staffModal.classList.remove('open');
+    staffModalOverlay.classList.remove('open');
+    setTimeout(() => { staffModal.hidden = true; staffModalOverlay.hidden = true; openStaffId = null; }, 300);
+  }
+
+  document.querySelectorAll('.staff-card[data-staff]').forEach(card => {
+    card.addEventListener('click', () => openStaffModal(card.dataset.staff));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openStaffModal(card.dataset.staff); }
+    });
+  });
+  staffModalClose.addEventListener('click', closeStaffModal);
+  staffModalOverlay.addEventListener('click', closeStaffModal);
 
   // ---------- Carrito ----------
   const CART_KEY = 'ohMyWashCart';
