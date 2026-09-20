@@ -150,6 +150,7 @@
   }
   .service-photo::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.25) 2px, transparent 2px);background-size:26px 26px;opacity:.5;}
   .service-photo-label{position:relative;color:#fff;text-align:center;font-weight:600;font-size:.85rem;background:rgba(0,0,0,.25);padding:10px 20px;border-radius:100px;}
+  .service-photo-img{width:100%;height:100%;object-fit:cover;display:block;}
 
   .service-eyebrow{color:var(--teal);font-weight:700;font-size:.82rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:block;}
   .service-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.15;margin-bottom:14px;}
@@ -738,7 +739,7 @@
 
     contentEl.innerHTML = `
       <div class="breadcrumb"><a href="servicios.html">${t['service.allServices']}</a> / ${service.name}</div>
-      <div class="service-photo"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>
+      <div class="service-photo" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
@@ -776,6 +777,18 @@
         </div>
       </div>
     `;
+
+    // Si ya hay una foto real subida a /assets para este servicio, la
+    // precargamos y la mostramos; si no existe (404), se queda el
+    // placeholder "Foto próximamente" tal cual estaba.
+    if (service.photoFile) {
+      const servicePhotoBox = document.getElementById('servicePhotoBox');
+      const preload = new Image();
+      preload.onload = () => {
+        servicePhotoBox.innerHTML = `<img class="service-photo-img" src="${service.photoFile}" alt="${service.name}">`;
+      };
+      preload.src = service.photoFile;
+    }
 
     selected = isVariablePricing ? service.options[0] : null;
     const optionRows = contentEl.querySelectorAll('.option-row');
