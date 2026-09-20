@@ -743,7 +743,7 @@
 
     contentEl.innerHTML = `
       <div class="breadcrumb"><a href="servicios.html">${t['service.allServices']}</a> / ${service.name}</div>
-      <div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>
+      ${isVariablePricing ? '' : `<div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>`}
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
@@ -787,7 +787,9 @@
     // "Foto próximamente" tal cual estaba. Algunos servicios (ej. In-N-Out)
     // usan dos fotos lado a lado para mostrar las dos partes del servicio
     // (interior y exterior) en vez de una sola.
-    if (service.photoFiles && service.photoFiles.length === 2) {
+    if (isVariablePricing) {
+      // Los add-ons no llevan sección de foto — solo descripción.
+    } else if (service.photoFiles && service.photoFiles.length === 2) {
       const servicePhotoBox = document.getElementById('servicePhotoBox');
       Promise.all(service.photoFiles.map(src => new Promise((resolve, reject) => {
         const img = new Image();
