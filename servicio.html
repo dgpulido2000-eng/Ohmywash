@@ -151,6 +151,8 @@
   .service-photo::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.25) 2px, transparent 2px);background-size:26px 26px;opacity:.5;}
   .service-photo-label{position:relative;color:#fff;text-align:center;font-weight:600;font-size:.85rem;background:rgba(0,0,0,.25);padding:10px 20px;border-radius:100px;}
   .service-photo-img{width:100%;height:100%;object-fit:cover;display:block;}
+  .service-photo-dual{display:flex;align-items:stretch;justify-content:stretch;gap:3px;}
+  .service-photo-dual .service-photo-img{width:50%;flex:1;}
 
   .service-eyebrow{color:var(--teal);font-weight:700;font-size:.82rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:block;}
   .service-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.15;margin-bottom:14px;}
@@ -337,7 +339,7 @@
   const CAR_LABEL_EN = { 'Sedán': 'Sedan', 'Estándar': 'Standard' };
   const SERVICES = {
     'in-n-out': {
-      photoFile: 'assets/servicio-in-n-out.jpg',
+      photoFiles: ['assets/servicio-in-n-out-1.jpg', 'assets/servicio-in-n-out-2.jpg'],
       options: [
         { label: 'Sedán', price: 100, duration: '2 hr' },
         { label: 'SUV', price: 120, duration: '2 hr 15 min' },
@@ -599,6 +601,7 @@
     },
     'paint-correction': {
       photoFile: 'assets/servicio-paint-correction.jpg',
+      photoPosition: 'center top',
       options: [
         { label: 'Small Cars', price: 450, duration: '5 hr' },
         { label: 'SUV', price: 550, duration: '5 hr 30 min' },
@@ -727,7 +730,7 @@
       return;
     }
 
-    const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, photoPosition: serviceRaw.photoPosition, options: serviceRaw.options };
+    const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, photoFiles: serviceRaw.photoFiles, photoPosition: serviceRaw.photoPosition, options: serviceRaw.options };
     const t = translations[currentLang];
     const carLabel = (label) => (currentLang === 'en' && CAR_LABEL_EN[label]) || label;
 
@@ -740,7 +743,7 @@
 
     contentEl.innerHTML = `
       <div class="breadcrumb"><a href="servicios.html">${t['service.allServices']}</a> / ${service.name}</div>
-      <div class="service-photo" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>
+      <div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
@@ -779,10 +782,24 @@
       </div>
     `;
 
-    // Si ya hay una foto real subida a /assets para este servicio, la
-    // precargamos y la mostramos; si no existe (404), se queda el
-    // placeholder "Foto próximamente" tal cual estaba.
-    if (service.photoFile) {
+    // Si ya hay foto(s) real(es) subida(s) a /assets para este servicio, se
+    // precargan y se muestran; si no existen (404), se queda el placeholder
+    // "Foto próximamente" tal cual estaba. Algunos servicios (ej. In-N-Out)
+    // usan dos fotos lado a lado para mostrar las dos partes del servicio
+    // (interior y exterior) en vez de una sola.
+    if (service.photoFiles && service.photoFiles.length === 2) {
+      const servicePhotoBox = document.getElementById('servicePhotoBox');
+      Promise.all(service.photoFiles.map(src => new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = src;
+      }))).then(() => {
+        servicePhotoBox.innerHTML = service.photoFiles
+          .map(src => `<img class="service-photo-img" src="${src}" alt="${service.name}">`)
+          .join('');
+      }).catch(() => {});
+    } else if (service.photoFile) {
       const servicePhotoBox = document.getElementById('servicePhotoBox');
       const preload = new Image();
       preload.onload = () => {
