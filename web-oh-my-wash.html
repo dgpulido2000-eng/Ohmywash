@@ -308,6 +308,28 @@
   .about-visual .tag span{font-size:.9rem;opacity:.85;}
   .placeholder-note{position:absolute;top:16px;right:16px;background:rgba(0,0,0,.35);color:#fff;font-size:.68rem;padding:6px 10px;border-radius:8px;letter-spacing:.3px;}
 
+  /* ---------- Nuestra historia ---------- */
+  .story{background:var(--off);}
+  .story-timeline{max-width:720px;margin:0 auto;}
+  .story-item{position:relative;padding-left:44px;padding-bottom:34px;}
+  .story-item:last-child{padding-bottom:0;}
+  .story-item::before{content:'';position:absolute;left:9px;top:26px;bottom:-34px;width:2px;background:var(--teal-light);}
+  .story-item:last-child::before{display:none;}
+  .story-dot{position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-pale);}
+  .story-content h3{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .story-content p{color:#5c6b6e;font-size:.95rem;line-height:1.65;}
+  .story-quote{
+    max-width:640px;margin:50px auto 0;text-align:center;padding:36px 38px;border-radius:22px;
+    background:linear-gradient(135deg, var(--teal-deep), var(--teal));color:#fff;
+    font-size:1.15rem;font-weight:600;line-height:1.55;font-style:italic;
+    box-shadow:var(--shadow);position:relative;
+  }
+  .story-quote::before{
+    content:'"';font-family:Georgia,serif;font-size:4.5rem;color:rgba(255,255,255,.28);
+    position:absolute;top:-6px;left:22px;line-height:1;font-style:normal;
+  }
+  .story-closing{max-width:640px;margin:40px auto 0;text-align:center;color:#5c6b6e;font-size:1rem;line-height:1.7;padding:0 10px;}
+
   /* ---------- Staff ---------- */
   .staff{background:var(--off);}
   .staff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px;max-width:900px;margin:0 auto;align-items:start;}
@@ -547,6 +569,66 @@
       </div>
       <a href="servicios.html" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:18px;">Book Now</a>
     </div>
+  </div>
+</section>
+
+<section class="story section-pad" id="historia">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center;margin-bottom:50px;">
+      <span class="eyebrow" data-i18n="story.eyebrow">Nuestra historia</span>
+      <h2 class="section-title" data-i18n="story.title">De una idea compartida a un equipo completo</h2>
+    </div>
+
+    <div class="story-timeline stagger">
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter1.title">Cómo empezó todo</h3>
+          <p data-i18n="story.chapter1.text">Oh My Wash se fundó en 2023, pero la idea empezó mucho antes de que el negocio tuviera nombre — nació de la pasión compartida de Miguel y José por los autos, su gusto por la limpieza, y el sueño de construir algo propio.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter2.title">Tío y sobrino, unidos por los autos</h3>
+          <p data-i18n="story.chapter2.text">Como tío y sobrino, los autos siempre han sido parte de su relación. José creció viendo a Miguel competir en carreras de rally, y esas experiencias despertaron un interés que se convirtió en una pasión compartida — junto con una gran atención al detalle y el orgullo de ver un auto completamente transformado.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter3.title">Reinventando el cuidado automotriz</h3>
+          <p data-i18n="story.chapter3.text">La idea de Oh My Wash tomó forma en conversaciones sobre cómo debería sentirse realmente el cuidado de un auto: un servicio que le permitiera al cliente seguir con su día, relajarse en casa, o pasar tiempo con su familia mientras profesionales de confianza se encargaban de su vehículo.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter4.title">El salto de fe</h3>
+          <p data-i18n="story.chapter4.text">Decididos a hacer realidad esa visión, Miguel y José se arriesgaron y empezaron a construir el negocio desde cero. No había garantía de que funcionara — pero creían en su idea y estaban dispuestos a poner el trabajo necesario para hacerla crecer.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter5.title">Perfeccionando el oficio</h3>
+          <p data-i18n="story.chapter5.text">Amar los autos era solo el comienzo. Para ofrecer el nivel de servicio que imaginaban, invirtieron en capacitación profesional y se certificaron en detailing automotriz, corrección de pintura y ceramic coating — y siguen aprendiendo nuevas técnicas con cada servicio.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter6.title">De dos personas a todo un equipo</h3>
+          <p data-i18n="story.chapter6.text">A medida que Oh My Wash creció, lo que empezó como una idea de dos personas se convirtió en el trabajo de todo un equipo. Cada día, Miguel y José transmiten los mismos valores que dieron forma a la empresa desde el principio: dedicación, honestidad, atención al detalle y respeto por cada vehículo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-quote reveal-scale">
+      <p data-i18n="story.nameQuote">El nombre Oh My Wash nació de la expresión "Oh my gosh!" — la reacción espontánea que esperan provocar cuando los clientes ven la transformación de su auto.</p>
+    </div>
+
+    <p class="story-closing reveal" data-i18n="story.closing">Hoy, Oh My Wash es mucho más que un negocio familiar de detailing. Es el resultado de una pasión compartida, años de aprendizaje, y el valor de convertir una idea en realidad — y su mayor satisfacción es ganarse la confianza de sus clientes, una transformación a la vez.</p>
   </div>
 </section>
 
@@ -801,6 +883,22 @@
       'about.value4': 'Personal care — "We care like it\'s ours"',
       'about.photoNote': 'Replace with real photo in /assets',
       'about.tagSub': 'Mobile service area',
+      'story.eyebrow': 'Our story',
+      'story.title': 'From a shared idea to a whole team',
+      'story.chapter1.title': 'How it all began',
+      'story.chapter1.text': "Oh My Wash was founded in 2023, but the idea began long before the business had a name. It grew from Miguel and José's shared passion for cars, their appreciation for cleanliness, and their dream of building something of their own.",
+      'story.chapter2.title': 'Uncle and nephew, bonded by cars',
+      'story.chapter2.text': 'As uncle and nephew, cars have always been an important part of their bond. Growing up, José watched Miguel compete in rally racing, and those experiences sparked an interest that became a shared passion — along with a strong attention to detail and the satisfaction of seeing a vehicle completely transformed.',
+      'story.chapter3.title': 'Reimagining car care',
+      'story.chapter3.text': 'The idea for Oh My Wash began to take shape through conversations about what the car care experience should truly feel like: a service that would let customers continue with their day, relax at home, or spend time with their families while trusted professionals took care of their vehicle.',
+      'story.chapter4.title': 'Taking the leap',
+      'story.chapter4.text': 'Determined to bring that vision to life, Miguel and José took a chance and began building the business from the ground up. There were no guarantees it would succeed, but they believed in their idea and were willing to put in the work required to make it grow.',
+      'story.chapter5.title': 'Mastering the craft',
+      'story.chapter5.text': 'Loving cars was only the beginning. To provide the level of service they envisioned, they invested in professional training and earned certifications in automotive detailing, paint correction, and ceramic coatings — and they keep studying new techniques with every service.',
+      'story.chapter6.title': 'From two people to a whole team',
+      'story.chapter6.text': "As Oh My Wash has grown, what began as an idea shared by two people has become the work of an entire team. Every day, Miguel and José pass on the same values that shaped the company from the beginning: dedication, honesty, attention to detail, and respect for every vehicle.",
+      'story.nameQuote': 'The name Oh My Wash was inspired by the expression "Oh my gosh!" — the spontaneous reaction they hope to create when customers see the transformation of their vehicle.',
+      'story.closing': "Today, Oh My Wash is much more than a family-owned detailing business. It is the result of a shared passion, years of learning, and the courage to turn an idea into reality. Their greatest satisfaction comes from earning their customers' trust, one transformation at a time.",
       'staff.eyebrow': 'Our team',
       'staff.title': 'The hands behind the shine',
       'reviews.eyebrow': 'Reviews',
@@ -843,6 +941,22 @@
       'about.value4': 'Trato cercano — "We care like it\'s ours"',
       'about.photoNote': 'Sustituir por foto real en /assets',
       'about.tagSub': 'Zona de servicio móvil',
+      'story.eyebrow': 'Nuestra historia',
+      'story.title': 'De una idea compartida a un equipo completo',
+      'story.chapter1.title': 'Cómo empezó todo',
+      'story.chapter1.text': 'Oh My Wash se fundó en 2023, pero la idea empezó mucho antes de que el negocio tuviera nombre — nació de la pasión compartida de Miguel y José por los autos, su gusto por la limpieza, y el sueño de construir algo propio.',
+      'story.chapter2.title': 'Tío y sobrino, unidos por los autos',
+      'story.chapter2.text': 'Como tío y sobrino, los autos siempre han sido parte de su relación. José creció viendo a Miguel competir en carreras de rally, y esas experiencias despertaron un interés que se convirtió en una pasión compartida — junto con una gran atención al detalle y el orgullo de ver un auto completamente transformado.',
+      'story.chapter3.title': 'Reinventando el cuidado automotriz',
+      'story.chapter3.text': 'La idea de Oh My Wash tomó forma en conversaciones sobre cómo debería sentirse realmente el cuidado de un auto: un servicio que le permitiera al cliente seguir con su día, relajarse en casa, o pasar tiempo con su familia mientras profesionales de confianza se encargaban de su vehículo.',
+      'story.chapter4.title': 'El salto de fe',
+      'story.chapter4.text': 'Decididos a hacer realidad esa visión, Miguel y José se arriesgaron y empezaron a construir el negocio desde cero. No había garantía de que funcionara — pero creían en su idea y estaban dispuestos a poner el trabajo necesario para hacerla crecer.',
+      'story.chapter5.title': 'Perfeccionando el oficio',
+      'story.chapter5.text': 'Amar los autos era solo el comienzo. Para ofrecer el nivel de servicio que imaginaban, invirtieron en capacitación profesional y se certificaron en detailing automotriz, corrección de pintura y ceramic coating — y siguen aprendiendo nuevas técnicas con cada servicio.',
+      'story.chapter6.title': 'De dos personas a todo un equipo',
+      'story.chapter6.text': 'A medida que Oh My Wash creció, lo que empezó como una idea de dos personas se convirtió en el trabajo de todo un equipo. Cada día, Miguel y José transmiten los mismos valores que dieron forma a la empresa desde el principio: dedicación, honestidad, atención al detalle y respeto por cada vehículo.',
+      'story.nameQuote': 'El nombre Oh My Wash nació de la expresión "Oh my gosh!" — la reacción espontánea que esperan provocar cuando los clientes ven la transformación de su auto.',
+      'story.closing': 'Hoy, Oh My Wash es mucho más que un negocio familiar de detailing. Es el resultado de una pasión compartida, años de aprendizaje, y el valor de convertir una idea en realidad — y su mayor satisfacción es ganarse la confianza de sus clientes, una transformación a la vez.',
       'staff.eyebrow': 'Nuestro equipo',
       'staff.title': 'Las manos detrás del brillo',
       'reviews.eyebrow': 'Reseñas',
