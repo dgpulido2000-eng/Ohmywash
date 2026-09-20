@@ -332,11 +332,25 @@
 
   /* ---------- Staff ---------- */
   .staff{background:var(--off);}
-  .staff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px;max-width:900px;margin:0 auto;align-items:start;}
+  .staff-carousel-wrap{display:flex;align-items:center;gap:14px;max-width:1040px;margin:0 auto;}
+  .staff-carousel{
+    display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+    padding:8px 4px 20px;-webkit-overflow-scrolling:touch;flex:1;
+  }
+  .staff-carousel::-webkit-scrollbar{height:6px;}
+  .staff-carousel::-webkit-scrollbar-track{background:transparent;}
+  .staff-carousel::-webkit-scrollbar-thumb{background:var(--teal-light);border-radius:10px;}
+  .staff-nav{
+    flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:none;background:var(--teal-pale);color:var(--teal-deep);
+    font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;
+    transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .staff-nav:hover{background:var(--teal);color:#fff;}
   .staff-card{
     background:#fff;border-radius:22px;padding:30px 24px;text-align:center;
     box-shadow:0 6px 22px rgba(20,50,55,.07);
     transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+    scroll-snap-align:center;flex:0 0 auto;width:220px;
   }
   .staff-card:hover{transform:translateY(-8px);box-shadow:0 22px 40px rgba(20,50,55,.15);}
   .staff-photo{
@@ -475,6 +489,7 @@
     }
     .about-grid, .contact-grid{grid-template-columns:1fr;}
     .about-visual{height:300px;}
+    .staff-nav{display:none;}
     header{padding:14px 20px;}
     body.nav-open .cart-btn{display:none;}
     .lang-switch-desktop{display:none;}
@@ -638,19 +653,27 @@
       <span class="eyebrow" data-i18n="staff.eyebrow">Nuestro equipo</span>
       <h2 class="section-title" data-i18n="staff.title">Las manos detrás del brillo</h2>
     </div>
-    <div class="staff-grid stagger">
-      <div class="staff-card">
-        <div class="staff-photo" data-initials="JP"><img src="assets/staff-jp.jpg" alt="JP — equipo Oh My Wash"></div>
-        <div class="staff-name">JP</div>
+    <div class="staff-carousel-wrap">
+      <button type="button" class="staff-nav staff-nav-prev" id="staffPrev" aria-label="Anterior">‹</button>
+      <div class="staff-carousel stagger" id="staffCarousel">
+        <div class="staff-card">
+          <div class="staff-photo" data-initials="JP"><img src="assets/staff-jp.jpg" alt="JP — equipo Oh My Wash"></div>
+          <div class="staff-name">JP</div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-photo" data-initials="JM"><img src="assets/staff-jose-miguel.jpg" alt="Jose Miguel — equipo Oh My Wash"></div>
+          <div class="staff-name">Jose Miguel</div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-photo" data-initials="M"><img src="assets/staff-miguel.jpg" alt="Miguel — equipo Oh My Wash"></div>
+          <div class="staff-name">Miguel</div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-photo" data-initials="MJ"><img src="assets/staff-maria-juliana.jpg" alt="Maria Juliana — equipo Oh My Wash"></div>
+          <div class="staff-name">Maria Juliana</div>
+        </div>
       </div>
-      <div class="staff-card">
-        <div class="staff-photo" data-initials="JM"><img src="assets/staff-jose-miguel.jpg" alt="Jose Miguel — equipo Oh My Wash"></div>
-        <div class="staff-name">Jose Miguel</div>
-      </div>
-      <div class="staff-card">
-        <div class="staff-photo" data-initials="M"><img src="assets/staff-miguel.jpg" alt="Miguel — equipo Oh My Wash"></div>
-        <div class="staff-name">Miguel</div>
-      </div>
+      <button type="button" class="staff-nav staff-nav-next" id="staffNext" aria-label="Siguiente">›</button>
     </div>
     <div style="text-align:center;margin-top:36px;">
       <a href="servicios.html" class="btn btn-teal">Book Now</a>
@@ -1072,6 +1095,21 @@
       card.innerHTML = `<div class="avatar-fallback">${card.dataset.initials}</div>`;
     });
   });
+
+  // ---------- Carousel del equipo ----------
+  const staffCarousel = document.getElementById('staffCarousel');
+  const staffPrev = document.getElementById('staffPrev');
+  const staffNext = document.getElementById('staffNext');
+  if (staffCarousel && staffPrev && staffNext) {
+    const staffScrollStep = () => {
+      const card = staffCarousel.querySelector('.staff-card');
+      if (!card) return 240;
+      const gap = parseFloat(getComputedStyle(staffCarousel).columnGap) || 24;
+      return card.getBoundingClientRect().width + gap;
+    };
+    staffPrev.addEventListener('click', () => staffCarousel.scrollBy({ left: -staffScrollStep(), behavior: 'smooth' }));
+    staffNext.addEventListener('click', () => staffCarousel.scrollBy({ left: staffScrollStep(), behavior: 'smooth' }));
+  }
 
   // ---------- Carrito ----------
   const CART_KEY = 'ohMyWashCart';
