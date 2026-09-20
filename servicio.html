@@ -339,7 +339,8 @@
   const CAR_LABEL_EN = { 'Sedán': 'Sedan', 'Estándar': 'Standard' };
   const SERVICES = {
     'in-n-out': {
-      photoFiles: ['assets/servicio-in-n-out-1.jpg', 'assets/servicio-in-n-out-2.jpg'],
+      photoFiles: ['assets/servicio-in-n-out-2.jpg', 'assets/servicio-in-n-out-1.jpg'],
+      photoFit: 'contain',
       options: [
         { label: 'Sedán', price: 100, duration: '2 hr' },
         { label: 'SUV', price: 120, duration: '2 hr 15 min' },
@@ -442,6 +443,7 @@
     },
     'wax-engine': {
       photoFile: 'assets/servicio-wax-engine.jpg',
+      photoFit: 'contain',
       options: [
         { label: 'Sedán', price: 180, duration: '2 hr 30 min' },
         { label: 'SUV', price: 200, duration: '3 hr' },
@@ -601,7 +603,7 @@
     },
     'paint-correction': {
       photoFile: 'assets/servicio-paint-correction.jpg',
-      photoPosition: 'center top',
+      photoFit: 'contain',
       options: [
         { label: 'Small Cars', price: 450, duration: '5 hr' },
         { label: 'SUV', price: 550, duration: '5 hr 30 min' },
@@ -730,7 +732,7 @@
       return;
     }
 
-    const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, photoFiles: serviceRaw.photoFiles, photoPosition: serviceRaw.photoPosition, options: serviceRaw.options };
+    const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, photoFiles: serviceRaw.photoFiles, photoPosition: serviceRaw.photoPosition, photoFit: serviceRaw.photoFit, options: serviceRaw.options };
     const t = translations[currentLang];
     const carLabel = (label) => (currentLang === 'en' && CAR_LABEL_EN[label]) || label;
 
@@ -795,15 +797,19 @@
         img.onerror = reject;
         img.src = src;
       }))).then(() => {
+        const fitStyle = service.photoFit ? ` style="object-fit:${service.photoFit};"` : '';
         servicePhotoBox.innerHTML = service.photoFiles
-          .map(src => `<img class="service-photo-img" src="${src}" alt="${service.name}">`)
+          .map(src => `<img class="service-photo-img" src="${src}" alt="${service.name}"${fitStyle}>`)
           .join('');
       }).catch(() => {});
     } else if (service.photoFile) {
       const servicePhotoBox = document.getElementById('servicePhotoBox');
       const preload = new Image();
       preload.onload = () => {
-        const posStyle = service.photoPosition ? ` style="object-position:${service.photoPosition};"` : '';
+        const styleParts = [];
+        if (service.photoPosition) styleParts.push(`object-position:${service.photoPosition}`);
+        if (service.photoFit) styleParts.push(`object-fit:${service.photoFit}`);
+        const posStyle = styleParts.length ? ` style="${styleParts.join(';')};"` : '';
         servicePhotoBox.innerHTML = `<img class="service-photo-img" src="${service.photoFile}" alt="${service.name}"${posStyle}>`;
       };
       preload.src = service.photoFile;
