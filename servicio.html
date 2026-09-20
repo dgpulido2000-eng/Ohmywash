@@ -144,7 +144,7 @@
   .breadcrumb a:hover{color:var(--teal-dark);}
 
   .service-photo{
-    width:100%;aspect-ratio:16/8;border-radius:24px;overflow:hidden;margin-bottom:32px;
+    width:100%;aspect-ratio:4/3;border-radius:24px;overflow:hidden;margin-bottom:32px;
     background:linear-gradient(135deg, var(--teal-deep), var(--teal) 60%, var(--teal-light));
     display:flex;align-items:center;justify-content:center;position:relative;box-shadow:var(--shadow);
   }
@@ -476,6 +476,7 @@
     },
     'all-in-one': {
       photoFile: 'assets/servicio-all-in-one.jpg',
+      photoPosition: 'center 20%',
       options: [
         { label: 'Small Cars', price: 200, duration: '3 hr' },
         { label: 'SUV', price: 250, duration: '3 hr 30 min' },
@@ -726,7 +727,7 @@
       return;
     }
 
-    const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, options: serviceRaw.options };
+    const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, photoPosition: serviceRaw.photoPosition, options: serviceRaw.options };
     const t = translations[currentLang];
     const carLabel = (label) => (currentLang === 'en' && CAR_LABEL_EN[label]) || label;
 
@@ -785,7 +786,8 @@
       const servicePhotoBox = document.getElementById('servicePhotoBox');
       const preload = new Image();
       preload.onload = () => {
-        servicePhotoBox.innerHTML = `<img class="service-photo-img" src="${service.photoFile}" alt="${service.name}">`;
+        const posStyle = service.photoPosition ? ` style="object-position:${service.photoPosition};"` : '';
+        servicePhotoBox.innerHTML = `<img class="service-photo-img" src="${service.photoFile}" alt="${service.name}"${posStyle}>`;
       };
       preload.src = service.photoFile;
     }
