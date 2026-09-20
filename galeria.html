@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería — Oh My Wash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Forum&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#2ec4b6;
+    --teal-dark:#22a89c;
+    --teal-deep:#0f6a62;
+    --teal-light:#7de0d4;
+    --teal-pale:#e6faf7;
+    --ink:#12191a;
+    --gray:#2b2b2b;
+    --paper:#ffffff;
+    --off:#f4fafb;
+    --shadow: 0 20px 50px rgba(20,50,55,.12);
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Inter',sans-serif;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  img{max-width:100%;display:block;}
+  ::selection{background:var(--teal);color:#fff;}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 28px;}
+
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease), transform .8s var(--ease);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+  .stagger > *{opacity:0;transform:translateY(24px);transition:opacity .6s var(--ease), transform .6s var(--ease);}
+  .stagger.in > *{opacity:1;transform:translateY(0);}
+  .stagger.in > *:nth-child(1){transition-delay:.03s;}
+  .stagger.in > *:nth-child(2){transition-delay:.07s;}
+  .stagger.in > *:nth-child(3){transition-delay:.11s;}
+  .stagger.in > *:nth-child(4){transition-delay:.15s;}
+  .stagger.in > *:nth-child(5){transition-delay:.19s;}
+  .stagger.in > *:nth-child(6){transition-delay:.23s;}
+  .stagger.in > *:nth-child(7){transition-delay:.27s;}
+  .stagger.in > *:nth-child(8){transition-delay:.31s;}
+
+  /* ---------- Nav ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 32px;
+    background:rgba(255,255,255,.7);
+    backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border-bottom:1px solid rgba(46,196,182,.15);
+    transition:padding .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  header.scrolled{padding:8px 32px;box-shadow:0 8px 30px rgba(20,50,55,.08);}
+  .logo{display:flex;align-items:center;}
+  .nav-icon{height:42px;display:inline-flex;align-items:center;}
+  .nav-icon img{height:100%;width:auto;display:block;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  nav ul{display:flex;gap:30px;align-items:center;}
+  nav a{font-weight:500;font-size:.95rem;color:var(--gray);position:relative;padding:4px 0;}
+  nav a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--teal);transition:width .3s var(--ease);}
+  nav a:hover::after, nav a.active::after{width:100%;}
+  .header-actions{display:flex;align-items:center;gap:14px;}
+  .lang-switch{display:flex;align-items:center;gap:4px;background:var(--teal-pale);border-radius:100px;padding:3px;}
+  .lang-switch-mobile{display:none;}
+  .lang-btn{
+    border:none;background:none;padding:6px 12px;border-radius:100px;font-weight:700;font-size:.8rem;
+    color:var(--teal-deep);cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .lang-btn.active{background:var(--teal);color:#fff;}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
+  .burger span{width:24px;height:2.5px;background:var(--teal-deep);border-radius:2px;}
+
+  /* ---------- Cart ---------- */
+  .cart-btn{
+    position:relative;width:54px;height:54px;border-radius:50%;border:none;flex:0 0 54px;
+    background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 8px 22px rgba(46,196,182,.4);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
+  }
+  .cart-btn:hover{transform:translateY(-2px);background:var(--teal-dark);box-shadow:0 12px 28px rgba(46,196,182,.5);}
+  .cart-badge{
+    position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;padding:0 6px;border-radius:100px;
+    background:#e2574c;color:#fff;font-size:.8rem;font-weight:700;display:none;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;border:2.5px solid #fff;
+  }
+  .cart-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:200;
+    opacity:0;pointer-events:none;transition:opacity .35s var(--ease);
+  }
+  .cart-overlay.open{opacity:1;pointer-events:auto;}
+  .cart-drawer{
+    position:fixed;top:0;right:-420px;width:min(420px,92vw);height:100vh;background:#fff;z-index:201;
+    display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.25);
+    transition:right .4s var(--ease);
+  }
+  .cart-drawer.open{right:0;}
+  .cart-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:24px 26px;border-bottom:1px solid #eef4f4;}
+  .cart-drawer-header h3{font-family:'Inter',sans-serif;font-weight:700;font-size:1.3rem;color:var(--ink);}
+  .cart-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8b9a9c;width:34px;height:34px;border-radius:50%;transition:background .25s;}
+  .cart-close:hover{background:var(--teal-pale);color:var(--teal-deep);}
+  .cart-items{flex:1;overflow-y:auto;padding:8px 26px;}
+  .cart-empty{text-align:center;padding:60px 10px;color:#8b9a9c;}
+  .cart-empty span{font-size:3.4rem;display:block;margin-bottom:14px;}
+  .cart-empty p{font-weight:600;color:var(--ink);margin-bottom:4px;}
+  .cart-empty small{font-size:.85rem;}
+  .cart-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #f0f5f5;}
+  .cart-item-info{display:flex;flex-direction:column;gap:4px;}
+  .cart-item-name{font-weight:600;font-size:.9rem;color:var(--ink);}
+  .cart-item-price{font-size:.78rem;color:#8b9a9c;}
+  .cart-item-controls{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+  .qty-btn{
+    width:26px;height:26px;border-radius:8px;border:1px solid #d8e8ea;background:#fff;color:var(--teal-deep);
+    font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .qty-btn:hover{background:var(--teal-pale);}
+  .qty-value{min-width:16px;text-align:center;font-weight:600;font-size:.88rem;}
+  .remove-btn{background:none;border:none;cursor:pointer;font-size:1.25rem;line-height:1;opacity:.55;margin-left:2px;}
+  .remove-btn:hover{opacity:1;}
+  .cart-footer{padding:20px 26px 26px;border-top:1px solid #eef4f4;}
+  .cart-total-row{display:flex;justify-content:space-between;align-items:center;font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;color:var(--ink);margin-bottom:16px;}
+  .cart-note{font-size:.74rem;color:#8b9a9c;text-align:center;margin-top:12px;line-height:1.5;}
+
+  .btn{
+    padding:15px 30px;border-radius:100px;font-weight:600;font-size:1rem;cursor:pointer;border:none;
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn-solid{background:var(--teal);color:#fff;box-shadow:0 10px 30px rgba(46,196,182,.35);}
+  .btn-solid:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(46,196,182,.45);background:var(--teal-dark);}
+
+  /* ---------- Page banner ---------- */
+  .page-banner{
+    padding:160px 24px 70px;text-align:center;
+    background:linear-gradient(160deg, #0f2e33 0%, #164752 32%, var(--teal-deep) 55%, var(--teal-dark) 78%, var(--teal) 100%);
+    color:#fff;
+  }
+  .page-banner .eyebrow{color:#bdeee9;}
+  .page-banner h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:800;line-height:1.1;margin-top:8px;}
+  .page-banner p{max-width:600px;margin:16px auto 0;color:rgba(255,255,255,.85);font-size:1.05rem;line-height:1.6;}
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.8);font-weight:600;font-size:.9rem;margin-bottom:18px;}
+  .back-link:hover{color:#fff;}
+
+  /* ---------- Sections shared ---------- */
+  section{position:relative;}
+  .section-pad{padding:70px 0 110px;}
+  .eyebrow{
+    display:inline-block;color:var(--teal);font-weight:700;font-size:.82rem;letter-spacing:2px;
+    text-transform:uppercase;margin-bottom:14px;
+  }
+
+  /* ---------- Gallery grid ---------- */
+  .gallery-grid{
+    columns:4 280px;
+    column-gap:18px;
+  }
+  .gallery-item{
+    break-inside:avoid;
+    margin-bottom:18px;
+    border-radius:18px;
+    overflow:hidden;
+    position:relative;
+    cursor:pointer;
+    box-shadow:0 4px 18px rgba(20,50,55,.08);
+    transition:transform .4s var(--ease), box-shadow .4s var(--ease);
+  }
+  .gallery-item:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(20,50,55,.18);}
+  .gallery-item img{
+    width:100%;height:auto;display:block;
+    transition:transform .6s var(--ease);
+  }
+  .gallery-item:hover img{transform:scale(1.06);}
+  .gallery-caption{
+    position:absolute;left:0;right:0;bottom:0;padding:22px 16px 14px;
+    background:linear-gradient(to top, rgba(10,25,28,.82), rgba(10,25,28,0));
+    color:#fff;font-weight:600;font-size:.88rem;
+    opacity:0;transform:translateY(8px);
+    transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .gallery-item:hover .gallery-caption{opacity:1;transform:translateY(0);}
+
+  .gallery-cta{
+    text-align:center;margin-top:56px;padding:48px 24px;border-radius:28px;
+    background:linear-gradient(135deg, var(--teal-pale), #fff);
+  }
+  .gallery-cta h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:700;color:var(--ink);margin-bottom:10px;}
+  .gallery-cta p{color:#5c6b6e;font-size:1rem;margin-bottom:26px;max-width:480px;margin-left:auto;margin-right:auto;}
+
+  /* ---------- Lightbox ---------- */
+  .lightbox{
+    position:fixed;inset:0;z-index:400;background:rgba(6,16,18,.94);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .lightbox.open{opacity:1;pointer-events:auto;}
+  .lightbox-inner{max-width:min(90vw,900px);max-height:86vh;position:relative;}
+  .lightbox-inner img{max-width:100%;max-height:86vh;border-radius:14px;display:block;margin:0 auto;box-shadow:0 30px 80px rgba(0,0,0,.5);}
+  .lightbox-caption{text-align:center;color:#fff;margin-top:16px;font-weight:600;font-size:1rem;}
+  .lightbox-close, .lightbox-prev, .lightbox-next{
+    position:fixed;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:background .2s var(--ease);
+  }
+  .lightbox-close{top:24px;right:24px;width:44px;height:44px;border-radius:50%;font-size:1.2rem;}
+  .lightbox-close:hover{background:rgba(255,255,255,.25);}
+  .lightbox-prev, .lightbox-next{top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;font-size:1.5rem;}
+  .lightbox-prev{left:16px;}
+  .lightbox-next{right:16px;}
+  .lightbox-prev:hover, .lightbox-next:hover{background:rgba(255,255,255,.25);}
+
+  footer{background:#0f2226;color:rgba(255,255,255,.7);padding:50px 0 26px;}
+  .footer-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;padding-bottom:30px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .footer-logo{background:#fff;border-radius:14px;padding:10px 18px;box-shadow:0 10px 26px rgba(0,0,0,.25);width:fit-content;}
+  .footer-logo img{height:38px;width:auto;display:block;}
+  .footer-tag{font-size:.85rem;color:var(--teal-light);margin-top:4px;}
+  .social-links{display:flex;gap:10px;margin-top:14px;}
+  .social-badge{
+    width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;letter-spacing:.5px;
+    transition:background .2s var(--ease), transform .2s var(--ease);
+  }
+  .social-badge:hover{background:var(--teal);transform:translateY(-2px);}
+  footer nav ul{display:flex;gap:24px;}
+  footer nav a{font-size:.9rem;color:rgba(255,255,255,.7);}
+  footer nav a:hover{color:#fff;}
+  .footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:22px;font-size:.8rem;color:rgba(255,255,255,.45);}
+  .powered-by{text-align:center;margin-top:22px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);font-size:.78rem;color:rgba(255,255,255,.4);}
+  .powered-by b{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.7);}
+
+  .nav-close{display:none;}
+
+  @media (max-width: 1080px){
+    .gallery-grid{columns:3 240px;}
+  }
+  @media (max-width: 860px){
+    nav ul{position:fixed;top:0;right:-100%;width:78%;max-width:320px;height:100vh;background:#fff;flex-direction:column;justify-content:center;gap:34px;transition:right .4s var(--ease);box-shadow:-10px 0 40px rgba(0,0,0,.15);}
+    nav ul.open{right:0;}
+    .burger{display:flex;}
+    .nav-close{
+      display:flex;position:absolute;top:20px;left:22px;width:38px;height:38px;border-radius:50%;
+      background:var(--teal-pale);color:var(--teal-deep);border:none;font-size:1.15rem;cursor:pointer;
+      align-items:center;justify-content:center;
+    }
+    header{padding:14px 20px;}
+    body.nav-open .cart-btn{display:none;}
+    .lang-switch-desktop{display:none;}
+    .lang-switch-mobile{
+      display:flex;position:absolute;top:20px;right:22px;
+    }
+    .gallery-grid{columns:2 160px;column-gap:12px;}
+    .gallery-item{margin-bottom:12px;border-radius:14px;}
+    .lightbox-prev, .lightbox-next{width:42px;height:42px;font-size:1.2rem;}
+  }
+  @media (max-width: 480px){
+    .gallery-grid{columns:2 140px;}
+  }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <a href="web-oh-my-wash.html" class="logo" aria-label="Oh My Wash — inicio">
+    <span class="nav-icon">
+      <img src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
+    </span>
+    <span class="sr-only">Oh My Wash</span>
+  </a>
+  <nav>
+    <ul id="navList">
+      <button class="nav-close" id="navClose" aria-label="Cerrar menú">✕</button>
+      <div class="lang-switch lang-switch-mobile">
+        <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+        <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+      </div>
+      <li><a href="web-oh-my-wash.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
+      <li><a href="servicios.html" class="nav-link" data-i18n="nav.services">Servicios</a></li>
+      <li><a href="galeria.html" class="nav-link active" data-i18n="nav.gallery">Galería</a></li>
+      <li><a href="web-oh-my-wash.html#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
+      <li><a href="web-oh-my-wash.html#nosotros" class="nav-link" data-i18n="nav.about">Nosotros</a></li>
+      <li><a href="web-oh-my-wash.html#contacto" class="nav-link" data-i18n="nav.contact">Contacto</a></li>
+    </ul>
+  </nav>
+  <div class="header-actions">
+    <div class="lang-switch lang-switch-desktop">
+      <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+      <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+    </div>
+    <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="burger" id="burger" aria-label="Menú"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<section class="page-banner">
+  <div class="wrap">
+    <a href="web-oh-my-wash.html" class="back-link" data-i18n="banner.back">‹ Volver al inicio</a>
+    <span class="eyebrow" data-i18n="galleryBanner.eyebrow">Nuestro trabajo</span>
+    <h1 data-i18n="galleryBanner.title">Antes de contratar, mira los resultados</h1>
+    <p data-i18n="galleryBanner.subtitle">Una selección real de autos que hemos detallado en Atlanta y alrededores — desde un hand wash rápido hasta ceramic coating completo.</p>
+  </div>
+</section>
+
+<section class="section-pad" id="galeria">
+  <div class="wrap">
+    <div class="gallery-grid stagger in" id="galleryGrid"></div>
+
+    <div class="gallery-cta reveal">
+      <h2 data-i18n="galleryCta.title">¿Listo para que tu auto se vea así?</h2>
+      <p data-i18n="galleryCta.subtitle">Reserva tu servicio móvil hoy — vamos hasta ti en Atlanta y alrededores.</p>
+      <a href="servicios.html" class="btn btn-solid" data-i18n="galleryCta.button">Ver servicios y reservar →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo"><img src="assets/oh-my-wash-logo.png" alt="Oh My Wash"></div>
+        <div class="footer-tag">We care like it's ours</div>
+        <div class="social-links">
+          <a href="https://www.instagram.com/oh_mywash/" target="_blank" rel="noopener" class="social-badge" aria-label="Instagram"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.25a3.25 3.25 0 1 1 0-6.5 3.25 3.25 0 0 1 0 6.5zM17.5 5.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg></a>
+          <a href="https://www.tiktok.com/@oh_mywash" target="_blank" rel="noopener" class="social-badge" aria-label="TikTok"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg></a>
+          <a href="https://www.facebook.com/people/Oh-my-wash/61553786844335/" target="_blank" rel="noopener" class="social-badge" aria-label="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.022 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.459h-1.26c-1.243 0-1.63.771-1.63 1.562v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.918 8.437-9.94z"/></svg></a>
+        </div>
+      </div>
+      <nav><ul>
+        <li><a href="web-oh-my-wash.html" data-i18n="footer.home">Inicio</a></li>
+        <li><a href="servicios.html" data-i18n="nav.services">Servicios</a></li>
+        <li><a href="web-oh-my-wash.html#nosotros" data-i18n="nav.about">Nosotros</a></li>
+        <li><a href="web-oh-my-wash.html#contacto" data-i18n="nav.contact">Contacto</a></li>
+      </ul></nav>
+    </div>
+    <div class="footer-bottom">
+      <span data-i18n="footer.copyright">© 2026 Oh My Wash, LLC — Atlanta y alrededores</span>
+      <span>+1 678-895-5812 · info.ohmywash@gmail.com</span>
+    </div>
+    <div class="powered-by">Powered by <b>NEXO GROWTH</b></div>
+  </div>
+</footer>
+
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header">
+    <h3 data-i18n="cart.title">Tu carrito</h3>
+    <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row"><span data-i18n="cart.totalLabel">Total</span><span id="cartTotal">$0.00</span></div>
+    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;justify-content:center;" disabled data-i18n="cart.checkout">Checkout →</button>
+    <p class="cart-note" data-i18n="cart.note">Precios de partida — el monto final puede variar según el vehículo.</p>
+  </div>
+</aside>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">✕</button>
+  <button class="lightbox-prev" id="lightboxPrev" aria-label="Anterior">‹</button>
+  <button class="lightbox-next" id="lightboxNext" aria-label="Siguiente">›</button>
+  <div class="lightbox-inner">
+    <img id="lightboxImg" src="" alt="">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Fotos de la galería ----------
+  const PHOTOS = [
+    { src:'assets/gallery-01.jpg', en:'Porsche — Interior Detailing', es:'Porsche — Detailing de Interior' },
+    { src:'assets/gallery-02.jpg', en:'BMW 3 Series — Exterior Detailing', es:'BMW 3 Series — Detailing Exterior' },
+    { src:'assets/gallery-03.jpg', en:'BMW 328i — Ceramic Coating', es:'BMW 328i — Ceramic Coating' },
+    { src:'assets/gallery-04.jpg', en:'Mercedes G63 AMG — Full Detailing', es:'Mercedes G63 AMG — Full Detailing' },
+    { src:'assets/gallery-05.jpg', en:'BMW M5 — Paint Correction', es:'BMW M5 — Corrección de Pintura' },
+    { src:'assets/gallery-06.jpg', en:'Mazda — Mobile Detailing', es:'Mazda — Detailing Móvil' },
+    { src:'assets/gallery-07.jpg', en:'Subaru Outback — Exterior Detailing', es:'Subaru Outback — Detailing Exterior' },
+    { src:'assets/gallery-08.jpg', en:'Honda Accord — Wax & Protection', es:'Honda Accord — Wax & Protección' },
+    { src:'assets/gallery-09.jpg', en:'Infiniti QX55 — Mobile Detailing', es:'Infiniti QX55 — Detailing Móvil' },
+    { src:'assets/gallery-10.jpg', en:'Audi Q7 — On-Site Detailing', es:'Audi Q7 — Detailing a Domicilio' },
+    { src:'assets/gallery-11.jpg', en:'Lexus NX — We Come To You', es:'Lexus NX — Vamos Hasta Ti' },
+    { src:'assets/gallery-12.jpg', en:'Toyota FJ Cruiser — Exterior Detailing', es:'Toyota FJ Cruiser — Detailing Exterior' },
+    { src:'assets/gallery-13.jpg', en:'Mazda Miata — Hand Wash & Detail', es:'Mazda Miata — Lavado y Detailing' },
+    { src:'assets/gallery-14.jpg', en:'Cadillac Escalade — Full Detailing', es:'Cadillac Escalade — Full Detailing' },
+    { src:'assets/gallery-15.jpg', en:'Cadillac Escalade — Interior Detailing', es:'Cadillac Escalade — Detailing de Interior' },
+    { src:'assets/gallery-16.jpg', en:'Cadillac Escalade — Interior Detailing', es:'Cadillac Escalade — Detailing de Interior' },
+    { src:'assets/gallery-17.jpg', en:'Land Rover Defender — Exterior Detailing', es:'Land Rover Defender — Detailing Exterior' },
+    { src:'assets/gallery-18.jpg', en:'Land Rover Defender — Interior Detailing', es:'Land Rover Defender — Detailing de Interior' },
+    { src:'assets/gallery-19.jpg', en:'Land Rover Defender — Ceramic Coating', es:'Land Rover Defender — Ceramic Coating' },
+    { src:'assets/gallery-20.jpg', en:'Toyota 4Runner — Exterior Detailing', es:'Toyota 4Runner — Detailing Exterior' },
+  ];
+
+  const galleryGrid = document.getElementById('galleryGrid');
+  galleryGrid.innerHTML = PHOTOS.map((p, i) => `
+    <div class="gallery-item" data-index="${i}">
+      <img src="${p.src}" alt="${p.en}" loading="lazy">
+      <div class="gallery-caption" data-i18n-photo="${i}">${p.en}</div>
+    </div>
+  `).join('');
+
+  // ---------- Idioma (EN/ES) ----------
+  const translations = {
+    en: {
+      'nav.home': 'Home', 'nav.services': 'Services', 'nav.gallery': 'Gallery', 'nav.team': 'Team', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'banner.back': '‹ Back to home',
+      'galleryBanner.eyebrow': 'Our work',
+      'galleryBanner.title': 'Before you book, see the results',
+      'galleryBanner.subtitle': 'A real selection of cars we’ve detailed around Atlanta and surrounding areas — from a quick hand wash to full ceramic coating.',
+      'galleryCta.title': 'Ready to make your car look like this?',
+      'galleryCta.subtitle': 'Book your mobile service today — we come to you in Atlanta and surrounding areas.',
+      'galleryCta.button': 'See services & book →',
+      'footer.home': 'Home',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta and surrounding areas',
+      'cart.title': 'Your cart', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Starting prices — final amount may vary depending on the vehicle.',
+      'cart.emptyTitle': 'Your cart is empty', 'cart.emptyHint': 'Add a service from the menu',
+      'cart.variablePrice': 'Variable price',
+    },
+    es: {
+      'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.gallery': 'Galería', 'nav.team': 'Equipo', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
+      'banner.back': '‹ Volver al inicio',
+      'galleryBanner.eyebrow': 'Nuestro trabajo',
+      'galleryBanner.title': 'Antes de contratar, mira los resultados',
+      'galleryBanner.subtitle': 'Una selección real de autos que hemos detallado en Atlanta y alrededores — desde un hand wash rápido hasta ceramic coating completo.',
+      'galleryCta.title': '¿Listo para que tu auto se vea así?',
+      'galleryCta.subtitle': 'Reserva tu servicio móvil hoy — vamos hasta ti en Atlanta y alrededores.',
+      'galleryCta.button': 'Ver servicios y reservar →',
+      'footer.home': 'Inicio',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta y alrededores',
+      'cart.title': 'Tu carrito', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Precios de partida — el monto final puede variar según el vehículo.',
+      'cart.emptyTitle': 'Tu carrito está vacío', 'cart.emptyHint': 'Agrega un servicio desde el menú',
+      'cart.variablePrice': 'Precio variable',
+    },
+  };
+
+  let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
+
+  function applyPhotoCaptions(lang){
+    document.querySelectorAll('[data-i18n-photo]').forEach(el => {
+      const idx = parseInt(el.dataset.i18nPhoto, 10);
+      el.textContent = PHOTOS[idx][lang];
+    });
+  }
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    const dict = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (dict[key] != null) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    localStorage.setItem('ohMyWashLang', lang);
+    applyPhotoCaptions(lang);
+    renderCart();
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => applyLanguage(b.dataset.lang));
+  });
+
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 40);
+  }, {passive:true});
+
+  const burger = document.getElementById('burger');
+  const navList = document.getElementById('navList');
+  const navClose = document.getElementById('navClose');
+  burger.addEventListener('click', () => {
+    navList.classList.toggle('open');
+    document.body.classList.toggle('nav-open', navList.classList.contains('open'));
+  });
+  navClose.addEventListener('click', () => {
+    navList.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  });
+  document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => {
+    navList.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  }));
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:.1});
+  document.querySelectorAll('.reveal, .stagger').forEach(el => io.observe(el));
+
+  // ---------- Lightbox ----------
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  let currentIndex = 0;
+
+  function openLightbox(index){
+    currentIndex = index;
+    updateLightbox();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function updateLightbox(){
+    const p = PHOTOS[currentIndex];
+    lightboxImg.src = p.src;
+    lightboxImg.alt = p[currentLang];
+    lightboxCaption.textContent = p[currentLang];
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function showPrev(){ currentIndex = (currentIndex - 1 + PHOTOS.length) % PHOTOS.length; updateLightbox(); }
+  function showNext(){ currentIndex = (currentIndex + 1) % PHOTOS.length; updateLightbox(); }
+
+  galleryGrid.addEventListener('click', (e) => {
+    const item = e.target.closest('.gallery-item');
+    if (item) openLightbox(parseInt(item.dataset.index, 10));
+  });
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.getElementById('lightboxPrev').addEventListener('click', showPrev);
+  document.getElementById('lightboxNext').addEventListener('click', showNext);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') showPrev();
+    if (e.key === 'ArrowRight') showNext();
+  });
+
+  // ---------- Carrito ----------
+  const CART_KEY = 'ohMyWashCart';
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
+
+  const cartItemsEl = document.getElementById('cartItems');
+  const cartTotalEl = document.getElementById('cartTotal');
+  const cartBadgeEl = document.getElementById('cartBadge');
+  const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+  const cartDrawer = document.getElementById('cartDrawer');
+  const cartOverlay = document.getElementById('cartOverlay');
+
+  const formatUSD = (n) => '$' + n.toFixed(2);
+  const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
+
+  function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
+  function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
+
+  function renderCart(){
+    const count = cart.reduce((sum, i) => sum + i.qty, 0);
+    cartBadgeEl.textContent = count;
+    cartBadgeEl.style.display = count > 0 ? 'flex' : 'none';
+
+    if (!cart.length) {
+      cartItemsEl.innerHTML = `<div class="cart-empty"><p>${translations[currentLang]['cart.emptyTitle']}</p><small>${translations[currentLang]['cart.emptyHint']}</small></div>`;
+      cartCheckoutBtn.disabled = true;
+    } else {
+      cartItemsEl.innerHTML = cart.map(i => `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <span class="cart-item-name">${i.name}</span>
+            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : translations[currentLang]['cart.variablePrice']}</span>
+          </div>
+          <div class="cart-item-controls">
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>
+            <span class="qty-value">${i.qty}</span>
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1">+</button>
+            <button class="remove-btn" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar">✕</button>
+          </div>
+        </div>
+      `).join('');
+      cartCheckoutBtn.disabled = false;
+
+      cartItemsEl.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeQty(btn.dataset.name, parseInt(btn.dataset.delta, 10)));
+      });
+      cartItemsEl.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => removeItem(btn.dataset.name));
+      });
+    }
+    cartTotalEl.textContent = formatUSD(cartTotal());
+  }
+
+  function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+
+  function changeQty(name, delta){
+    const item = cart.find(i => i.name === name);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
+    saveCart();
+    renderCart();
+  }
+
+  function removeItem(name){
+    cart = cart.filter(i => i.name !== name);
+    saveCart();
+    renderCart();
+  }
+
+  document.getElementById('cartBtn').addEventListener('click', openCart);
+  document.getElementById('cartClose').addEventListener('click', closeCart);
+  cartOverlay.addEventListener('click', closeCart);
+  cartCheckoutBtn.addEventListener('click', () => {
+    if (!cart.length) return;
+    window.location.href = 'checkout.html';
+  });
+
+  applyLanguage(currentLang);
+})();
+</script>
+
+</body>
+</html>
