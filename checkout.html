@@ -32,7 +32,8 @@
     background:#fff;border-bottom:1px solid #eaf1f2;padding:16px 0;
     position:sticky;top:0;z-index:10;
   }
-  header .wrap{display:flex;align-items:center;justify-content:space-between;}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .header-actions{display:flex;align-items:center;gap:14px;}
   .brand{display:flex;align-items:center;}
   .brand img{height:40px;width:auto;display:block;}
   .back-link{
@@ -41,6 +42,12 @@
     transition:background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
   }
   .back-link:hover{background:var(--teal);color:#fff;transform:translateY(-2px);}
+  .lang-switch{display:flex;align-items:center;gap:4px;background:var(--teal-pale);border-radius:100px;padding:3px;}
+  .lang-btn{
+    border:none;background:none;padding:6px 12px;border-radius:100px;font-weight:700;font-size:.8rem;
+    color:var(--teal-deep);cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .lang-btn.active{background:var(--teal);color:#fff;}
 
   main{padding:56px 0 100px;}
   .page-title{font-family:'Inter',sans-serif;font-weight:700;font-size:clamp(1.7rem,3.6vw,2.4rem);margin-bottom:8px;}
@@ -198,14 +205,20 @@
     <a href="web-oh-my-wash.html" class="brand">
       <img src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
     </a>
-    <a href="servicios.html" class="back-link">‹ Volver a servicios</a>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+        <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+      </div>
+      <a href="servicios.html" class="back-link" data-i18n="checkout.backToServices">‹ Volver a servicios</a>
+    </div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <h1 class="page-title">Checkout</h1>
-    <p class="page-sub">Revisa tu pedido y completa el pago para reservar tus servicios.</p>
+    <h1 class="page-title" data-i18n="checkout.pageTitle">Checkout</h1>
+    <p class="page-sub" data-i18n="checkout.pageSub">Revisa tu pedido y completa el pago para reservar tus servicios.</p>
 
     <div id="checkoutContent"></div>
 
@@ -220,6 +233,178 @@
   const SQUARE_APP_ID = 'sq0idp-an9AUhbzuSGcXHZhiw0rfA';
   const SQUARE_LOCATION_ID = 'L4KR0652S04AJ';
   const BACKEND_URL = 'https://oh-my-wash-server.onrender.com/create-payment';
+
+  // ---------- Idioma (EN/ES) ----------
+  const translations = {
+    en: {
+      'checkout.backToServices': '‹ Back to services',
+      'checkout.pageTitle': 'Checkout',
+      'checkout.pageSub': 'Review your order and complete payment to book your services.',
+      'checkout.emptyTitle': 'Your cart is empty',
+      'checkout.emptyHint': 'Add one or more services from the shop before checking out.',
+      'checkout.emptyCta': 'View services',
+      'checkout.orderSummary': 'Order summary',
+      'checkout.totalLabel': 'Total',
+      'checkout.scheduleTitle': 'Schedule your appointment',
+      'checkout.scheduleHint': 'Choose the main service, the date, and confirm an available time with our team.',
+      'checkout.serviceLabel': 'Service',
+      'checkout.loadingService': 'Loading service...',
+      'checkout.dateLabel': 'Date',
+      'checkout.chooseDate': 'Choose a date',
+      'checkout.prevMonth': 'Previous month', 'checkout.nextMonth': 'Next month',
+      'checkout.technicianLabel': 'Technician',
+      'checkout.searchSlots': 'Search available times',
+      'checkout.fullName': 'Full name', 'checkout.namePlaceholder': 'Your name',
+      'checkout.email': 'Email',
+      'checkout.phone': 'Phone',
+      'checkout.addressLine1': 'Street and number',
+      'checkout.city': 'City',
+      'checkout.state': 'State',
+      'checkout.zip': 'ZIP code',
+      'checkout.confirmAppt': 'Confirm appointment',
+      'checkout.paymentTitle': 'Payment details',
+      'checkout.paymentGateNote': 'Schedule your appointment above to enable payment.',
+      'checkout.cardLabel': 'Card',
+      'checkout.payButton': 'Pay',
+      'checkout.paymentNote': '🔒 Secure payment processed by Square. Your card details never pass through our servers.',
+      'checkout.variablePrice': 'Variable price',
+      'checkout.orderNotePlain': 'Starting prices — the final amount may vary based on vehicle size and condition.',
+      'checkout.orderNoteAddon': 'Starting prices — the final amount may vary based on vehicle size and condition. Variable-price add-ons are not included in this total — they are quoted and charged on-site with the technician.',
+      'checkout.removeOne': 'Remove one', 'checkout.addOne': 'Add one', 'checkout.removeService': 'Remove service',
+      'checkout.weekdays': ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      'checkout.noTechToday': 'No technician works that day',
+      'checkout.loadingServices': 'Loading service...',
+      'checkout.noBookableServices': 'No bookable services yet',
+      'checkout.priceToConfirm': 'Price to confirm',
+      'checkout.couldNotLoadServices': "Couldn't load services",
+      'checkout.noServicesToSchedule': 'No services to schedule',
+      'checkout.noTechSelectDate': 'No technician works that day. Choose another date.',
+      'checkout.searchingSlots': 'Searching for available times...',
+      'checkout.noSlotsThatDay': 'No available times that day. Try another date.',
+      'checkout.chooseTimeFirst': 'Choose a time first',
+      'checkout.writeYourName': 'Write your name',
+      'checkout.completeAddress': 'Fill in the address where the service will take place',
+      'checkout.confirmingAppt': 'Confirming your appointment...',
+      'checkout.apptConfirmedFor': 'Appointment confirmed for',
+      'checkout.apptAlreadyScheduled': 'Your appointment is already scheduled — complete payment to confirm your booking.',
+      'checkout.viewReceipt': 'View receipt',
+      'checkout.paymentIdLabel': 'Payment ID:',
+      'checkout.paymentReceived': 'Payment received!',
+      'checkout.apptConfirmedTitle': 'Appointment confirmed!',
+      'checkout.totalCharged': 'Total charged:',
+      'checkout.backToHome': 'Back to home',
+      'checkout.sdkLoadError': 'Could not load Square Web Payments SDK.',
+      'checkout.cardFormError': 'Could not load the card form (check the console).',
+      'checkout.scheduleBeforePay': 'Schedule your appointment before paying.',
+      'checkout.noChargeConfirmed': '✅ Appointment confirmed — no charge (only variable-price add-ons).',
+      'checkout.processing': 'Processing...',
+      'checkout.cardError': 'Could not process the card',
+      'checkout.paymentSuccess': '✅ Payment successful',
+      'checkout.paymentRejected': 'Backend rejected the payment',
+    },
+    es: {
+      'checkout.backToServices': '‹ Volver a servicios',
+      'checkout.pageTitle': 'Checkout',
+      'checkout.pageSub': 'Revisa tu pedido y completa el pago para reservar tus servicios.',
+      'checkout.emptyTitle': 'Tu carrito está vacío',
+      'checkout.emptyHint': 'Agrega uno o más servicios desde la tienda antes de pagar.',
+      'checkout.emptyCta': 'Ver servicios',
+      'checkout.orderSummary': 'Resumen de tu pedido',
+      'checkout.totalLabel': 'Total',
+      'checkout.scheduleTitle': 'Agenda tu cita',
+      'checkout.scheduleHint': 'Elige el servicio principal, la fecha, y confirma un horario disponible con nuestro equipo.',
+      'checkout.serviceLabel': 'Servicio',
+      'checkout.loadingService': 'Cargando servicio...',
+      'checkout.dateLabel': 'Fecha',
+      'checkout.chooseDate': 'Elige una fecha',
+      'checkout.prevMonth': 'Mes anterior', 'checkout.nextMonth': 'Mes siguiente',
+      'checkout.technicianLabel': 'Técnico',
+      'checkout.searchSlots': 'Buscar horarios disponibles',
+      'checkout.fullName': 'Nombre completo', 'checkout.namePlaceholder': 'Tu nombre',
+      'checkout.email': 'Correo',
+      'checkout.phone': 'Teléfono',
+      'checkout.addressLine1': 'Calle y número',
+      'checkout.city': 'Ciudad',
+      'checkout.state': 'Estado',
+      'checkout.zip': 'Código postal',
+      'checkout.confirmAppt': 'Confirmar cita',
+      'checkout.paymentTitle': 'Datos de pago',
+      'checkout.paymentGateNote': 'Agenda tu cita arriba para habilitar el pago.',
+      'checkout.cardLabel': 'Tarjeta',
+      'checkout.payButton': 'Pagar',
+      'checkout.paymentNote': '🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.',
+      'checkout.variablePrice': 'Precio variable',
+      'checkout.orderNotePlain': 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.',
+      'checkout.orderNoteAddon': 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo. Los add-ons de precio variable no están incluidos en este total — se cotizan y se cobran en sitio con el técnico.',
+      'checkout.removeOne': 'Quitar uno', 'checkout.addOne': 'Agregar uno', 'checkout.removeService': 'Quitar servicio',
+      'checkout.weekdays': ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
+      'checkout.noTechToday': 'Ningún técnico trabaja ese día',
+      'checkout.loadingServices': 'Cargando servicio...',
+      'checkout.noBookableServices': 'No hay servicios reservables todavía',
+      'checkout.priceToConfirm': 'Precio a confirmar',
+      'checkout.couldNotLoadServices': 'No se pudieron cargar los servicios',
+      'checkout.noServicesToSchedule': 'No hay servicios para agendar',
+      'checkout.noTechSelectDate': 'Ningún técnico trabaja ese día. Elige otra fecha.',
+      'checkout.searchingSlots': 'Buscando horarios...',
+      'checkout.noSlotsThatDay': 'No hay horarios disponibles ese día. Prueba otra fecha.',
+      'checkout.chooseTimeFirst': 'Elige un horario primero',
+      'checkout.writeYourName': 'Escribe tu nombre',
+      'checkout.completeAddress': 'Completa la dirección donde se hará el servicio',
+      'checkout.confirmingAppt': 'Confirmando tu cita...',
+      'checkout.apptConfirmedFor': 'Cita confirmada para',
+      'checkout.apptAlreadyScheduled': 'Tu cita ya está agendada — completa el pago para confirmar tu reserva.',
+      'checkout.viewReceipt': 'Ver recibo',
+      'checkout.paymentIdLabel': 'ID de pago:',
+      'checkout.paymentReceived': '¡Pago recibido!',
+      'checkout.apptConfirmedTitle': '¡Cita confirmada!',
+      'checkout.totalCharged': 'Total cobrado:',
+      'checkout.backToHome': 'Volver al inicio',
+      'checkout.sdkLoadError': 'No se pudo cargar Square Web Payments SDK.',
+      'checkout.cardFormError': 'No se pudo cargar el formulario de tarjeta (revisa la consola).',
+      'checkout.scheduleBeforePay': 'Agenda tu cita antes de pagar.',
+      'checkout.noChargeConfirmed': '✅ Cita confirmada — no hay ningún cargo (solo add-ons de precio variable).',
+      'checkout.processing': 'Procesando...',
+      'checkout.cardError': 'No se pudo procesar la tarjeta',
+      'checkout.paymentSuccess': '✅ Pago exitoso',
+      'checkout.paymentRejected': 'El backend rechazó el pago',
+    },
+  };
+  let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
+  const t = () => translations[currentLang];
+
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === currentLang);
+    b.addEventListener('click', () => applyLanguage(b.dataset.lang));
+  });
+
+  function applyStaticTranslations() {
+    document.documentElement.lang = currentLang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (t()[key] != null) el.innerHTML = t()[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.dataset.i18nPlaceholder;
+      if (t()[key] != null) el.placeholder = t()[key];
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      const key = el.dataset.i18nAria;
+      if (t()[key] != null) el.setAttribute('aria-label', t()[key]);
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+  }
+
+  // Se ejecuta cada vez que cambia el idioma. Ojo: nunca reconstruye por
+  // completo el contenido de #checkoutContent una vez que Square ya montó
+  // el formulario de tarjeta ahí adentro — eso desprendería el iframe de
+  // Square. Por eso solo se actualizan textos de elementos ya existentes.
+  function applyLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('ohMyWashLang', lang);
+    applyStaticTranslations();
+    if (typeof afterLanguageChange === 'function') afterLanguageChange();
+  }
+  let afterLanguageChange = null;
 
   // Si el navegador restaura esta página desde su caché (ej. el cliente le
   // dio "atrás" después de quitar algo del carrito en otra página), el
@@ -238,14 +423,19 @@
   const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
   if (!cart.length) {
-    content.innerHTML = `
-      <div class="empty-state">
-        <span>🛒</span>
-        <h2>Tu carrito está vacío</h2>
-        <p>Agrega uno o más servicios desde la tienda antes de pagar.</p>
-        <a href="servicios.html" class="btn-primary">Ver servicios</a>
-      </div>
-    `;
+    function renderEmpty() {
+      content.innerHTML = `
+        <div class="empty-state">
+          <span>🛒</span>
+          <h2 data-i18n="checkout.emptyTitle">${t()['checkout.emptyTitle']}</h2>
+          <p data-i18n="checkout.emptyHint">${t()['checkout.emptyHint']}</p>
+          <a href="servicios.html" class="btn-primary" data-i18n="checkout.emptyCta">${t()['checkout.emptyCta']}</a>
+        </div>
+      `;
+    }
+    afterLanguageChange = renderEmpty;
+    renderEmpty();
+    applyStaticTranslations();
     return;
   }
 
@@ -254,21 +444,21 @@
   content.innerHTML = `
     <div class="checkout-flow" id="checkoutGrid">
       <div class="panel">
-        <h2>Resumen de tu pedido</h2>
+        <h2 data-i18n="checkout.orderSummary">Resumen de tu pedido</h2>
         <div id="orderItems"></div>
-        <div class="order-total-row"><span>Total</span><span id="orderTotal">${formatUSD(total)}</span></div>
+        <div class="order-total-row"><span data-i18n="checkout.totalLabel">Total</span><span id="orderTotal">${formatUSD(total)}</span></div>
         <p class="order-note" id="orderNote"></p>
       </div>
 
       <div class="panel">
-        <h2>Agenda tu cita</h2>
-        <p class="section-hint">Elige el servicio principal, la fecha, y confirma un horario disponible con nuestro equipo.</p>
+        <h2 data-i18n="checkout.scheduleTitle">Agenda tu cita</h2>
+        <p class="section-hint" data-i18n="checkout.scheduleHint">Elige el servicio principal, la fecha, y confirma un horario disponible con nuestro equipo.</p>
         <div class="pay-field">
-          <label>Servicio</label>
-          <div id="apptServiceSummary" class="appt-service-summary">Cargando servicio...</div>
+          <label data-i18n="checkout.serviceLabel">Servicio</label>
+          <div id="apptServiceSummary" class="appt-service-summary" data-i18n="checkout.loadingService">Cargando servicio...</div>
         </div>
         <div class="pay-field">
-          <label>Fecha</label>
+          <label data-i18n="checkout.dateLabel">Fecha</label>
           <div class="date-picker-wrap">
             <button type="button" id="apptDateBtn" class="date-picker-btn">
               <span id="apptDateLabel">Elige una fecha</span>
@@ -276,46 +466,44 @@
             </button>
             <div id="apptCalendar" class="appt-calendar" hidden>
               <div class="cal-header">
-                <button type="button" id="calPrev" class="cal-nav" aria-label="Mes anterior">‹</button>
+                <button type="button" id="calPrev" class="cal-nav" data-i18n-aria="checkout.prevMonth" aria-label="Mes anterior">‹</button>
                 <span id="calMonthLabel"></span>
-                <button type="button" id="calNext" class="cal-nav" aria-label="Mes siguiente">›</button>
+                <button type="button" id="calNext" class="cal-nav" data-i18n-aria="checkout.nextMonth" aria-label="Mes siguiente">›</button>
               </div>
-              <div class="cal-weekdays">
-                <span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span>
-              </div>
+              <div class="cal-weekdays" id="calWeekdays"></div>
               <div id="calDays" class="cal-days"></div>
             </div>
           </div>
         </div>
         <div class="pay-field">
-          <label>Técnico</label>
+          <label data-i18n="checkout.technicianLabel">Técnico</label>
           <div id="apptStaffPicker" class="appt-staff-picker"></div>
         </div>
-        <button id="apptSearchBtn" type="button" class="btn-secondary">Buscar horarios disponibles</button>
+        <button id="apptSearchBtn" type="button" class="btn-secondary" data-i18n="checkout.searchSlots">Buscar horarios disponibles</button>
         <div id="apptSlots" class="appt-slots"></div>
         <div id="apptCustomerForm" class="appt-customer-form" hidden>
-          <div class="pay-field"><label>Nombre completo</label><input type="text" id="apptName" placeholder="Tu nombre"></div>
-          <div class="pay-field"><label>Correo</label><input type="email" id="apptEmail" placeholder="tu@correo.com"></div>
-          <div class="pay-field"><label>Teléfono</label><input type="tel" id="apptPhone" placeholder="+1 678 555 0100"></div>
-          <div class="pay-field"><label>Calle y número</label><input type="text" id="apptAddressLine1" placeholder="123 Main St"></div>
-          <div class="pay-field"><label>Ciudad</label><input type="text" id="apptCity" placeholder="Atlanta"></div>
-          <div class="pay-field"><label>Estado</label><input type="text" id="apptState" value="GA" maxlength="2"></div>
-          <div class="pay-field"><label>Código postal</label><input type="text" id="apptZip" placeholder="30341" inputmode="numeric"></div>
-          <button id="apptConfirmBtn" type="button">Confirmar cita</button>
+          <div class="pay-field"><label data-i18n="checkout.fullName">Nombre completo</label><input type="text" id="apptName" data-i18n-placeholder="checkout.namePlaceholder" placeholder="Tu nombre"></div>
+          <div class="pay-field"><label data-i18n="checkout.email">Correo</label><input type="email" id="apptEmail" placeholder="tu@correo.com"></div>
+          <div class="pay-field"><label data-i18n="checkout.phone">Teléfono</label><input type="tel" id="apptPhone" placeholder="+1 678 555 0100"></div>
+          <div class="pay-field"><label data-i18n="checkout.addressLine1">Calle y número</label><input type="text" id="apptAddressLine1" placeholder="123 Main St"></div>
+          <div class="pay-field"><label data-i18n="checkout.city">Ciudad</label><input type="text" id="apptCity" placeholder="Atlanta"></div>
+          <div class="pay-field"><label data-i18n="checkout.state">Estado</label><input type="text" id="apptState" value="GA" maxlength="2"></div>
+          <div class="pay-field"><label data-i18n="checkout.zip">Código postal</label><input type="text" id="apptZip" placeholder="30341" inputmode="numeric"></div>
+          <button id="apptConfirmBtn" type="button" data-i18n="checkout.confirmAppt">Confirmar cita</button>
         </div>
         <p id="appt-status"></p>
       </div>
 
       <div class="panel" id="paymentPanel" style="opacity:.5;pointer-events:none;">
-        <h2>Datos de pago</h2>
-        <p class="section-hint" id="paymentGateNote">Agenda tu cita arriba para habilitar el pago.</p>
+        <h2 data-i18n="checkout.paymentTitle">Datos de pago</h2>
+        <p class="section-hint" id="paymentGateNote" data-i18n="checkout.paymentGateNote">Agenda tu cita arriba para habilitar el pago.</p>
         <div class="pay-field">
-          <label>Tarjeta</label>
+          <label data-i18n="checkout.cardLabel">Tarjeta</label>
           <div id="card-container"></div>
         </div>
-        <button id="card-button" type="button">Pagar ${formatUSD(total)}</button>
+        <button id="card-button" type="button"></button>
         <p id="payment-status"></p>
-        <p class="payment-note">🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.</p>
+        <p class="payment-note" data-i18n="checkout.paymentNote">🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.</p>
       </div>
     </div>
   `;
@@ -325,10 +513,15 @@
   const paymentPanel = document.getElementById('paymentPanel');
   let bookingConfirmed = false;
 
+  function updatePayButtonText() {
+    cardButton.textContent = `${t()['checkout.payButton']} ${formatUSD(total)}`;
+  }
+  updatePayButtonText();
+
   function renderOrderNote() {
     document.getElementById('orderNote').textContent = cart.some(i => i.price == null)
-      ? 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo. Los add-ons de precio variable no están incluidos en este total — se cotizan y se cobran en sitio con el técnico.'
-      : 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.';
+      ? t()['checkout.orderNoteAddon']
+      : t()['checkout.orderNotePlain'];
   }
 
   function renderOrderItems() {
@@ -336,16 +529,16 @@
       <div class="order-item">
         <div>
           <div class="order-item-name">${i.name}</div>
-          <div class="order-item-qty">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</div>
+          <div class="order-item-qty">${i.price != null ? formatUSD(i.price) + ' c/u' : t()['checkout.variablePrice']}</div>
         </div>
         <div class="order-item-right">
           <div class="order-item-controls">
-            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1" aria-label="Quitar uno">−</button>
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1" aria-label="${t()['checkout.removeOne']}">−</button>
             <span class="qty-value">${i.qty}</span>
-            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1" aria-label="Agregar uno">+</button>
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1" aria-label="${t()['checkout.addOne']}">+</button>
           </div>
-          <div class="order-item-price">${i.price != null ? formatUSD(i.price * i.qty) : 'Precio variable'}</div>
-          <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar servicio">✕</button>
+          <div class="order-item-price">${i.price != null ? formatUSD(i.price * i.qty) : t()['checkout.variablePrice']}</div>
+          <button class="order-item-remove" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="${t()['checkout.removeService']}">✕</button>
         </div>
       </div>
     `).join('');
@@ -364,7 +557,7 @@
     renderOrderItems();
     renderOrderNote();
     document.getElementById('orderTotal').textContent = formatUSD(total);
-    if (cardButton) cardButton.textContent = `Pagar ${formatUSD(total)}`;
+    if (cardButton) updatePayButtonText();
     loadApptServices();
   }
 
@@ -414,6 +607,7 @@
   const apptDateLabel = document.getElementById('apptDateLabel');
   const apptCalendar = document.getElementById('apptCalendar');
   const calMonthLabel = document.getElementById('calMonthLabel');
+  const calWeekdays = document.getElementById('calWeekdays');
   const calDays = document.getElementById('calDays');
   const calPrev = document.getElementById('calPrev');
   const calNext = document.getElementById('calNext');
@@ -424,9 +618,14 @@
   let calViewDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
 
   const toDateStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const dateLocale = () => currentLang === 'en' ? 'en-US' : 'es-ES';
+
+  function renderWeekdayHeaders() {
+    calWeekdays.innerHTML = t()['checkout.weekdays'].map(w => `<span>${w}</span>`).join('');
+  }
 
   function updateDateLabel() {
-    apptDateLabel.textContent = selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    apptDateLabel.textContent = selectedDate.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
   }
   updateDateLabel();
 
@@ -451,7 +650,7 @@
     const eligible = Object.entries(STAFF_SCHEDULE).filter(([, s]) => s.days.includes(dow));
 
     if (!eligible.length) {
-      apptStaffPicker.innerHTML = '<span class="appt-staff-empty">Ningún técnico trabaja ese día</span>';
+      apptStaffPicker.innerHTML = `<span class="appt-staff-empty">${t()['checkout.noTechToday']}</span>`;
       selectedStaffId = null;
       return;
     }
@@ -483,7 +682,8 @@
   }
 
   function renderCalendar() {
-    calMonthLabel.textContent = calViewDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    calMonthLabel.textContent = calViewDate.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
+    renderWeekdayHeaders();
 
     const year = calViewDate.getFullYear();
     const month = calViewDate.getMonth();
@@ -531,6 +731,7 @@
 
   async function loadApptServices() {
     try {
+      apptServiceSummary.textContent = t()['checkout.loadingServices'];
       const res = await fetch(`${API_BASE}/services`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
@@ -542,18 +743,19 @@
       // dentro de un mismo item (ej. "ALL IN ONE" con variaciones "SUV",
       // "SMALL CARS", "BIG SUV/TRUCK"), y el orden/idioma de las palabras no
       // siempre coincide con el nombre en la web (ej. "Ceramic Coating - 2
-      // anos" en la web vs "2 years Ceramic coating Without paint
+      // years/anos" en la web vs "2 years Ceramic coating Without paint
       // correction:" en Square). Comparar el string completo hacia "match"
       // con varias tallas a la vez (pedia disponibilidad para todas juntas)
       // o directamente no encontraba nada.
-      // Se cuentan palabras clave en comun (ignorando acentos y conectores)
-      // y, si hay mas de un candidato con suficientes palabras en comun, se
-      // usa el precio (identico en la web y en Square) para desempatar.
-      const TRANSLATE = { anos: 'years', ano: 'years', correccion: 'correction' };
-      const STOPWORDS = new Set(['oh', 'my', 'wash', 'with', 'without', 'de', 'la', 'el', 'y']);
+      // Se cuentan palabras clave en comun (ignorando acentos y conectores,
+      // y traduciendo "años/year(s)" y "corrección/correction" entre
+      // idiomas) y, si hay mas de un candidato con suficientes palabras en
+      // comun, se usa el precio (identico en ambos idiomas) para desempatar.
+      const TRANSLATE = { anos: 'years', ano: 'years', years: 'years', correccion: 'correction', correction: 'correction' };
+      const STOPWORDS = new Set(['oh', 'my', 'wash', 'with', 'without', 'de', 'la', 'el', 'y', 'and']);
       const words = (str) => str
         .toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
         .replace(/[^a-z0-9]+/g, ' ')
         .trim()
         .split(' ')
@@ -577,26 +779,26 @@
       apptServices = matched.length ? matched : allServices.map(s => ({ ...s, qty: 1 }));
 
       if (!apptServices.length) {
-        apptServiceSummary.textContent = 'No hay servicios reservables todavía';
+        apptServiceSummary.textContent = t()['checkout.noBookableServices'];
         return;
       }
       apptServiceSummary.innerHTML = apptServices.map(s => `
         <span class="appt-service-name">${s.serviceName}${s.qty > 1 ? ` ×${s.qty}` : ''}</span>
-        <span class="appt-service-meta">${s.price != null ? '$' + s.price.toFixed(2) : 'Precio a confirmar'} · ${s.durationMinutes} min${s.qty > 1 ? ' c/u' : ''}</span>
+        <span class="appt-service-meta">${s.price != null ? '$' + s.price.toFixed(2) : t()['checkout.priceToConfirm']} · ${s.durationMinutes} min${s.qty > 1 ? ' c/u' : ''}</span>
       `).join('<hr style="width:100%;border:none;border-top:1px dashed var(--teal-light);margin:2px 0;">');
     } catch (err) {
       console.error(err);
-      apptServiceSummary.textContent = 'No se pudieron cargar los servicios';
+      apptServiceSummary.textContent = t()['checkout.couldNotLoadServices'];
     }
   }
   loadApptServices();
 
   apptSearchBtn.addEventListener('click', async () => {
-    if (!apptServices.length) { setApptStatus('No hay servicios para agendar', 'error'); return; }
-    if (!selectedStaffId) { setApptStatus('Ningún técnico trabaja ese día. Elige otra fecha.', 'error'); return; }
+    if (!apptServices.length) { setApptStatus(t()['checkout.noServicesToSchedule'], 'error'); return; }
+    if (!selectedStaffId) { setApptStatus(t()['checkout.noTechSelectDate'], 'error'); return; }
     const dateVal = toDateStr(selectedDate);
 
-    setApptStatus('Buscando horarios...', 'info');
+    setApptStatus(t()['checkout.searchingSlots'], 'info');
     apptSlotsEl.innerHTML = '';
     apptCustomerForm.hidden = true;
     apptSelectedIndex = null;
@@ -633,13 +835,13 @@
       });
 
       if (!apptAvailabilities.length) {
-        setApptStatus('No hay horarios disponibles ese día. Prueba otra fecha.', 'error');
+        setApptStatus(t()['checkout.noSlotsThatDay'], 'error');
         return;
       }
 
       apptSlotsEl.innerHTML = apptAvailabilities
         .map((a, i) => {
-          const time = new Date(a.startAt).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit' });
+          const time = new Date(a.startAt).toLocaleTimeString(currentLang === 'en' ? 'en-US' : 'es-US', { hour: 'numeric', minute: '2-digit' });
           return `<button type="button" class="appt-slot-btn" data-index="${i}">${time}</button>`;
         })
         .join('');
@@ -662,21 +864,21 @@
   });
 
   apptConfirmBtn.addEventListener('click', async () => {
-    if (apptSelectedIndex == null) { setApptStatus('Elige un horario primero', 'error'); return; }
+    if (apptSelectedIndex == null) { setApptStatus(t()['checkout.chooseTimeFirst'], 'error'); return; }
     const name = document.getElementById('apptName').value.trim();
-    if (!name) { setApptStatus('Escribe tu nombre', 'error'); return; }
+    if (!name) { setApptStatus(t()['checkout.writeYourName'], 'error'); return; }
     const email = document.getElementById('apptEmail').value.trim();
     const phone = document.getElementById('apptPhone').value.trim();
     const addressLine1 = document.getElementById('apptAddressLine1').value.trim();
     const city = document.getElementById('apptCity').value.trim();
     const state = document.getElementById('apptState').value.trim();
     const zip = document.getElementById('apptZip').value.trim();
-    if (!addressLine1 || !city || !zip) { setApptStatus('Completa la dirección donde se hará el servicio', 'error'); return; }
+    if (!addressLine1 || !city || !zip) { setApptStatus(t()['checkout.completeAddress'], 'error'); return; }
 
     const slot = apptAvailabilities[apptSelectedIndex];
     const segments = slot.appointmentSegments;
 
-    setApptStatus('Confirmando tu cita...', 'info');
+    setApptStatus(t()['checkout.confirmingAppt'], 'info');
     apptConfirmBtn.disabled = true;
 
     try {
@@ -703,15 +905,15 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
 
-      const dateStr = new Date(slot.startAt).toLocaleString('es-US', {
+      const dateStr = new Date(slot.startAt).toLocaleString(dateLocale(), {
         weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
       });
-      setApptStatus(`<div class="appt-confirmed">✅ Cita confirmada para ${dateStr}</div>`, 'ok');
+      setApptStatus(`<div class="appt-confirmed">✅ ${t()['checkout.apptConfirmedFor']} ${dateStr}</div>`, 'ok');
 
       bookingConfirmed = true;
       paymentPanel.style.opacity = '1';
       paymentPanel.style.pointerEvents = 'auto';
-      document.getElementById('paymentGateNote').textContent = 'Tu cita ya está agendada — completa el pago para confirmar tu reserva.';
+      document.getElementById('paymentGateNote').textContent = t()['checkout.apptAlreadyScheduled'];
       apptSearchBtn.disabled = true;
       apptDateBtn.disabled = true;
     } catch (err) {
@@ -731,17 +933,17 @@
 
   function showSuccess(data) {
     const receiptLink = data.receiptUrl
-      ? `<p><a class="receipt" href="${data.receiptUrl}" target="_blank" rel="noopener">Ver recibo</a></p>`
+      ? `<p><a class="receipt" href="${data.receiptUrl}" target="_blank" rel="noopener">${t()['checkout.viewReceipt']}</a></p>`
       : '';
-    const paymentLine = data.paymentId ? `<p>ID de pago: ${data.paymentId}</p>` : '';
+    const paymentLine = data.paymentId ? `<p>${t()['checkout.paymentIdLabel']} ${data.paymentId}</p>` : '';
     document.getElementById('checkoutGrid').innerHTML = `
       <div class="panel success-panel">
         <div class="success-icon">✓</div>
-        <h2>${data.paymentId ? '¡Pago recibido!' : '¡Cita confirmada!'}</h2>
+        <h2>${data.paymentId ? t()['checkout.paymentReceived'] : t()['checkout.apptConfirmedTitle']}</h2>
         ${paymentLine}
-        <p>Total cobrado: ${formatUSD(total)}</p>
+        <p>${t()['checkout.totalCharged']} ${formatUSD(total)}</p>
         ${receiptLink}
-        <p style="margin-top:22px;"><a href="web-oh-my-wash.html" class="btn-primary">Volver al inicio</a></p>
+        <p style="margin-top:22px;"><a href="web-oh-my-wash.html" class="btn-primary">${t()['checkout.backToHome']}</a></p>
       </div>
     `;
     localStorage.removeItem(CART_KEY);
@@ -749,7 +951,7 @@
 
   async function initSquarePayments() {
     if (!window.Square) {
-      setStatus('No se pudo cargar Square Web Payments SDK.', 'error');
+      setStatus(t()['checkout.sdkLoadError'], 'error');
       if (cardButton) cardButton.disabled = true;
       return;
     }
@@ -761,14 +963,14 @@
       await card.attach('#card-container');
     } catch (err) {
       console.error('No se pudo inicializar el formulario de tarjeta:', err);
-      setStatus('No se pudo cargar el formulario de tarjeta (revisa la consola).', 'error');
+      setStatus(t()['checkout.cardFormError'], 'error');
       if (cardButton) cardButton.disabled = true;
       return;
     }
 
     cardButton.addEventListener('click', async () => {
       if (!bookingConfirmed) {
-        setStatus('Agenda tu cita antes de pagar.', 'error');
+        setStatus(t()['checkout.scheduleBeforePay'], 'error');
         return;
       }
       // Se vuelve a leer el carrito real de localStorage justo antes de
@@ -780,18 +982,18 @@
       total = freshCart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
       if (total <= 0) {
-        setStatus('✅ Cita confirmada — no hay ningún cargo (solo add-ons de precio variable).', 'ok');
+        setStatus(t()['checkout.noChargeConfirmed'], 'ok');
         showSuccess({ paymentId: null, receiptUrl: null });
         return;
       }
 
-      setStatus('Procesando...', 'info');
+      setStatus(t()['checkout.processing'], 'info');
       cardButton.disabled = true;
       try {
         const amountCents = Math.round(total * 100);
         const tokenResult = await card.tokenize();
         if (tokenResult.status !== 'OK') {
-          throw new Error(tokenResult.errors?.[0]?.message || 'No se pudo procesar la tarjeta');
+          throw new Error(tokenResult.errors?.[0]?.message || t()['checkout.cardError']);
         }
 
         const res = await fetch(BACKEND_URL, {
@@ -802,10 +1004,10 @@
         const data = await res.json();
 
         if (data.success) {
-          setStatus('✅ Pago exitoso', 'ok');
+          setStatus(t()['checkout.paymentSuccess'], 'ok');
           showSuccess(data);
         } else {
-          throw new Error(data.error || 'El backend rechazó el pago');
+          throw new Error(data.error || t()['checkout.paymentRejected']);
         }
       } catch (err) {
         console.error(err);
@@ -817,6 +1019,19 @@
   }
 
   initSquarePayments();
+
+  afterLanguageChange = () => {
+    updatePayButtonText();
+    renderOrderItems();
+    renderOrderNote();
+    renderWeekdayHeaders();
+    updateDateLabel();
+    if (!apptCalendar.hidden) renderCalendar();
+    renderStaffPicker();
+    loadApptServices();
+  };
+  applyStaticTranslations();
+  renderWeekdayHeaders();
 })();
 </script>
 
