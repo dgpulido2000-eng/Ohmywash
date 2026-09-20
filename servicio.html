@@ -132,6 +132,12 @@
   }
   .addon-modal-add-btn:hover{background:var(--teal);color:#fff;}
   .addon-modal-add-btn:disabled{background:var(--teal-pale);border-color:var(--teal-pale);color:var(--teal-deep);cursor:default;opacity:.8;}
+  .pethair-btn-row{display:flex;gap:12px;margin-top:6px;}
+  .pethair-btn-row .btn{flex:1;padding:14px 16px;font-size:.92rem;}
+  .pethair-btn-no{background:#fff;border:1.5px solid #d8e8ea;color:var(--teal-deep);}
+  .pethair-btn-no:hover{background:var(--teal-pale);}
+  .pethair-btn-yes{background:var(--teal);color:#fff;box-shadow:0 10px 30px rgba(46,196,182,.35);}
+  .pethair-btn-yes:hover{background:var(--teal-dark);}
   .btn{padding:15px 30px;border-radius:100px;font-weight:600;font-size:1rem;cursor:pointer;border:none;transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s;display:inline-flex;align-items:center;gap:8px;justify-content:center;}
   .btn-solid{background:var(--teal);color:#fff;box-shadow:0 10px 30px rgba(46,196,182,.35);}
   .btn-solid:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(46,196,182,.45);background:var(--teal-dark);}
@@ -333,6 +339,19 @@
   <p class="addon-modal-hint" data-i18n="addon.modalHint">Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.</p>
   <div class="addon-modal-list" id="addonModalList"></div>
   <button class="btn btn-solid" id="addonModalContinue" style="width:100%;justify-content:center;" data-i18n="addon.modalContinue">Continuar al checkout →</button>
+</div>
+
+<div class="addon-modal-overlay" id="petHairOverlay"></div>
+<div class="addon-modal" id="petHairModal" hidden>
+  <div class="addon-modal-header">
+    <h3 data-i18n="petHair.title">¿Tu auto tiene pelo de mascota?</h3>
+    <button class="addon-modal-close" id="petHairClose" aria-label="Cerrar">✕</button>
+  </div>
+  <p class="addon-modal-hint" data-i18n="petHair.hint">Si tu auto tiene pelo de perro o gato, se agrega un cargo adicional de $50 por la eliminación profunda de pelo durante el aspirado.</p>
+  <div class="pethair-btn-row">
+    <button type="button" class="btn pethair-btn-no" id="petHairNo" data-i18n="petHair.no">No tiene</button>
+    <button type="button" class="btn pethair-btn-yes" id="petHairYes" data-i18n="petHair.yes">Sí, agregar (+$50)</button>
+  </div>
 </div>
 
 <script>
@@ -836,9 +855,19 @@
     addToCartBtn.addEventListener('click', () => {
       if (!selected) return;
       const name = isVariablePricing ? service.name : `${service.name} (${selected.label})`;
-      addToCart(name, selected.price);
+      if (PET_HAIR_SERVICES.includes(serviceId)) {
+        openPetHairModal(name, selected.price);
+      } else {
+        addToCart(name, selected.price);
+      }
     });
   }
+
+  // Servicios que incluyen limpieza/aspirado del interior — a estos se les
+  // pregunta por pelo de mascota antes de agregar al carrito. Los servicios
+  // solo exteriores (All In One, Ceramic Coating, Paint Correction) no la
+  // necesitan porque no incluyen aspirado de cabina.
+  const PET_HAIR_SERVICES = ['in-n-out', 'wax-protection', 'interior-detailing', 'wax-engine', 'full-detailing'];
 
   // ---------- Idioma (EN/ES) ----------
   const translations = {
@@ -864,6 +893,10 @@
       'service.contactForSize': 'Contact us for this size', 'service.toBeConfirmed': 'To be confirmed',
       'service.chooseCarType2': 'Choose a vehicle type', 'service.toSeePrice': 'to see the price',
       'service.addToCart': 'Add to cart',
+      'petHair.title': 'Does your car have pet hair?',
+      'petHair.hint': "If your car has dog or cat hair, we add a $50 charge for deep pet hair removal during vacuuming.",
+      'petHair.yes': 'Yes, add (+$50)', 'petHair.no': 'No, it doesn’t',
+      'petHair.itemName': 'Pet Hair Removal',
     },
     es: {
       'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.gallery': 'Galería', 'nav.team': 'Equipo', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
@@ -887,6 +920,10 @@
       'service.contactForSize': 'Contáctanos para este tamaño', 'service.toBeConfirmed': 'Por confirmar',
       'service.chooseCarType2': 'Elige un tipo de auto', 'service.toSeePrice': 'para ver el precio',
       'service.addToCart': 'Agregar al carrito',
+      'petHair.title': '¿Tu auto tiene pelo de mascota?',
+      'petHair.hint': 'Si tu auto tiene pelo de perro o gato, se agrega un cargo adicional de $50 por la eliminación profunda de pelo durante el aspirado.',
+      'petHair.yes': 'Sí, agregar (+$50)', 'petHair.no': 'No tiene',
+      'petHair.itemName': 'Eliminación de pelo de mascota',
     },
   };
 
@@ -1025,6 +1062,45 @@
   addonModalOverlay.addEventListener('click', closeAddonModal);
   addonModalContinue.addEventListener('click', () => {
     window.location.href = 'checkout.html';
+  });
+
+  // ---------- Modal de pelo de mascota (al agregar al carrito) ----------
+  const petHairOverlay = document.getElementById('petHairOverlay');
+  const petHairModal = document.getElementById('petHairModal');
+  const petHairClose = document.getElementById('petHairClose');
+  const petHairYes = document.getElementById('petHairYes');
+  const petHairNo = document.getElementById('petHairNo');
+  let pendingCartItem = null;
+
+  function openPetHairModal(name, price) {
+    pendingCartItem = { name, price };
+    petHairModal.hidden = false;
+    petHairOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      petHairModal.classList.add('open');
+      petHairOverlay.classList.add('open');
+    });
+  }
+
+  function closePetHairModal() {
+    petHairModal.classList.remove('open');
+    petHairOverlay.classList.remove('open');
+    setTimeout(() => { petHairModal.hidden = true; petHairOverlay.hidden = true; }, 300);
+    pendingCartItem = null;
+  }
+
+  petHairClose.addEventListener('click', closePetHairModal);
+  petHairOverlay.addEventListener('click', closePetHairModal);
+  petHairNo.addEventListener('click', () => {
+    if (pendingCartItem) addToCart(pendingCartItem.name, pendingCartItem.price);
+    closePetHairModal();
+  });
+  petHairYes.addEventListener('click', () => {
+    if (pendingCartItem) {
+      addToCart(pendingCartItem.name, pendingCartItem.price);
+      addToCart(translations[currentLang]['petHair.itemName'], 50);
+    }
+    closePetHairModal();
   });
 
 
