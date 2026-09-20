@@ -161,22 +161,22 @@
 
   /* ---------- Gallery grid ---------- */
   .gallery-grid{
-    columns:4 280px;
-    column-gap:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:18px;
   }
   .gallery-item{
-    break-inside:avoid;
-    margin-bottom:18px;
+    position:relative;
     border-radius:18px;
     overflow:hidden;
-    position:relative;
     cursor:pointer;
+    aspect-ratio:3/4;
     box-shadow:0 4px 18px rgba(20,50,55,.08);
-    transition:transform .4s var(--ease), box-shadow .4s var(--ease);
+    transition:box-shadow .4s var(--ease);
   }
-  .gallery-item:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(20,50,55,.18);}
+  .gallery-item:hover{box-shadow:0 20px 40px rgba(20,50,55,.18);}
   .gallery-item img{
-    width:100%;height:auto;display:block;
+    width:100%;height:100%;object-fit:cover;display:block;
     transition:transform .6s var(--ease);
   }
   .gallery-item:hover img{transform:scale(1.06);}
@@ -238,9 +238,6 @@
 
   .nav-close{display:none;}
 
-  @media (max-width: 1080px){
-    .gallery-grid{columns:3 240px;}
-  }
   @media (max-width: 860px){
     nav ul{position:fixed;top:0;right:-100%;width:78%;max-width:320px;height:100vh;background:#fff;flex-direction:column;justify-content:center;gap:34px;transition:right .4s var(--ease);box-shadow:-10px 0 40px rgba(0,0,0,.15);}
     nav ul.open{right:0;}
@@ -256,12 +253,9 @@
     .lang-switch-mobile{
       display:flex;position:absolute;top:20px;right:22px;
     }
-    .gallery-grid{columns:2 160px;column-gap:12px;}
-    .gallery-item{margin-bottom:12px;border-radius:14px;}
+    .gallery-grid{grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:12px;}
+    .gallery-item{border-radius:14px;}
     .lightbox-prev, .lightbox-next{width:42px;height:42px;font-size:1.2rem;}
-  }
-  @media (max-width: 480px){
-    .gallery-grid{columns:2 140px;}
   }
 </style>
 </head>
@@ -397,7 +391,6 @@
     { src:'assets/gallery-17.jpg', en:'Land Rover Defender — Exterior Detailing', es:'Land Rover Defender — Detailing Exterior' },
     { src:'assets/gallery-18.jpg', en:'Land Rover Defender — Interior Detailing', es:'Land Rover Defender — Detailing de Interior' },
     { src:'assets/gallery-19.jpg', en:'Land Rover Defender — Ceramic Coating', es:'Land Rover Defender — Ceramic Coating' },
-    { src:'assets/gallery-20.jpg', en:'Toyota 4Runner — Exterior Detailing', es:'Toyota 4Runner — Detailing Exterior' },
   ];
 
   const galleryGrid = document.getElementById('galleryGrid');
