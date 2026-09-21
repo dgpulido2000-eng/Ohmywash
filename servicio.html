@@ -146,7 +146,8 @@
   /* ---------- Page ---------- */
   main{padding:120px 0 140px;}
   .breadcrumb{display:flex;align-items:center;gap:6px;font-size:.85rem;color:#8b9a9c;margin-bottom:24px;}
-  .breadcrumb a{color:var(--teal-deep);font-weight:400;font-size:2.2rem;line-height:1;vertical-align:middle;}
+  .breadcrumb a{display:flex;align-items:center;color:var(--teal-deep);}
+  .breadcrumb a svg{width:22px;height:22px;display:block;}
   .breadcrumb a:hover{color:var(--teal-dark);}
 
   .service-photo{
@@ -868,7 +869,7 @@
     const cheapest = isVariablePricing ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
 
     contentEl.innerHTML = `
-      <div class="breadcrumb"><a href="servicios.html" aria-label="${t['service.allServices']}">‹</a><span>/ ${service.name}</span></div>
+      <div class="breadcrumb"><a href="servicios.html" aria-label="${t['service.allServices']}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></a><span>/ ${service.name}</span></div>
       ${isVariablePricing ? '' : `<div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>`}
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
