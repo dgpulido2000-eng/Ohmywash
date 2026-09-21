@@ -223,35 +223,6 @@
   .blob1{width:420px;height:420px;background:radial-gradient(circle, rgba(255,255,255,.5), transparent 70%);top:-120px;left:-100px;}
   .blob2{width:360px;height:360px;background:radial-gradient(circle, rgba(255,255,255,.35), transparent 70%);bottom:-140px;right:-80px;}
 
-  /* Soap bubbles */
-  .bubble{
-    position:absolute;bottom:-120px;border-radius:50%;pointer-events:none;
-    background:
-      radial-gradient(circle at 30% 26%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.45) 14%, rgba(255,255,255,.08) 40%, rgba(190,238,240,.16) 68%, rgba(255,255,255,.05) 100%);
-    border:1px solid rgba(255,255,255,.55);
-    box-shadow:
-      inset -6px -6px 12px rgba(120,210,220,.25),
-      inset 5px 6px 10px rgba(255,255,255,.6),
-      0 6px 16px rgba(10,40,45,.18);
-    animation:rise linear infinite;
-    opacity:0;
-  }
-  .bubble::after{
-    content:'';position:absolute;top:16%;left:20%;width:26%;height:26%;
-    background:rgba(255,255,255,.9);border-radius:50%;filter:blur(1.5px);
-  }
-  .bubble::before{
-    content:'';position:absolute;inset:0;border-radius:50%;
-    background:linear-gradient(135deg, rgba(255,180,220,.12), rgba(180,255,220,.1) 35%, rgba(180,210,255,.12) 65%, transparent 80%);
-    mix-blend-mode:screen;
-  }
-  @keyframes rise{
-    0%{transform:translateY(0) translateX(0) scale(.85);opacity:0;}
-    8%{opacity:.85;}
-    50%{transform:translateY(-58vh) translateX(18px) scale(1.05);}
-    88%{opacity:.7;}
-    100%{transform:translateY(-108vh) translateX(-14px) scale(.92);opacity:0;}
-  }
   .hero-eyebrow{
     position:relative;z-index:2;
     display:inline-flex;align-items:center;gap:8px;
@@ -647,7 +618,6 @@
 <section class="hero" id="top">
   <div class="blob blob1"></div>
   <div class="blob blob2"></div>
-  <div id="bubbleField"></div>
 
   <div class="brand-logo reveal-scale in">
     <img src="assets/oh-my-wash-logo-hero.png" alt="Oh My Wash — we care like it's ours" class="brand-logo-img">
@@ -1267,27 +1237,7 @@
     }, {passive:true});
   }
 
-  // Soap bubbles rising in hero
-  const bubbleField = document.getElementById('bubbleField');
-  if (bubbleField && !prefersReduced) {
-    const BUBBLE_COUNT = 16;
-    for (let i = 0; i < BUBBLE_COUNT; i++) {
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      const size = 14 + (i * 37 % 46);
-      const left = (i * 61) % 100;
-      const duration = 9 + (i * 7 % 10);
-      const delay = -(i * 1.3 % duration);
-      b.style.width = size + 'px';
-      b.style.height = size + 'px';
-      b.style.left = left + '%';
-      b.style.animationDuration = duration + 's';
-      b.style.animationDelay = delay + 's';
-      bubbleField.appendChild(b);
-    }
-  }
-
-  // Staff photo fallback to initials avatar if file isn't in /assets yet
+// Staff photo fallback to initials avatar if file isn't in /assets yet
   document.querySelectorAll('.staff-photo img').forEach(img => {
     img.addEventListener('error', () => {
       const card = img.closest('.staff-photo');
