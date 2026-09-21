@@ -1,11 +1,16 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import pkg from 'square';
+import nodemailer from 'nodemailer';
 const { Client, Environment } = pkg;
 
 const app = express();
+
+// Necesario en Render (detrás de proxy) para que req.protocol devuelva
+// "https" correctamente al armar los links de aprobación del correo.
+app.set('trust proxy', true);
 
 // cors() sin opciones responde con "Access-Control-Allow-Origin: *",
 // lo que también satisface peticiones fetch() hechas desde un archivo
@@ -22,6 +27,109 @@ const squareClient = new Client({
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
   environment: squareEnvironment,
 });
+
+// --- Correo de aprobación manual de citas ---
+// Las citas creadas por la API con el token del negocio quedan ACCEPTED
+// automáticamente en Square (Square no permite forzar otro status al
+// crearlas así) — por eso, en vez de crear la cita al instante, se manda
+// este correo con botones de Aceptar/Rechazar, y la cita real en Square
+// solo se crea cuando el dueño la acepta.
+const mailTransport = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    })
+  : null;
+
+const APPROVAL_SECRET = process.env.APPROVAL_SECRET;
+const BOOKING_REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
+
+// Firma sin estado (sin base de datos): el token trae los datos de la
+// reserva codificados + una firma HMAC, así que el link del correo por sí
+// solo es suficiente para crear la cita al aprobarla, sin depender de que
+// el servidor siga "recordando" la solicitud (Render puede reiniciarse).
+function signBookingToken(payload) {
+  const body = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  const sig = createHmac('sha256', APPROVAL_SECRET).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifyBookingToken(token) {
+  if (!APPROVAL_SECRET || !token || typeof token !== 'string' || !token.includes('.')) return null;
+  const [body, sig] = token.split('.');
+  const expectedSig = createHmac('sha256', APPROVAL_SECRET).update(body).digest('base64url');
+  const sigBuf = Buffer.from(sig || '', 'utf8');
+  const expectedBuf = Buffer.from(expectedSig, 'utf8');
+  if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (!payload.exp || Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// Los datos del cliente (nombre, teléfono, dirección...) vienen del
+// formulario público y se insertan en HTML (correo y páginas de
+// aprobación) — hay que escaparlos para que un nombre con "<script>" no
+// se ejecute en el navegador del dueño.
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function approvalHtmlPage(title, message) {
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#f4fafb;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box;}
+  .card{max-width:420px;background:#fff;border-radius:20px;padding:36px 30px;box-shadow:0 20px 50px rgba(20,50,55,.12);text-align:center;}
+  h1{font-size:1.3rem;margin:0 0 12px;color:#12191a;}
+  p{color:#5c6b6e;line-height:1.6;margin:0;}
+</style></head><body><div class="card"><h1>${title}</h1><p>${message}</p></div></body></html>`;
+}
+
+function formatApptDate(startAt) {
+  return new Date(startAt).toLocaleString('es-US', {
+    timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  });
+}
+
+async function sendApprovalEmail(req, payload, token) {
+  if (!mailTransport) {
+    throw new Error('El correo de aprobación no está configurado (faltan GMAIL_USER / GMAIL_APP_PASSWORD en el servidor).');
+  }
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const approveUrl = `${baseUrl}/approve-booking?token=${encodeURIComponent(token)}`;
+  const declineUrl = `${baseUrl}/decline-booking?token=${encodeURIComponent(token)}`;
+  const addressStr = payload.address
+    ? [payload.address.addressLine1, payload.address.locality, payload.address.administrativeDistrictLevel1, payload.address.postalCode].filter(Boolean).join(', ')
+    : 'No especificada';
+
+  await mailTransport.sendMail({
+    from: `"Oh My Wash — Reservas" <${process.env.GMAIL_USER}>`,
+    to: process.env.GMAIL_USER,
+    subject: `Nueva solicitud de cita — ${payload.customerName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#0f6a62;">Nueva solicitud de cita</h2>
+        <p><strong>Cliente:</strong> ${escapeHtml(payload.customerName)}</p>
+        <p><strong>Teléfono:</strong> ${escapeHtml(payload.customerPhone) || '—'}</p>
+        <p><strong>Correo:</strong> ${escapeHtml(payload.customerEmail) || '—'}</p>
+        <p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>
+        <p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary) || '—'}</p>
+        <p><strong>Técnico:</strong> ${escapeHtml(payload.staffName) || '—'}</p>
+        <p><strong>Fecha y hora:</strong> ${formatApptDate(payload.startAt)}</p>
+        <div style="margin-top:24px;">
+          <a href="${approveUrl}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;margin-right:12px;">✅ Aceptar cita</a>
+          <a href="${declineUrl}" style="display:inline-block;background:#e2574c;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;">❌ Rechazar</a>
+        </div>
+        <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">Este enlace vence en 7 días.</p>
+      </div>
+    `,
+  });
+}
 
 function bigIntSafe(value) {
   return typeof value === 'bigint' ? Number(value) : value;
@@ -216,7 +324,8 @@ app.post('/availability', async (req, res) => {
   }
 });
 
-// Crea la cita real en Square (y el cliente si no existe todavía).
+// Crea el cliente en Square si no existe (la cita en sí NO se crea aquí —
+// se manda a aprobación manual por correo, ver sendApprovalEmail más abajo).
 // Acepta "segments" (varios servicios en una sola visita) o los campos sueltos de un solo servicio, por compatibilidad.
 app.post('/create-booking', async (req, res) => {
   const {
@@ -233,6 +342,8 @@ app.post('/create-booking', async (req, res) => {
     locality,
     administrativeDistrictLevel1,
     postalCode,
+    serviceSummary,
+    staffName,
   } = req.body || {};
 
   // Square solo acepta estos sub-campos en address (ni booking.address ni
@@ -285,25 +396,61 @@ app.post('/create-booking', async (req, res) => {
       customerId = (createResp.result?.customer ?? createResp.customer)?.id;
     }
 
+    // No se llama a bookingsApi.createBooking aquí. En su lugar, se firma
+    // un token con todos los datos necesarios para crear la cita después,
+    // y se manda por correo con botones de Aceptar/Rechazar — la cita real
+    // en Square solo se crea cuando el dueño hace clic en "Aceptar"
+    // (endpoint /approve-booking).
+    const pendingPayload = {
+      segments: segmentList.map(s => ({
+        serviceVariationId: s.serviceVariationId,
+        serviceVariationVersion: s.serviceVariationVersion,
+        teamMemberId: s.teamMemberId,
+        durationMinutes: s.durationMinutes,
+      })),
+      startAt,
+      customerId,
+      customerName,
+      customerEmail: customerEmail || null,
+      customerPhone: customerPhone || null,
+      address: address || null,
+      serviceSummary: serviceSummary || null,
+      staffName: staffName || null,
+      exp: Date.now() + BOOKING_REQUEST_TTL_MS,
+    };
+
+    const token = signBookingToken(pendingPayload);
+    await sendApprovalEmail(req, pendingPayload, token);
+
+    res.json({ success: true, pending: true });
+  } catch (err) {
+    console.error('Error creando la solicitud de cita:', err);
+    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
+// El dueño hace clic en este link desde el correo para aceptar la cita —
+// aquí sí se crea la cita real en Square. idempotencyKey se deriva del
+// token para que hacer clic dos veces (o recargar la página) no cree dos
+// citas duplicadas.
+app.get('/approve-booking', async (req, res) => {
+  const payload = verifyBookingToken(req.query.token);
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de aprobación ya no es válido (venció a los 7 días, o el token está mal formado).'));
+  }
+
+  try {
+    const idempotencyKey = createHash('sha256').update(String(req.query.token)).digest('hex').slice(0, 45);
     const bookingResp = await squareClient.bookingsApi.createBooking({
-      idempotencyKey: randomUUID(),
+      idempotencyKey,
       booking: {
         locationId: process.env.SQUARE_LOCATION_ID,
-        startAt,
-        customerId,
-        // Las reservas creadas por la API con el token de acceso del vendedor
-        // quedan ACCEPTED automáticamente por default (a diferencia de las
-        // hechas desde la página de reservas propia de Square, que respetan
-        // la política de "requiere aprobación" del negocio). Forzamos PENDING
-        // para que TODAS las citas de esta web se acepten manualmente en Square.
-        status: 'PENDING',
-        // Square exige locationType: CUSTOMER_LOCATION explícitamente en la
-        // reserva para poder guardar una dirección (no basta con que el
-        // perfil del negocio lo permita) — Oh My Wash es un servicio móvil,
-        // siempre se hace en la ubicación del cliente.
-        locationType: address ? 'CUSTOMER_LOCATION' : undefined,
-        address,
-        appointmentSegments: segmentList.map(s => ({
+        startAt: payload.startAt,
+        customerId: payload.customerId,
+        locationType: payload.address ? 'CUSTOMER_LOCATION' : undefined,
+        address: payload.address || undefined,
+        appointmentSegments: payload.segments.map(s => ({
           teamMemberId: s.teamMemberId,
           serviceVariationId: s.serviceVariationId,
           serviceVariationVersion: s.serviceVariationVersion != null ? BigInt(s.serviceVariationVersion) : undefined,
@@ -313,18 +460,28 @@ app.post('/create-booking', async (req, res) => {
     });
 
     const booking = bookingResp.result?.booking ?? bookingResp.booking;
-
-    res.json({
-      success: true,
-      bookingId: booking.id,
-      startAt: booking.startAt,
-      status: booking.status,
-    });
+    res.send(approvalHtmlPage(
+      '✅ Cita aceptada',
+      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue creada en Square (ID: ${escapeHtml(booking.id)}).`,
+    ));
   } catch (err) {
-    console.error('Error creando la cita:', err);
+    console.error('Error aprobando la cita:', err);
     const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
-    res.status(500).json({ success: false, error: detail });
+    res.status(500).send(approvalHtmlPage('❌ No se pudo crear la cita', escapeHtml(detail)));
   }
+});
+
+// El dueño hace clic en este link para rechazar la solicitud — como la
+// cita nunca se creó en Square, no hay nada que cancelar ahí.
+app.get('/decline-booking', async (req, res) => {
+  const payload = verifyBookingToken(req.query.token);
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace ya no es válido.'));
+  }
+  res.send(approvalHtmlPage(
+    '🚫 Solicitud rechazada',
+    `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada. No se creó ninguna cita en Square.`,
+  ));
 });
 
 const PORT = process.env.PORT || 3000;

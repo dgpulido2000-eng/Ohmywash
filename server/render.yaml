@@ -15,3 +15,9 @@ services:
         sync: false
       - key: SQUARE_APPLICATION_SECRET
         sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: APPROVAL_SECRET
+        sync: false
