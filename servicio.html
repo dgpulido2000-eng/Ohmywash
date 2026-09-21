@@ -226,6 +226,72 @@
   .powered-by{text-align:center;margin-top:22px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);font-size:.78rem;color:rgba(255,255,255,.4);}
   .powered-by b{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.7);}
 
+
+  /* ---------- Promo flotante $40 OFF ---------- */
+  .promo-banner{
+    position:fixed;right:20px;top:38%;z-index:150;
+    display:flex;align-items:center;gap:8px;
+    background:linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color:#fff;padding:10px 10px 10px 16px;border-radius:100px;
+    box-shadow:0 14px 34px rgba(20,50,55,.3);cursor:pointer;
+    transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+    animation:promoPulse 2.6s ease-in-out infinite;
+  }
+  .promo-banner:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(20,50,55,.42);}
+  .promo-banner[hidden]{display:none;}
+  .promo-banner-text{font-size:.92rem;font-weight:800;white-space:nowrap;}
+  .promo-banner-close{
+    flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.22);
+    border:none;color:#fff;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:background .2s var(--ease);
+  }
+  .promo-banner-close:hover{background:rgba(255,255,255,.38);}
+  @keyframes promoPulse{
+    0%,100%{box-shadow:0 14px 34px rgba(20,50,55,.3);}
+    50%{box-shadow:0 14px 34px rgba(46,196,182,.6);}
+  }
+  .promo-modal-overlay{
+    position:fixed;inset:0;background:rgba(6,16,18,.75);z-index:410;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .promo-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .promo-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);
+    width:min(560px,92vw);max-height:88vh;overflow-y:auto;
+    background:linear-gradient(160deg,#1a3236,#0f2226);color:#fff;border-radius:26px;
+    padding:38px 32px 32px;z-index:411;opacity:0;pointer-events:none;
+    box-shadow:0 40px 90px rgba(0,0,0,.5);
+    transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .promo-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .promo-modal-close{
+    position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,.12);border:none;color:#fff;font-size:1.1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:background .2s var(--ease);
+  }
+  .promo-modal-close:hover{background:rgba(255,255,255,.25);}
+  .promo-modal-logo{height:44px;margin:0 auto 18px;display:block;}
+  .promo-modal-eyebrow{text-align:center;color:var(--teal-light);font-weight:700;letter-spacing:1.5px;font-size:.78rem;text-transform:uppercase;}
+  .promo-modal-title{text-align:center;font-size:1.5rem;font-weight:800;line-height:1.2;margin:10px 0 18px;}
+  .promo-modal-desc{font-size:.9rem;line-height:1.65;color:rgba(255,255,255,.82);text-align:center;margin-bottom:16px;}
+  .promo-modal-price{text-align:center;font-size:3rem;font-weight:800;color:var(--teal-light);line-height:1;}
+  .promo-modal-price-sub{text-align:center;font-size:.82rem;color:rgba(255,255,255,.7);margin-top:6px;margin-bottom:26px;}
+  .promo-modal-how{text-align:center;font-size:1.15rem;font-weight:700;margin-bottom:16px;}
+  .promo-steps{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px;}
+  .promo-step{background:rgba(255,255,255,.06);border-radius:16px;padding:16px 12px;text-align:center;}
+  .promo-step-title{font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;color:var(--teal-light);}
+  .promo-step-text{font-size:.78rem;line-height:1.5;color:rgba(255,255,255,.75);}
+  .promo-modal-tagline{text-align:center;font-weight:700;font-size:.95rem;line-height:1.5;margin-bottom:22px;}
+  .promo-modal-cta{display:flex;justify-content:center;}
+  @media (max-width:600px){
+    .promo-banner{right:14px;top:34%;padding:9px 9px 9px 14px;}
+    .promo-banner-text{font-size:.85rem;}
+  }
+  @media (max-width:480px){
+    .promo-steps{grid-template-columns:1fr 1fr;}
+    .promo-modal{padding:30px 20px 26px;}
+    .promo-modal-price{font-size:2.4rem;}
+  }
   .nav-close{display:none;}
 
   @media (max-width: 860px){
@@ -351,6 +417,45 @@
   <div class="pethair-btn-row">
     <button type="button" class="btn pethair-btn-no" id="petHairNo" data-i18n="petHair.no">No tiene</button>
     <button type="button" class="btn pethair-btn-yes" id="petHairYes" data-i18n="petHair.yes">Sí, agregar (+$50)</button>
+  </div>
+</div>
+
+<div class="promo-banner" id="promoBanner">
+  <strong class="promo-banner-text" data-i18n="promo.bannerTitle">$40 OFF</strong>
+  <button class="promo-banner-close" id="promoBannerClose" aria-label="Cerrar">✕</button>
+</div>
+
+<div class="promo-modal-overlay" id="promoModalOverlay"></div>
+<div class="promo-modal" id="promoModal" hidden>
+  <button class="promo-modal-close" id="promoModalClose" aria-label="Cerrar">✕</button>
+  <img class="promo-modal-logo" src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
+  <div class="promo-modal-eyebrow" data-i18n="promo.eyebrow">Price List · Mobile Car Detailing Services</div>
+  <h3 class="promo-modal-title" data-i18n="promo.title">Monthly Maintenance Program</h3>
+  <p class="promo-modal-desc" data-i18n="promo.desc">Our monthly maintenance program is tailored to provide unmatched convenience while ensuring your vehicle stays in pristine condition. Join our community of satisfied clients and discover the joy of driving a well-maintained car with a reset every 4 weeks. As a valued member, after your first detailing service, enjoy</p>
+  <div class="promo-modal-price">$40 OFF</div>
+  <div class="promo-modal-price-sub" data-i18n="promo.priceSub">on your next services within each calendar month</div>
+  <div class="promo-modal-how" data-i18n="promo.how">How can you join?</div>
+  <div class="promo-steps">
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step1Title">Get your first detail</div>
+      <div class="promo-step-text" data-i18n="promo.step1Text">Receive our initial service from us. Feel free to choose the initial service package that aligns best with your needs.</div>
+    </div>
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step2Title">Join our program</div>
+      <div class="promo-step-text" data-i18n="promo.step2Text">After your first service with us, you're eligible to join our program for premium care and exclusive discounts.</div>
+    </div>
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step3Title">Set date/time</div>
+      <div class="promo-step-text" data-i18n="promo.step3Text">Choose the best recurring time and date that can work with your schedule to service your vehicle within each calendar month.</div>
+    </div>
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step4Title">Enjoy premium car care</div>
+      <div class="promo-step-text" data-i18n="promo.step4Text">Experience our premium maintenance detailing to keep your vehicle in pristine condition.</div>
+    </div>
+  </div>
+  <p class="promo-modal-tagline" data-i18n="promo.tagline">Be part of the Oh My Wash family, where we take care of the vehicle that takes care of you every day.</p>
+  <div class="promo-modal-cta">
+    <a href="servicios.html" class="btn btn-solid" data-i18n="promo.cta">See services &amp; book →</a>
   </div>
 </div>
 
@@ -873,6 +978,22 @@
   const translations = {
     en: {
       'nav.home': 'Home', 'nav.services': 'Services', 'nav.gallery': 'Gallery', 'nav.team': 'Team', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'promo.bannerTitle': '$40 OFF',
+      'promo.eyebrow': 'Price List · Mobile Car Detailing Services',
+      'promo.title': 'Monthly Maintenance Program',
+      'promo.desc': 'Our monthly maintenance program is tailored to provide unmatched convenience while ensuring your vehicle stays in pristine condition. Join our community of satisfied clients and discover the joy of driving a well-maintained car with a reset every 4 weeks. As a valued member, after your first detailing service, enjoy',
+      'promo.priceSub': 'on your next services within each calendar month',
+      'promo.how': 'How can you join?',
+      'promo.step1Title': 'Get your first detail',
+      'promo.step1Text': 'Receive our initial service from us. Feel free to choose the initial service package that aligns best with your needs.',
+      'promo.step2Title': 'Join our program',
+      'promo.step2Text': 'After your first service with us, you\'re eligible to join our program for premium care and exclusive discounts.',
+      'promo.step3Title': 'Set date/time',
+      'promo.step3Text': 'Choose the best recurring time and date that can work with your schedule to service your vehicle within each calendar month.',
+      'promo.step4Title': 'Enjoy premium car care',
+      'promo.step4Text': 'Experience our premium maintenance detailing to keep your vehicle in pristine condition.',
+      'promo.tagline': 'Be part of the Oh My Wash family, where we take care of the vehicle that takes care of you every day.',
+      'promo.cta': 'See services & book →',
       'footer.home': 'Home',
       'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta and surrounding areas',
       'cart.title': 'Your cart', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
@@ -900,6 +1021,22 @@
     },
     es: {
       'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.gallery': 'Galería', 'nav.team': 'Equipo', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
+      'promo.bannerTitle': '$40 DE DESCUENTO',
+      'promo.eyebrow': 'Lista de Precios · Detailing Móvil',
+      'promo.title': 'Programa de Mantenimiento Mensual',
+      'promo.desc': 'Nuestro programa de mantenimiento mensual está diseñado para ofrecerte una comodidad inigualable mientras mantenemos tu vehículo en condiciones impecables. Únete a nuestra comunidad de clientes satisfechos y descubre la sensación de manejar un auto bien cuidado con un reinicio cada 4 semanas. Como miembro, después de tu primer servicio de detailing, disfruta',
+      'promo.priceSub': 'en tus próximos servicios dentro de cada mes calendario',
+      'promo.how': '¿Cómo puedes unirte?',
+      'promo.step1Title': 'Agenda tu primer detailing',
+      'promo.step1Text': 'Recibe tu primer servicio con nosotros. Elige el paquete inicial que mejor se ajuste a tus necesidades.',
+      'promo.step2Title': 'Únete al programa',
+      'promo.step2Text': 'Después de tu primer servicio con nosotros, ya eres elegible para unirte a nuestro programa de cuidado premium y descuentos exclusivos.',
+      'promo.step3Title': 'Elige fecha y hora',
+      'promo.step3Text': 'Elige el mejor horario y fecha recurrente que se ajuste a tu agenda para atender tu vehículo dentro de cada mes calendario.',
+      'promo.step4Title': 'Disfruta cuidado premium',
+      'promo.step4Text': 'Disfruta nuestro detailing de mantenimiento premium para mantener tu vehículo en condiciones impecables.',
+      'promo.tagline': 'Sé parte de la familia Oh My Wash, donde cuidamos el vehículo que te cuida a ti todos los días.',
+      'promo.cta': 'Ver servicios y reservar →',
       'footer.home': 'Inicio',
       'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta y alrededores',
       'cart.title': 'Tu carrito', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
@@ -1179,5 +1316,43 @@
 })();
 </script>
 
+<script>
+(function(){
+  // ---------- Promo flotante $40 OFF ----------
+  const PROMO_KEY = 'ohMyWashPromoClosed';
+  const promoBanner = document.getElementById('promoBanner');
+  const promoBannerClose = document.getElementById('promoBannerClose');
+  const promoModalOverlay = document.getElementById('promoModalOverlay');
+  const promoModal = document.getElementById('promoModal');
+  const promoModalClose = document.getElementById('promoModalClose');
+
+  if (localStorage.getItem(PROMO_KEY) === '1') {
+    promoBanner.hidden = true;
+  }
+
+  function openPromoModal(){
+    promoModal.hidden = false;
+    promoModalOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      promoModal.classList.add('open');
+      promoModalOverlay.classList.add('open');
+    });
+  }
+  function closePromoModal(){
+    promoModal.classList.remove('open');
+    promoModalOverlay.classList.remove('open');
+    setTimeout(() => { promoModal.hidden = true; promoModalOverlay.hidden = true; }, 300);
+  }
+
+  promoBanner.addEventListener('click', openPromoModal);
+  promoBannerClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    promoBanner.hidden = true;
+    localStorage.setItem(PROMO_KEY, '1');
+  });
+  promoModalClose.addEventListener('click', closePromoModal);
+  promoModalOverlay.addEventListener('click', closePromoModal);
+})();
+</script>
 </body>
 </html>
