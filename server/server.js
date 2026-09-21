@@ -291,6 +291,12 @@ app.post('/create-booking', async (req, res) => {
         locationId: process.env.SQUARE_LOCATION_ID,
         startAt,
         customerId,
+        // Las reservas creadas por la API con el token de acceso del vendedor
+        // quedan ACCEPTED automáticamente por default (a diferencia de las
+        // hechas desde la página de reservas propia de Square, que respetan
+        // la política de "requiere aprobación" del negocio). Forzamos PENDING
+        // para que TODAS las citas de esta web se acepten manualmente en Square.
+        status: 'PENDING',
         // Square exige locationType: CUSTOMER_LOCATION explícitamente en la
         // reserva para poder guardar una dirección (no basta con que el
         // perfil del negocio lo permita) — Oh My Wash es un servicio móvil,
