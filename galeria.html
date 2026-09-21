@@ -240,19 +240,19 @@
   /* ---------- Promo flotante $40 OFF ---------- */
   .promo-banner{
     position:fixed;right:20px;top:38%;z-index:150;
-    display:flex;align-items:center;gap:8px;
+    display:flex;align-items:center;gap:10px;
     background:linear-gradient(135deg, var(--teal), var(--teal-dark));
-    color:#fff;padding:10px 10px 10px 16px;border-radius:100px;
+    color:#fff;padding:13px 13px 13px 20px;border-radius:100px;
     box-shadow:0 14px 34px rgba(20,50,55,.3);cursor:pointer;
     transition:transform .3s var(--ease), box-shadow .3s var(--ease);
     animation:promoPulse 2.6s ease-in-out infinite;
   }
   .promo-banner:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(20,50,55,.42);}
   .promo-banner[hidden]{display:none;}
-  .promo-banner-text{font-size:.92rem;font-weight:800;white-space:nowrap;}
+  .promo-banner-text{font-size:1.15rem;font-weight:800;white-space:nowrap;}
   .promo-banner-close{
-    flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.22);
-    border:none;color:#fff;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);
+    border:none;color:#fff;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
     transition:background .2s var(--ease);
   }
   .promo-banner-close:hover{background:rgba(255,255,255,.38);}
@@ -294,8 +294,8 @@
   .promo-modal-tagline{text-align:center;font-weight:700;font-size:.95rem;line-height:1.5;margin-bottom:22px;}
   .promo-modal-cta{display:flex;justify-content:center;}
   @media (max-width:600px){
-    .promo-banner{right:14px;top:34%;padding:9px 9px 9px 14px;}
-    .promo-banner-text{font-size:.85rem;}
+    .promo-banner{right:14px;top:34%;padding:11px 11px 11px 16px;}
+    .promo-banner-text{font-size:1rem;}
   }
   @media (max-width:480px){
     .promo-steps{grid-template-columns:1fr 1fr;}
@@ -364,7 +364,7 @@
 
 <section class="page-banner">
   <div class="wrap">
-    <a href="web-oh-my-wash.html" class="back-link" data-i18n="banner.back">‹ Volver al inicio</a>
+    <a href="web-oh-my-wash.html" class="back-link" data-i18n="banner.back" data-i18n-aria="banner.backAria" aria-label="Back to home">‹</a>
     <span class="eyebrow" data-i18n="galleryBanner.eyebrow">Nuestro trabajo</span>
     <h1 data-i18n="galleryBanner.title">Antes de contratar, mira los resultados</h1>
     <p data-i18n="galleryBanner.subtitle">Una selección real de autos que hemos detallado en Atlanta y alrededores — desde un hand wash rápido hasta ceramic coating completo.</p>
@@ -442,7 +442,7 @@
 <div class="promo-modal-overlay" id="promoModalOverlay"></div>
 <div class="promo-modal" id="promoModal" hidden>
   <button class="promo-modal-close" id="promoModalClose" aria-label="Cerrar">✕</button>
-  <img class="promo-modal-logo" src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
+  <img class="promo-modal-logo" src="assets/oh-my-wash-logo-white.png" alt="Oh My Wash">
   <div class="promo-modal-eyebrow" data-i18n="promo.eyebrow">Price List · Mobile Car Detailing Services</div>
   <h3 class="promo-modal-title" data-i18n="promo.title">Monthly Maintenance Program</h3>
   <p class="promo-modal-desc" data-i18n="promo.desc">Our monthly maintenance program is tailored to provide unmatched convenience while ensuring your vehicle stays in pristine condition. Join our community of satisfied clients and discover the joy of driving a well-maintained car with a reset every 4 weeks. As a valued member, after your first detailing service, enjoy</p>
@@ -526,7 +526,7 @@
       'promo.step4Text': 'Experience our premium maintenance detailing to keep your vehicle in pristine condition.',
       'promo.tagline': 'Be part of the Oh My Wash family, where we take care of the vehicle that takes care of you every day.',
       'promo.cta': 'See services & book →',
-      'banner.back': '‹ Back to home',
+      'banner.back': '‹', 'banner.backAria': 'Back to home',
       'galleryBanner.eyebrow': 'Our work',
       'galleryBanner.title': 'Before you book, see the results',
       'galleryBanner.subtitle': 'A real selection of cars we’ve detailed around Atlanta and surrounding areas — from a quick hand wash to full ceramic coating.',
@@ -542,7 +542,7 @@
     },
     es: {
       'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.gallery': 'Galería', 'nav.team': 'Equipo', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
-      'promo.bannerTitle': '$40 DE DESCUENTO',
+      'promo.bannerTitle': '$40 OFF',
       'promo.eyebrow': 'Lista de Precios · Detailing Móvil',
       'promo.title': 'Programa de Mantenimiento Mensual',
       'promo.desc': 'Nuestro programa de mantenimiento mensual está diseñado para ofrecerte una comodidad inigualable mientras mantenemos tu vehículo en condiciones impecables. Únete a nuestra comunidad de clientes satisfechos y descubre la sensación de manejar un auto bien cuidado con un reinicio cada 4 semanas. Como miembro, después de tu primer servicio de detailing, disfruta',
@@ -558,7 +558,7 @@
       'promo.step4Text': 'Disfruta nuestro detailing de mantenimiento premium para mantener tu vehículo en condiciones impecables.',
       'promo.tagline': 'Sé parte de la familia Oh My Wash, donde cuidamos el vehículo que te cuida a ti todos los días.',
       'promo.cta': 'Ver servicios y reservar →',
-      'banner.back': '‹ Volver al inicio',
+      'banner.back': '‹', 'banner.backAria': 'Volver al inicio',
       'galleryBanner.eyebrow': 'Nuestro trabajo',
       'galleryBanner.title': 'Antes de contratar, mira los resultados',
       'galleryBanner.subtitle': 'Una selección real de autos que hemos detallado en Atlanta y alrededores — desde un hand wash rápido hasta ceramic coating completo.',
@@ -590,6 +590,10 @@
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.dataset.i18n;
       if (dict[key] != null) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      const key = el.dataset.i18nAria;
+      if (dict[key] != null) el.setAttribute('aria-label', dict[key]);
     });
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
     localStorage.setItem('ohMyWashLang', lang);

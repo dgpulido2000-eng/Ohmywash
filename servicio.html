@@ -201,7 +201,11 @@
     margin-top:30px;box-shadow:0 -10px 30px rgba(20,50,55,.06);
   }
   .add-bar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
-  .add-bar-price{font-weight:800;font-size:1.4rem;color:var(--ink);}
+  .add-bar-price{
+    font-weight:800;font-size:1.4rem;color:var(--ink);
+    background:var(--teal-pale);border-radius:100px;padding:10px 22px;
+    display:inline-block;line-height:1.3;
+  }
   .add-bar-price small{display:block;font-size:.72rem;font-weight:500;color:#8b9a9c;}
   #addToCartBtn{min-width:220px;}
 
@@ -230,19 +234,19 @@
   /* ---------- Promo flotante $40 OFF ---------- */
   .promo-banner{
     position:fixed;right:20px;top:38%;z-index:150;
-    display:flex;align-items:center;gap:8px;
+    display:flex;align-items:center;gap:10px;
     background:linear-gradient(135deg, var(--teal), var(--teal-dark));
-    color:#fff;padding:10px 10px 10px 16px;border-radius:100px;
+    color:#fff;padding:13px 13px 13px 20px;border-radius:100px;
     box-shadow:0 14px 34px rgba(20,50,55,.3);cursor:pointer;
     transition:transform .3s var(--ease), box-shadow .3s var(--ease);
     animation:promoPulse 2.6s ease-in-out infinite;
   }
   .promo-banner:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(20,50,55,.42);}
   .promo-banner[hidden]{display:none;}
-  .promo-banner-text{font-size:.92rem;font-weight:800;white-space:nowrap;}
+  .promo-banner-text{font-size:1.15rem;font-weight:800;white-space:nowrap;}
   .promo-banner-close{
-    flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.22);
-    border:none;color:#fff;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);
+    border:none;color:#fff;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
     transition:background .2s var(--ease);
   }
   .promo-banner-close:hover{background:rgba(255,255,255,.38);}
@@ -284,8 +288,8 @@
   .promo-modal-tagline{text-align:center;font-weight:700;font-size:.95rem;line-height:1.5;margin-bottom:22px;}
   .promo-modal-cta{display:flex;justify-content:center;}
   @media (max-width:600px){
-    .promo-banner{right:14px;top:34%;padding:9px 9px 9px 14px;}
-    .promo-banner-text{font-size:.85rem;}
+    .promo-banner{right:14px;top:34%;padding:11px 11px 11px 16px;}
+    .promo-banner-text{font-size:1rem;}
   }
   @media (max-width:480px){
     .promo-steps{grid-template-columns:1fr 1fr;}
@@ -428,7 +432,7 @@
 <div class="promo-modal-overlay" id="promoModalOverlay"></div>
 <div class="promo-modal" id="promoModal" hidden>
   <button class="promo-modal-close" id="promoModalClose" aria-label="Cerrar">✕</button>
-  <img class="promo-modal-logo" src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
+  <img class="promo-modal-logo" src="assets/oh-my-wash-logo-white.png" alt="Oh My Wash">
   <div class="promo-modal-eyebrow" data-i18n="promo.eyebrow">Price List · Mobile Car Detailing Services</div>
   <h3 class="promo-modal-title" data-i18n="promo.title">Monthly Maintenance Program</h3>
   <p class="promo-modal-desc" data-i18n="promo.desc">Our monthly maintenance program is tailored to provide unmatched convenience while ensuring your vehicle stays in pristine condition. Join our community of satisfied clients and discover the joy of driving a well-maintained car with a reset every 4 weeks. As a valued member, after your first detailing service, enjoy</p>
@@ -867,7 +871,7 @@
     const cheapest = isVariablePricing ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
 
     contentEl.innerHTML = `
-      <div class="breadcrumb"><a href="servicios.html">${t['service.allServices']}</a> / ${service.name}</div>
+      <div class="breadcrumb"><a href="servicios.html" aria-label="${t['service.allServices']}">‹</a> / ${service.name}</div>
       ${isVariablePricing ? '' : `<div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>`}
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
@@ -1021,7 +1025,7 @@
     },
     es: {
       'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.gallery': 'Galería', 'nav.team': 'Equipo', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
-      'promo.bannerTitle': '$40 DE DESCUENTO',
+      'promo.bannerTitle': '$40 OFF',
       'promo.eyebrow': 'Lista de Precios · Detailing Móvil',
       'promo.title': 'Programa de Mantenimiento Mensual',
       'promo.desc': 'Nuestro programa de mantenimiento mensual está diseñado para ofrecerte una comodidad inigualable mientras mantenemos tu vehículo en condiciones impecables. Únete a nuestra comunidad de clientes satisfechos y descubre la sensación de manejar un auto bien cuidado con un reinicio cada 4 semanas. Como miembro, después de tu primer servicio de detailing, disfruta',
