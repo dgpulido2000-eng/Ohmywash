@@ -152,6 +152,18 @@ app.get('/', (req, res) => {
   res.json({ ok: true, service: 'oh-my-wash-server' });
 });
 
+// Diagnóstico de solo lectura: confirma si las variables de entorno del
+// correo de aprobación quedaron configuradas en Render, sin exponer sus
+// valores (solo true/false).
+app.get('/debug/approval-config', (req, res) => {
+  res.json({
+    gmailUserSet: !!process.env.GMAIL_USER,
+    gmailAppPasswordSet: !!process.env.GMAIL_APP_PASSWORD,
+    approvalSecretSet: !!process.env.APPROVAL_SECRET,
+    mailTransportReady: !!mailTransport,
+  });
+});
+
 app.post('/create-payment', async (req, res) => {
   const { sourceId, amount } = req.body || {};
 
