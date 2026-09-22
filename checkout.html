@@ -751,7 +751,13 @@
       // y traduciendo "años/year(s)" y "corrección/correction" entre
       // idiomas) y, si hay mas de un candidato con suficientes palabras en
       // comun, se usa el precio (identico en ambos idiomas) para desempatar.
-      const TRANSLATE = { anos: 'years', ano: 'years', years: 'years', correccion: 'correction', correction: 'correction' };
+      const TRANSLATE = {
+        anos: 'years', ano: 'years', years: 'years', correccion: 'correction', correction: 'correction',
+        // Para que "Eliminación de pelo de mascota" (agregado al carrito
+        // desde la pregunta de pelo de mascota) empareje con "Pet Hair Fee"
+        // en Square sin importar el idioma en que esté navegando el cliente.
+        mascota: 'pet', pelo: 'hair', eliminacion: 'removal',
+      };
       const STOPWORDS = new Set(['oh', 'my', 'wash', 'with', 'without', 'de', 'la', 'el', 'y', 'and']);
       const words = (str) => str
         .toLowerCase()
