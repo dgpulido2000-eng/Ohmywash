@@ -161,14 +161,14 @@
   .pay-field{margin-bottom:18px;}
   .pay-field label{display:block;font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:8px;}
   #card-container{padding:2px;border-radius:12px;min-height:56px;}
-  #card-button, #apptConfirmBtn{
+  #card-button{
     width:100%;padding:15px;border-radius:100px;border:none;background:var(--teal);color:#fff;
     font-family:'Inter',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
     transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
     box-shadow:0 12px 30px rgba(46,196,182,.3);
   }
-  #card-button:hover, #apptConfirmBtn:hover{background:var(--teal-dark);transform:translateY(-2px);}
-  #card-button:disabled, #apptConfirmBtn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+  #card-button:hover{background:var(--teal-dark);transform:translateY(-2px);}
+  #card-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}
   #payment-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
   .payment-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
   .powered-by-light{text-align:center;padding:36px 0 10px;font-size:.8rem;color:#8b9a9c;}
@@ -195,6 +195,43 @@
   .success-panel h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.6rem;margin-bottom:10px;}
   .success-panel p{color:#5c6b6e;margin-bottom:6px;}
   .success-panel a.receipt{color:var(--teal);font-weight:600;text-decoration:underline;}
+
+  /* ---------- Popup de confirmación de cita (al pagar) ---------- */
+  .confirm-modal-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.55);z-index:400;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+    display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;
+  }
+  .confirm-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .confirm-modal{
+    background:#fff;border-radius:24px;box-shadow:0 40px 90px rgba(0,0,0,.35);
+    max-width:480px;width:100%;max-height:88vh;overflow-y:auto;padding:36px 32px;
+    transform:scale(.96);transition:transform .3s var(--ease);
+  }
+  .confirm-modal-overlay.open .confirm-modal{transform:scale(1);}
+  .confirm-modal-icon{
+    width:60px;height:60px;border-radius:50%;background:var(--teal-pale);color:var(--teal-deep);
+    display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 16px;
+  }
+  .confirm-modal h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.35rem;text-align:center;margin-bottom:6px;}
+  .confirm-modal-sub{color:#5c6b6e;font-size:.9rem;text-align:center;margin-bottom:24px;line-height:1.5;}
+  .confirm-modal-section{margin-bottom:20px;}
+  .confirm-modal-section-title{
+    font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--teal-deep);margin-bottom:10px;
+  }
+  .confirm-modal-item{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f0f5f5;font-size:.9rem;}
+  .confirm-modal-item:last-child{border-bottom:none;}
+  .confirm-modal-item-name{color:var(--ink);font-weight:600;}
+  .confirm-modal-item-price{color:#5c6b6e;white-space:nowrap;}
+  .confirm-modal-total-row{display:flex;justify-content:space-between;font-weight:700;font-size:1.05rem;padding-top:10px;margin-top:4px;border-top:1.5px solid #eaf1f2;}
+  .confirm-modal-detail{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:.88rem;}
+  .confirm-modal-detail-label{color:#8b9a9c;}
+  .confirm-modal-detail-value{color:var(--ink);font-weight:600;text-align:right;}
+  .confirm-modal-note{
+    background:var(--teal-pale);border-radius:14px;padding:14px 16px;font-size:.85rem;color:var(--teal-deep);
+    line-height:1.5;margin-bottom:24px;
+  }
+  .confirm-modal-close{display:block;text-align:center;}
 
 </style>
 </head>
@@ -225,6 +262,40 @@
     <div class="powered-by-light">Powered by <b>NEXO GROWTH</b></div>
   </div>
 </main>
+
+<div class="confirm-modal-overlay" id="confirmModalOverlay">
+  <div class="confirm-modal" id="confirmModal">
+    <div class="confirm-modal-icon">✓</div>
+    <h2 id="confirmModalTitle"></h2>
+    <p class="confirm-modal-sub" id="confirmModalSub"></p>
+
+    <div class="confirm-modal-section">
+      <div class="confirm-modal-section-title" data-i18n="checkout.confirmModalServicesTitle">Servicios solicitados</div>
+      <div id="confirmModalItems"></div>
+      <div class="confirm-modal-total-row">
+        <span data-i18n="checkout.totalLabel">Total</span>
+        <span id="confirmModalTotal"></span>
+      </div>
+    </div>
+
+    <div class="confirm-modal-section">
+      <div class="confirm-modal-section-title" data-i18n="checkout.confirmModalApptTitle">Detalles de la cita</div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.confirmModalDateTime">Fecha y hora</span><span class="confirm-modal-detail-value" id="confirmModalDateTime"></span></div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.technicianLabel">Técnico</span><span class="confirm-modal-detail-value" id="confirmModalStaff"></span></div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.addressLine1">Calle y número</span><span class="confirm-modal-detail-value" id="confirmModalAddress"></span></div>
+    </div>
+
+    <div class="confirm-modal-section">
+      <div class="confirm-modal-section-title" data-i18n="checkout.confirmModalCustomerTitle">Tus datos</div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.fullName">Nombre completo</span><span class="confirm-modal-detail-value" id="confirmModalName"></span></div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.email">Correo</span><span class="confirm-modal-detail-value" id="confirmModalEmail"></span></div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.phone">Teléfono</span><span class="confirm-modal-detail-value" id="confirmModalPhone"></span></div>
+    </div>
+
+    <p class="confirm-modal-note" id="confirmModalNote"></p>
+    <a href="web-oh-my-wash.html" class="btn-primary confirm-modal-close" data-i18n="checkout.backToHome">Volver al inicio</a>
+  </div>
+</div>
 
 <script src="https://web.squarecdn.com/v1/square.js"></script>
 <script>
@@ -261,9 +332,8 @@
       'checkout.city': 'City',
       'checkout.state': 'State',
       'checkout.zip': 'ZIP code',
-      'checkout.confirmAppt': 'Confirm appointment',
       'checkout.paymentTitle': 'Payment details',
-      'checkout.paymentGateNote': 'Schedule your appointment above to enable payment.',
+      'checkout.paymentGateNote': 'Complete your appointment details above, then pay here to submit your request.',
       'checkout.cardLabel': 'Card',
       'checkout.payButton': 'Pay',
       'checkout.paymentNote': '🔒 Secure payment processed by Square. Your card details never pass through our servers.',
@@ -286,7 +356,6 @@
       'checkout.completeAddress': 'Fill in the address where the service will take place',
       'checkout.confirmingAppt': 'Confirming your appointment...',
       'checkout.apptConfirmedFor': 'Appointment request sent for',
-      'checkout.apptAlreadyScheduled': 'Your request was sent — complete payment to reserve your spot while we confirm your appointment.',
       'checkout.viewReceipt': 'View receipt',
       'checkout.paymentIdLabel': 'Payment ID:',
       'checkout.paymentReceived': 'Payment received!',
@@ -295,12 +364,19 @@
       'checkout.backToHome': 'Back to home',
       'checkout.sdkLoadError': 'Could not load Square Web Payments SDK.',
       'checkout.cardFormError': 'Could not load the card form (check the console).',
-      'checkout.scheduleBeforePay': 'Schedule your appointment before paying.',
       'checkout.noChargeConfirmed': '✅ Request sent — no charge (only variable-price add-ons). We’ll confirm your appointment soon.',
       'checkout.processing': 'Processing...',
       'checkout.cardError': 'Could not process the card',
       'checkout.paymentSuccess': '✅ Payment successful',
       'checkout.paymentRejected': 'Backend rejected the payment',
+      'checkout.confirmModalServicesTitle': 'Requested services',
+      'checkout.confirmModalApptTitle': 'Appointment details',
+      'checkout.confirmModalDateTime': 'Date & time',
+      'checkout.confirmModalCustomerTitle': 'Your details',
+      'checkout.confirmModalPaidSub': 'Your payment was received and your appointment request was sent.',
+      'checkout.confirmModalNoChargeSub': 'Your appointment request was sent — no charge (only variable-price add-ons).',
+      'checkout.confirmModalPendingNote': 'Your appointment is pending confirmation from our team — we’ll reach out shortly to confirm the date and time.',
+      'checkout.bookingAfterPaymentError': 'Your payment was received, but we couldn’t submit your appointment request. Please call us at +1 678-895-5812 so we can schedule it manually.',
     },
     es: {
       'checkout.backToServices': '‹ Volver a servicios',
@@ -327,9 +403,8 @@
       'checkout.city': 'Ciudad',
       'checkout.state': 'Estado',
       'checkout.zip': 'Código postal',
-      'checkout.confirmAppt': 'Confirmar cita',
       'checkout.paymentTitle': 'Datos de pago',
-      'checkout.paymentGateNote': 'Agenda tu cita arriba para habilitar el pago.',
+      'checkout.paymentGateNote': 'Completa los datos de tu cita arriba y paga aquí para enviar tu solicitud.',
       'checkout.cardLabel': 'Tarjeta',
       'checkout.payButton': 'Pagar',
       'checkout.paymentNote': '🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.',
@@ -352,7 +427,6 @@
       'checkout.completeAddress': 'Completa la dirección donde se hará el servicio',
       'checkout.confirmingAppt': 'Confirmando tu cita...',
       'checkout.apptConfirmedFor': 'Solicitud de cita enviada para',
-      'checkout.apptAlreadyScheduled': 'Tu solicitud fue enviada — completa el pago para reservar tu lugar mientras confirmamos tu cita.',
       'checkout.viewReceipt': 'Ver recibo',
       'checkout.paymentIdLabel': 'ID de pago:',
       'checkout.paymentReceived': '¡Pago recibido!',
@@ -361,12 +435,19 @@
       'checkout.backToHome': 'Volver al inicio',
       'checkout.sdkLoadError': 'No se pudo cargar Square Web Payments SDK.',
       'checkout.cardFormError': 'No se pudo cargar el formulario de tarjeta (revisa la consola).',
-      'checkout.scheduleBeforePay': 'Agenda tu cita antes de pagar.',
       'checkout.noChargeConfirmed': '✅ Solicitud enviada — no hay ningún cargo (solo add-ons de precio variable). Te confirmaremos tu cita pronto.',
       'checkout.processing': 'Procesando...',
       'checkout.cardError': 'No se pudo procesar la tarjeta',
       'checkout.paymentSuccess': '✅ Pago exitoso',
       'checkout.paymentRejected': 'El backend rechazó el pago',
+      'checkout.confirmModalServicesTitle': 'Servicios solicitados',
+      'checkout.confirmModalApptTitle': 'Detalles de la cita',
+      'checkout.confirmModalDateTime': 'Fecha y hora',
+      'checkout.confirmModalCustomerTitle': 'Tus datos',
+      'checkout.confirmModalPaidSub': 'Tu pago fue recibido y tu solicitud de cita fue enviada.',
+      'checkout.confirmModalNoChargeSub': 'Tu solicitud de cita fue enviada — no hay ningún cargo (solo add-ons de precio variable).',
+      'checkout.confirmModalPendingNote': 'Tu cita está pendiente de confirmación de nuestro equipo — te contactaremos pronto para confirmar la fecha y hora.',
+      'checkout.bookingAfterPaymentError': 'Tu pago fue recibido, pero no pudimos enviar tu solicitud de cita. Por favor llámanos al +1 678-895-5812 para agendarla manualmente.',
     },
   };
   let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
@@ -489,14 +570,13 @@
           <div class="pay-field"><label data-i18n="checkout.city">Ciudad</label><input type="text" id="apptCity" placeholder="Atlanta"></div>
           <div class="pay-field"><label data-i18n="checkout.state">Estado</label><input type="text" id="apptState" value="GA" maxlength="2"></div>
           <div class="pay-field"><label data-i18n="checkout.zip">Código postal</label><input type="text" id="apptZip" placeholder="30341" inputmode="numeric"></div>
-          <button id="apptConfirmBtn" type="button" data-i18n="checkout.confirmAppt">Confirmar cita</button>
         </div>
         <p id="appt-status"></p>
       </div>
 
-      <div class="panel" id="paymentPanel" style="opacity:.5;pointer-events:none;">
+      <div class="panel" id="paymentPanel">
         <h2 data-i18n="checkout.paymentTitle">Datos de pago</h2>
-        <p class="section-hint" id="paymentGateNote" data-i18n="checkout.paymentGateNote">Agenda tu cita arriba para habilitar el pago.</p>
+        <p class="section-hint" id="paymentGateNote" data-i18n="checkout.paymentGateNote">Completa los datos de tu cita arriba y paga aquí para enviar tu solicitud.</p>
         <div class="pay-field">
           <label data-i18n="checkout.cardLabel">Tarjeta</label>
           <div id="card-container"></div>
@@ -511,7 +591,6 @@
   const API_BASE = 'https://oh-my-wash-server.onrender.com';
   const cardButton = document.getElementById('card-button');
   const paymentPanel = document.getElementById('paymentPanel');
-  let bookingConfirmed = false;
 
   function updatePayButtonText() {
     cardButton.textContent = `${t()['checkout.payButton']} ${formatUSD(total)}`;
@@ -594,7 +673,6 @@
   const apptSearchBtn = document.getElementById('apptSearchBtn');
   const apptSlotsEl = document.getElementById('apptSlots');
   const apptCustomerForm = document.getElementById('apptCustomerForm');
-  const apptConfirmBtn = document.getElementById('apptConfirmBtn');
   const apptStatusEl = document.getElementById('appt-status');
 
   function setApptStatus(html, kind) {
@@ -869,69 +947,64 @@
     }
   });
 
-  apptConfirmBtn.addEventListener('click', async () => {
-    if (apptSelectedIndex == null) { setApptStatus(t()['checkout.chooseTimeFirst'], 'error'); return; }
+  // Lee y valida los datos de la cita que el cliente ya eligió arriba
+  // (horario + datos personales). Ya no hay un botón "Confirmar cita"
+  // aparte — esta validación se corre justo antes de cobrar, al pulsar
+  // "Pay", porque pagar Y solicitar la cita pasan en un solo paso.
+  function readApptDetails() {
+    if (apptSelectedIndex == null) { setApptStatus(t()['checkout.chooseTimeFirst'], 'error'); return null; }
     const name = document.getElementById('apptName').value.trim();
-    if (!name) { setApptStatus(t()['checkout.writeYourName'], 'error'); return; }
+    if (!name) { setApptStatus(t()['checkout.writeYourName'], 'error'); return null; }
     const email = document.getElementById('apptEmail').value.trim();
     const phone = document.getElementById('apptPhone').value.trim();
     const addressLine1 = document.getElementById('apptAddressLine1').value.trim();
     const city = document.getElementById('apptCity').value.trim();
     const state = document.getElementById('apptState').value.trim();
     const zip = document.getElementById('apptZip').value.trim();
-    if (!addressLine1 || !city || !zip) { setApptStatus(t()['checkout.completeAddress'], 'error'); return; }
+    if (!addressLine1 || !city || !zip) { setApptStatus(t()['checkout.completeAddress'], 'error'); return null; }
 
-    const slot = apptAvailabilities[apptSelectedIndex];
-    const segments = slot.appointmentSegments;
+    setApptStatus('', 'info');
+    return {
+      slot: apptAvailabilities[apptSelectedIndex],
+      name, email, phone, addressLine1, city, state, zip,
+      staffName: STAFF_SCHEDULE[selectedStaffId]?.name || selectedStaffId,
+      serviceSummary: apptServices.map(s => `${s.serviceName}${s.qty > 1 ? ` ×${s.qty}` : ''}`).join(', '),
+    };
+  }
 
-    setApptStatus(t()['checkout.confirmingAppt'], 'info');
-    apptConfirmBtn.disabled = true;
-
-    try {
-      const res = await fetch(`${API_BASE}/create-booking`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          segments: segments.map(s => ({
-            serviceVariationId: s.serviceVariationId,
-            serviceVariationVersion: s.serviceVariationVersion,
-            teamMemberId: s.teamMemberId,
-            durationMinutes: s.durationMinutes,
-          })),
-          startAt: slot.startAt,
-          customerName: name,
-          customerEmail: email || undefined,
-          customerPhone: phone || undefined,
-          addressLine1,
-          locality: city,
-          administrativeDistrictLevel1: state || undefined,
-          postalCode: zip,
-          // Solo informativo para el correo de aprobación — la cita en sí
-          // se crea con los IDs de arriba, no con este texto.
-          serviceSummary: apptServices.map(s => `${s.serviceName}${s.qty > 1 ? ` ×${s.qty}` : ''}`).join(', '),
-          staffName: STAFF_SCHEDULE[selectedStaffId]?.name || selectedStaffId,
-        }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-
-      const dateStr = new Date(slot.startAt).toLocaleString(dateLocale(), {
-        weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
-      });
-      setApptStatus(`<div class="appt-confirmed">✅ ${t()['checkout.apptConfirmedFor']} ${dateStr}</div>`, 'ok');
-
-      bookingConfirmed = true;
-      paymentPanel.style.opacity = '1';
-      paymentPanel.style.pointerEvents = 'auto';
-      document.getElementById('paymentGateNote').textContent = t()['checkout.apptAlreadyScheduled'];
-      apptSearchBtn.disabled = true;
-      apptDateBtn.disabled = true;
-    } catch (err) {
-      console.error(err);
-      setApptStatus(`❌ ${err.message}`, 'error');
-      apptConfirmBtn.disabled = false;
-    }
-  });
+  // Manda la solicitud de cita a Square (queda pendiente de aprobación
+  // manual — ver server.js). Se llama DESPUÉS de cobrar la tarjeta, nunca
+  // antes: el dueño quiere que el pago pase primero.
+  async function submitBookingRequest(details) {
+    const segments = details.slot.appointmentSegments;
+    const res = await fetch(`${API_BASE}/create-booking`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        segments: segments.map(s => ({
+          serviceVariationId: s.serviceVariationId,
+          serviceVariationVersion: s.serviceVariationVersion,
+          teamMemberId: s.teamMemberId,
+          durationMinutes: s.durationMinutes,
+        })),
+        startAt: details.slot.startAt,
+        customerName: details.name,
+        customerEmail: details.email || undefined,
+        customerPhone: details.phone || undefined,
+        addressLine1: details.addressLine1,
+        locality: details.city,
+        administrativeDistrictLevel1: details.state || undefined,
+        postalCode: details.zip,
+        // Solo informativo para el correo de aprobación — la cita en sí
+        // se crea con los IDs de arriba, no con este texto.
+        serviceSummary: details.serviceSummary,
+        staffName: details.staffName,
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    return data;
+  }
 
   const statusEl = document.getElementById('payment-status');
 
@@ -941,21 +1014,39 @@
     statusEl.style.color = kind === 'error' ? '#c0392b' : kind === 'ok' ? '#1d8a4a' : '#5c6b6e';
   }
 
-  function showSuccess(data) {
-    const receiptLink = data.receiptUrl
-      ? `<p><a class="receipt" href="${data.receiptUrl}" target="_blank" rel="noopener">${t()['checkout.viewReceipt']}</a></p>`
-      : '';
-    const paymentLine = data.paymentId ? `<p>${t()['checkout.paymentIdLabel']} ${data.paymentId}</p>` : '';
-    document.getElementById('checkoutGrid').innerHTML = `
-      <div class="panel success-panel">
-        <div class="success-icon">✓</div>
-        <h2>${data.paymentId ? t()['checkout.paymentReceived'] : t()['checkout.apptConfirmedTitle']}</h2>
-        ${paymentLine}
-        <p>${t()['checkout.totalCharged']} ${formatUSD(total)}</p>
-        ${receiptLink}
-        <p style="margin-top:22px;"><a href="web-oh-my-wash.html" class="btn-primary">${t()['checkout.backToHome']}</a></p>
+  // Popup final: desglose de servicios + monto + datos del cliente,
+  // confirmando que la solicitud de cita fue enviada (queda pendiente de
+  // aprobación manual, no es una cita ya aceptada en Square).
+  function showConfirmModal(details, paymentData) {
+    const dateStr = new Date(details.slot.startAt).toLocaleString(dateLocale(), {
+      weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    });
+
+    document.getElementById('confirmModalTitle').textContent = t()['checkout.apptConfirmedTitle'];
+    document.getElementById('confirmModalSub').textContent = paymentData.paymentId
+      ? t()['checkout.confirmModalPaidSub']
+      : t()['checkout.confirmModalNoChargeSub'];
+
+    document.getElementById('confirmModalItems').innerHTML = cart.map(i => `
+      <div class="confirm-modal-item">
+        <span class="confirm-modal-item-name">${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}</span>
+        <span class="confirm-modal-item-price">${i.price != null ? formatUSD(i.price * i.qty) : t()['checkout.variablePrice']}</span>
       </div>
-    `;
+    `).join('');
+    document.getElementById('confirmModalTotal').textContent = formatUSD(total);
+
+    document.getElementById('confirmModalDateTime').textContent = dateStr;
+    document.getElementById('confirmModalStaff').textContent = details.staffName;
+    document.getElementById('confirmModalAddress').textContent =
+      `${details.addressLine1}, ${details.city}${details.state ? ', ' + details.state : ''} ${details.zip}`.trim();
+
+    document.getElementById('confirmModalName').textContent = details.name;
+    document.getElementById('confirmModalEmail').textContent = details.email || '—';
+    document.getElementById('confirmModalPhone').textContent = details.phone || '—';
+
+    document.getElementById('confirmModalNote').textContent = t()['checkout.confirmModalPendingNote'];
+
+    document.getElementById('confirmModalOverlay').classList.add('open');
     localStorage.removeItem(CART_KEY);
   }
 
@@ -979,50 +1070,60 @@
     }
 
     cardButton.addEventListener('click', async () => {
-      if (!bookingConfirmed) {
-        setStatus(t()['checkout.scheduleBeforePay'], 'error');
-        return;
-      }
+      const apptDetails = readApptDetails();
+      if (!apptDetails) return;
+
       // Se vuelve a leer el carrito real de localStorage justo antes de
       // cobrar (no se confía en la variable "total" ya calculada): si algo
       // se quitó del carrito en otra pestaña/página después de cargar esta,
       // el monto que se cobra debe reflejar el carrito actual, no uno viejo.
       let freshCart = [];
       try { freshCart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { freshCart = []; }
+      cart = freshCart;
       total = freshCart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
 
-      if (total <= 0) {
-        setStatus(t()['checkout.noChargeConfirmed'], 'ok');
-        showSuccess({ paymentId: null, receiptUrl: null });
-        return;
-      }
-
-      setStatus(t()['checkout.processing'], 'info');
       cardButton.disabled = true;
       try {
-        const amountCents = Math.round(total * 100);
-        const tokenResult = await card.tokenize();
-        if (tokenResult.status !== 'OK') {
-          throw new Error(tokenResult.errors?.[0]?.message || t()['checkout.cardError']);
-        }
+        let paymentData = { paymentId: null, receiptUrl: null };
 
-        const res = await fetch(BACKEND_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sourceId: tokenResult.token, amount: amountCents }),
-        });
-        const data = await res.json();
+        if (total > 0) {
+          setStatus(t()['checkout.processing'], 'info');
+          const amountCents = Math.round(total * 100);
+          const tokenResult = await card.tokenize();
+          if (tokenResult.status !== 'OK') {
+            throw new Error(tokenResult.errors?.[0]?.message || t()['checkout.cardError']);
+          }
 
-        if (data.success) {
+          const res = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sourceId: tokenResult.token, amount: amountCents }),
+          });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.error || t()['checkout.paymentRejected']);
+          paymentData = data;
           setStatus(t()['checkout.paymentSuccess'], 'ok');
-          showSuccess(data);
         } else {
-          throw new Error(data.error || t()['checkout.paymentRejected']);
+          setStatus(t()['checkout.noChargeConfirmed'], 'ok');
         }
+
+        // El pago (si aplicaba) ya se cobró — ahora se manda la solicitud
+        // de cita. Si esto falla, el dinero ya se cobró, así que se avisa
+        // aparte en vez de perderlo en silencio como si nada hubiera pasado.
+        setApptStatus(t()['checkout.confirmingAppt'], 'info');
+        try {
+          await submitBookingRequest(apptDetails);
+        } catch (bookingErr) {
+          console.error(bookingErr);
+          setApptStatus(`❌ ${t()['checkout.bookingAfterPaymentError']}`, 'error');
+          cardButton.disabled = false;
+          return;
+        }
+
+        showConfirmModal(apptDetails, paymentData);
       } catch (err) {
         console.error(err);
         setStatus(`❌ ${err.message}`, 'error');
-      } finally {
         cardButton.disabled = false;
       }
     });
