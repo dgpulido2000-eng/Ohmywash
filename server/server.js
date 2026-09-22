@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import { randomUUID, createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import pkg from 'square';
-import nodemailer from 'nodemailer';
 const { Client, Environment } = pkg;
 
 const app = express();
@@ -34,13 +33,12 @@ const squareClient = new Client({
 // crearlas así) — por eso, en vez de crear la cita al instante, se manda
 // este correo con botones de Aceptar/Rechazar, y la cita real en Square
 // solo se crea cuando el dueño la acepta.
-const mailTransport = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
-  ? nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
-    })
-  : null;
-
+//
+// El correo se manda por la API HTTP de Resend (no por SMTP): el plan
+// gratuito de Render bloquea las conexiones SMTP salientes (a Gmail o a
+// cualquier otro), así que un envío por SMTP se queda colgado para
+// siempre sin avisar del error. La API de Resend usa HTTPS normal, que sí
+// funciona en Render.
 const APPROVAL_SECRET = process.env.APPROVAL_SECRET;
 const BOOKING_REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
 
@@ -97,8 +95,8 @@ function formatApptDate(startAt) {
 }
 
 async function sendApprovalEmail(req, payload, token) {
-  if (!mailTransport) {
-    throw new Error('El correo de aprobación no está configurado (faltan GMAIL_USER / GMAIL_APP_PASSWORD en el servidor).');
+  if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) {
+    throw new Error('El correo de aprobación no está configurado (faltan RESEND_API_KEY / NOTIFY_EMAIL en el servidor).');
   }
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   const approveUrl = `${baseUrl}/approve-booking?token=${encodeURIComponent(token)}`;
@@ -107,28 +105,43 @@ async function sendApprovalEmail(req, payload, token) {
     ? [payload.address.addressLine1, payload.address.locality, payload.address.administrativeDistrictLevel1, payload.address.postalCode].filter(Boolean).join(', ')
     : 'No especificada';
 
-  await mailTransport.sendMail({
-    from: `"Oh My Wash — Reservas" <${process.env.GMAIL_USER}>`,
-    to: process.env.GMAIL_USER,
-    subject: `Nueva solicitud de cita — ${payload.customerName}`,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
-        <h2 style="color:#0f6a62;">Nueva solicitud de cita</h2>
-        <p><strong>Cliente:</strong> ${escapeHtml(payload.customerName)}</p>
-        <p><strong>Teléfono:</strong> ${escapeHtml(payload.customerPhone) || '—'}</p>
-        <p><strong>Correo:</strong> ${escapeHtml(payload.customerEmail) || '—'}</p>
-        <p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>
-        <p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary) || '—'}</p>
-        <p><strong>Técnico:</strong> ${escapeHtml(payload.staffName) || '—'}</p>
-        <p><strong>Fecha y hora:</strong> ${formatApptDate(payload.startAt)}</p>
-        <div style="margin-top:24px;">
-          <a href="${approveUrl}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;margin-right:12px;">✅ Aceptar cita</a>
-          <a href="${declineUrl}" style="display:inline-block;background:#e2574c;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;">❌ Rechazar</a>
+  const emailResp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      // "onboarding@resend.dev" funciona sin verificar un dominio propio,
+      // pero solo puede mandar al correo con el que se creó la cuenta de
+      // Resend — por eso NOTIFY_EMAIL debe ser esa misma cuenta.
+      from: process.env.NOTIFY_FROM || 'Oh My Wash <onboarding@resend.dev>',
+      to: [process.env.NOTIFY_EMAIL],
+      subject: `Nueva solicitud de cita — ${payload.customerName}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+          <h2 style="color:#0f6a62;">Nueva solicitud de cita</h2>
+          <p><strong>Cliente:</strong> ${escapeHtml(payload.customerName)}</p>
+          <p><strong>Teléfono:</strong> ${escapeHtml(payload.customerPhone) || '—'}</p>
+          <p><strong>Correo:</strong> ${escapeHtml(payload.customerEmail) || '—'}</p>
+          <p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>
+          <p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary) || '—'}</p>
+          <p><strong>Técnico:</strong> ${escapeHtml(payload.staffName) || '—'}</p>
+          <p><strong>Fecha y hora:</strong> ${formatApptDate(payload.startAt)}</p>
+          <div style="margin-top:24px;">
+            <a href="${approveUrl}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;margin-right:12px;">✅ Aceptar cita</a>
+            <a href="${declineUrl}" style="display:inline-block;background:#e2574c;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;">❌ Rechazar</a>
+          </div>
+          <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">Este enlace vence en 7 días.</p>
         </div>
-        <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">Este enlace vence en 7 días.</p>
-      </div>
-    `,
+      `,
+    }),
   });
+
+  if (!emailResp.ok) {
+    const errText = await emailResp.text().catch(() => '');
+    throw new Error(`No se pudo enviar el correo de aprobación (Resend respondió ${emailResp.status}): ${errText}`);
+  }
 }
 
 function bigIntSafe(value) {
@@ -157,10 +170,9 @@ app.get('/', (req, res) => {
 // valores (solo true/false).
 app.get('/debug/approval-config', (req, res) => {
   res.json({
-    gmailUserSet: !!process.env.GMAIL_USER,
-    gmailAppPasswordSet: !!process.env.GMAIL_APP_PASSWORD,
+    resendApiKeySet: !!process.env.RESEND_API_KEY,
+    notifyEmailSet: !!process.env.NOTIFY_EMAIL,
     approvalSecretSet: !!process.env.APPROVAL_SECRET,
-    mailTransportReady: !!mailTransport,
   });
 });
 
