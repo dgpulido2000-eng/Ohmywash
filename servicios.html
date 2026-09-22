@@ -483,7 +483,7 @@
         <a class="card addon-card" href="servicio.html?id=headlight-restoration">
           <h3>Headlight Restoration with Ceramic Coating</h3>
           <p data-i18n="card.headlightRestoration.desc">Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.</p>
-          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">1 hr</span></div>
+          <div class="card-footer"><span class="price">$0.01</span><span class="duration">1 hr</span></div>
           <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=engine-bay-cleaning">
@@ -824,11 +824,11 @@
     'Oh My Wash | Full Detailing': ['Upholstery Cleaning', 'Stain Removal'],
   };
   const ADDON_CATALOG = [
-    { name: 'Stain Removal', duration: '2h 30m' },
-    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h' },
-    { name: 'Engine Bay Cleaning', duration: '1h 30m' },
-    { name: 'Upholstery Cleaning', duration: '2h 40m' },
-    { name: 'Carpet Cleaning', duration: '1h 30m' },
+    { name: 'Stain Removal', duration: '2h 30m', price: null },
+    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 0.01 },
+    { name: 'Engine Bay Cleaning', duration: '1h 30m', price: null },
+    { name: 'Upholstery Cleaning', duration: '2h 40m', price: null },
+    { name: 'Carpet Cleaning', duration: '1h 30m', price: null },
   ];
 
   function getAvailableAddons() {
@@ -855,7 +855,7 @@
       <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
         <div>
           <div class="addon-modal-item-name">${a.name}</div>
-          <div class="addon-modal-item-meta">${a.duration} · ${translations[currentLang]['cart.variablePrice']}</div>
+          <div class="addon-modal-item-meta">${a.duration} · ${a.price != null ? '$' + a.price.toFixed(2) : translations[currentLang]['cart.variablePrice']}</div>
         </div>
         <button type="button" class="addon-modal-add-btn">+ ${translations[currentLang]['addon.add']}</button>
       </div>
@@ -863,7 +863,8 @@
     addonModalList.querySelectorAll('.addon-modal-add-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const name = btn.closest('.addon-modal-item').dataset.addonName;
-        addToCart(name, null);
+        const addon = available.find(a => a.name === name);
+        addToCart(name, addon ? addon.price : null);
         btn.disabled = true;
         btn.textContent = translations[currentLang]['addon.added'];
       });

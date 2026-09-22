@@ -780,7 +780,7 @@
     },
     'headlight-restoration': {
       photoFile: 'assets/servicio-headlight-restoration.jpg',
-      options: [{ label: 'Estándar', price: null, duration: '1 hr' }],
+      options: [{ label: 'Estándar', price: 0.01, duration: '1 hr' }],
       es: {
         name: 'Headlight Restoration with Ceramic Coating',
         category: 'Add-ons',
@@ -866,28 +866,32 @@
     const t = translations[currentLang];
     const carLabel = (label) => (currentLang === 'en' && CAR_LABEL_EN[label]) || label;
 
-    // Los add-ons son un solo extra de precio variable (no tienen tallas de
-    // auto), así que se muestran directo con "Agregar al carrito" habilitado,
-    // sin el paso de "elige el tipo de tu auto" que sí necesitan los
-    // servicios con precio por tamaño.
-    const isVariablePricing = service.options.length === 1 && service.options[0].price == null;
-    const cheapest = isVariablePricing ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
+    // Los add-ons son un solo extra (no tienen tallas de auto), así que se
+    // muestran directo con "Agregar al carrito" habilitado, sin el paso de
+    // "elige el tipo de tu auto" que sí necesitan los servicios con precio
+    // por tamaño. La mayoría de los add-ons se cotizan en sitio (precio
+    // null), pero algunos (ej. Headlight Restoration) tienen precio fijo.
+    const isSingleOption = service.options.length === 1;
+    const singleOption = isSingleOption ? service.options[0] : null;
+    const hasQuotedPrice = isSingleOption && singleOption.price == null;
+    const isAddon = service.category === 'Add-ons';
+    const cheapest = isSingleOption ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
 
     contentEl.innerHTML = `
       <div class="breadcrumb"><a href="servicios.html" aria-label="${t['service.allServices']}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></a><span>/ ${service.name}</span></div>
-      ${isVariablePricing ? '' : `<div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>`}
+      ${isAddon ? '' : `<div class="service-photo${service.photoFiles ? ' service-photo-dual' : ''}" id="servicePhotoBox"><span class="service-photo-label">📷 ${t['service.photoSoon']}</span></div>`}
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
-        <span class="service-duration">${isVariablePricing ? t['service.variablePrice'] : t['service.from'] + ' $' + cheapest}</span>
-        <span class="service-varies">${isVariablePricing ? t['service.quotedOnSite'] : t['service.priceVaries']}</span>
+        <span class="service-duration">${hasQuotedPrice ? t['service.variablePrice'] : isSingleOption ? '$' + singleOption.price.toFixed(2) : t['service.from'] + ' $' + cheapest}</span>
+        <span class="service-varies">${hasQuotedPrice ? t['service.quotedOnSite'] : isSingleOption ? '' : t['service.priceVaries']}</span>
       </div>
       ${service.description ? `<p class="service-description">${service.description}</p>` : ''}
       ${service.bullets ? `
         <div class="service-bullets-title">${t['service.includes']}</div>
         <ul class="service-bullets">${service.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
       ` : ''}
-      ${isVariablePricing ? '' : `
+      ${isSingleOption ? '' : `
         <div class="options-title">${t['service.chooseCarType']}</div>
         <div id="optionList">
           ${service.options.map((o, i) => `
@@ -905,11 +909,11 @@
       <div class="add-bar">
         <div class="wrap add-bar-inner">
           <div class="add-bar-price" id="addBarPrice">
-            ${isVariablePricing
-              ? `${t['service.variablePrice']}<small>${service.options[0].duration}</small>`
+            ${isSingleOption
+              ? `${hasQuotedPrice ? t['service.variablePrice'] : '$' + singleOption.price.toFixed(2)}<small>${singleOption.duration}</small>`
               : `${t['service.chooseCarType2']}<small>${t['service.toSeePrice']}</small>`}
           </div>
-          <button class="btn btn-solid" id="addToCartBtn" ${isVariablePricing ? '' : 'disabled'}>${t['service.addToCart']}</button>
+          <button class="btn btn-solid" id="addToCartBtn" ${isSingleOption ? '' : 'disabled'}>${t['service.addToCart']}</button>
         </div>
       </div>
     `;
@@ -919,7 +923,7 @@
     // "Foto próximamente" tal cual estaba. Algunos servicios (ej. In-N-Out)
     // usan dos fotos lado a lado para mostrar las dos partes del servicio
     // (interior y exterior) en vez de una sola.
-    if (isVariablePricing) {
+    if (isAddon) {
       // Los add-ons no llevan sección de foto — solo descripción.
     } else if (service.photoFiles && service.photoFiles.length === 2) {
       const servicePhotoBox = document.getElementById('servicePhotoBox');
@@ -947,7 +951,7 @@
       preload.src = service.photoFile;
     }
 
-    selected = isVariablePricing ? service.options[0] : null;
+    selected = isSingleOption ? singleOption : null;
     const optionRows = contentEl.querySelectorAll('.option-row');
     const addBarPrice = document.getElementById('addBarPrice');
     const addToCartBtn = document.getElementById('addToCartBtn');
@@ -966,7 +970,7 @@
 
     addToCartBtn.addEventListener('click', () => {
       if (!selected) return;
-      const name = isVariablePricing ? service.name : `${service.name} (${selected.label})`;
+      const name = isSingleOption ? service.name : `${service.name} (${selected.label})`;
       if (PET_HAIR_SERVICES.includes(serviceId)) {
         openPetHairModal(name, selected.price);
       } else {
@@ -1146,11 +1150,11 @@
     'Oh My Wash | Full Detailing': ['Upholstery Cleaning', 'Stain Removal'],
   };
   const ADDON_CATALOG = [
-    { name: 'Stain Removal', duration: '2h 30m' },
-    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h' },
-    { name: 'Engine Bay Cleaning', duration: '1h 30m' },
-    { name: 'Upholstery Cleaning', duration: '2h 40m' },
-    { name: 'Carpet Cleaning', duration: '1h 30m' },
+    { name: 'Stain Removal', duration: '2h 30m', price: null },
+    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 0.01 },
+    { name: 'Engine Bay Cleaning', duration: '1h 30m', price: null },
+    { name: 'Upholstery Cleaning', duration: '2h 40m', price: null },
+    { name: 'Carpet Cleaning', duration: '1h 30m', price: null },
   ];
 
   function getAvailableAddons() {
@@ -1177,7 +1181,7 @@
       <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
         <div>
           <div class="addon-modal-item-name">${a.name}</div>
-          <div class="addon-modal-item-meta">${a.duration} · ${translations[currentLang]['cart.variablePrice']}</div>
+          <div class="addon-modal-item-meta">${a.duration} · ${a.price != null ? '$' + a.price.toFixed(2) : translations[currentLang]['cart.variablePrice']}</div>
         </div>
         <button type="button" class="addon-modal-add-btn">+ ${translations[currentLang]['addon.add']}</button>
       </div>
@@ -1185,7 +1189,8 @@
     addonModalList.querySelectorAll('.addon-modal-add-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const name = btn.closest('.addon-modal-item').dataset.addonName;
-        addToCart(name, null);
+        const addon = available.find(a => a.name === name);
+        addToCart(name, addon ? addon.price : null);
         btn.disabled = true;
         btn.textContent = translations[currentLang]['addon.added'];
       });
