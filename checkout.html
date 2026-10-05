@@ -891,6 +891,7 @@
       btn.addEventListener('click', () => {
         const [y, m, day] = btn.dataset.date.split('-').map(Number);
         selectedDate = new Date(y, m - 1, day);
+        userPickedDate = true;
         updateDateLabel();
         renderStaffPicker();
         apptCalendar.hidden = true;
@@ -971,6 +972,7 @@
         apptServiceSummary.textContent = t()['checkout.noBookableServices'];
         return;
       }
+      autoSelectNextAvailable();
       apptServiceSummary.innerHTML = apptServices.map(s => `
         <span class="appt-service-name">${s.serviceName}${s.qty > 1 ? ` ×${s.qty}` : ''}</span>
         <span class="appt-service-meta">${s.price != null ? '$' + s.price.toFixed(2) : t()['checkout.priceToConfirm']} · ${s.durationMinutes} min${s.qty > 1 ? ' c/u' : ''}</span>
@@ -997,6 +999,25 @@
       renderCalendar();
       apptSearchBtn.click();
     });
+  }
+
+  let userPickedDate = false;
+  async function autoSelectNextAvailable() {
+    if (userPickedDate || !apptServices.length || apptSelectedIndex != null) return;
+    try {
+      const next = await findNextAvailable(toDateStr(new Date()));
+      if (userPickedDate || apptSelectedIndex != null) return;
+      if (!next) { setApptStatus(t()['checkout.noUpcomingSlots'], 'error'); return; }
+      const [y, m, day] = dayKeyNY(next.startAt).split('-').map(Number);
+      selectedDate = new Date(y, m - 1, day);
+      selectedStaffId = next.staffId;
+      updateDateLabel();
+      renderStaffPicker();
+      renderCalendar();
+      apptSearchBtn.click();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   apptSearchBtn.addEventListener('click', async () => {
