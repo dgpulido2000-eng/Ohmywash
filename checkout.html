@@ -114,6 +114,10 @@
   .cal-day.today:not(.selected){border:1.5px solid var(--teal);}
   .cal-day:disabled{color:#d0dbdc;cursor:not-allowed;}
   .cal-day.empty{visibility:hidden;cursor:default;}
+  .cal-day.unavail{color:#b4bfc1;background:#f1f4f5;position:relative;}
+  .cal-day.unavail::after{content:'/';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:400;color:#9aa6a8;}
+  .appt-recommend-btn{margin-left:8px;padding:6px 14px;border-radius:100px;border:1.5px solid var(--teal);background:#fff;color:var(--teal-deep);font-weight:700;font-size:.82rem;cursor:pointer;}
+  .appt-recommend-btn:hover{background:var(--teal-pale);}
 
   .appt-slots{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
   .appt-slot-btn{
@@ -373,6 +377,9 @@
       'checkout.cardError': 'Could not process the card',
       'checkout.paymentSuccess': '✅ Payment successful',
       'checkout.paymentRejected': 'Backend rejected the payment',
+      'checkout.recommendPrefix': 'Next available:',
+      'checkout.recommendUse': 'Use this date',
+      'checkout.noUpcomingSlots': 'No availability in the next month. Please call us at +1 678-895-5812.',
       'checkout.confirmModalServicesTitle': 'Requested services',
       'checkout.confirmModalApptTitle': 'Appointment details',
       'checkout.confirmModalDateTime': 'Date & time',
@@ -446,6 +453,9 @@
       'checkout.cardError': 'No se pudo procesar la tarjeta',
       'checkout.paymentSuccess': '✅ Pago exitoso',
       'checkout.paymentRejected': 'El backend rechazó el pago',
+      'checkout.recommendPrefix': 'Próxima disponibilidad:',
+      'checkout.recommendUse': 'Usar esta fecha',
+      'checkout.noUpcomingSlots': 'No hay disponibilidad en el próximo mes. Llámanos al +1 678-895-5812.',
       'checkout.confirmModalServicesTitle': 'Servicios solicitados',
       'checkout.confirmModalApptTitle': 'Detalles de la cita',
       'checkout.confirmModalDateTime': 'Fecha y hora',
@@ -769,6 +779,85 @@
     return h * 60 + m;
   }
 
+  // ---------- Disponibilidad por día ----------
+  // Un día se marca en gris (con "/") si ningún técnico que trabaja ese día
+  // tiene horario válido para TODOS los servicios del carrito — ya sea porque
+  // el calendario está lleno o porque la duración no cabe antes de su salida.
+  const dayKeyNY = (iso) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+  const weekdayOfKey = (key) => new Date(key + 'T12:00:00').getDay();
+  const monthAvailCache = {};
+  const monthAvailPending = {};
+
+  function totalDurationMin() {
+    return apptServices.reduce((sum, s) => sum + s.durationMinutes * (s.qty || 1), 0);
+  }
+
+  function slotsAreValid(staffId, availabilities) {
+    const dur = totalDurationMin();
+    const endMin = STAFF_SCHEDULE[staffId].endMin;
+    return availabilities.filter(a => nyMinutesOfDay(new Date(new Date(a.startAt).getTime() + dur * 60000)) <= endMin);
+  }
+
+  async function searchAvailability(staffId, startAt, endAt) {
+    const res = await fetch(`${API_BASE}/availability`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        serviceVariationIds: apptServices.flatMap(s => Array(s.qty || 1).fill(s.serviceVariationId)),
+        teamMemberId: staffId,
+        startAt,
+        endAt,
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    return data.availabilities || [];
+  }
+
+  function monthAvailKey(year, month) {
+    return apptServices.map(s => `${s.serviceVariationId}x${s.qty || 1}`).join('+') + `|${totalDurationMin()}|${year}-${month}`;
+  }
+
+  function loadMonthAvailability(year, month) {
+    const key = monthAvailKey(year, month);
+    if (monthAvailCache[key]) return Promise.resolve(monthAvailCache[key]);
+    if (monthAvailPending[key]) return monthAvailPending[key];
+
+    // Square rechaza fechas de inicio en el pasado, así que el rango empieza hoy si el mes ya empezó.
+    const startAt = new Date(Math.max(Date.UTC(year, month, 1), Date.now())).toISOString();
+    const endAt = new Date(Date.UTC(year, month + 1, 1)).toISOString();
+    monthAvailPending[key] = Promise.all(Object.keys(STAFF_SCHEDULE).map(id =>
+      searchAvailability(id, startAt, endAt).then(av => ({ id, av })).catch(() => ({ id, av: [] }))
+    )).then(results => {
+      const open = new Set();
+      results.forEach(({ id, av }) => {
+        slotsAreValid(id, av).forEach(a => {
+          const day = dayKeyNY(a.startAt);
+          if (STAFF_SCHEDULE[id].days.includes(weekdayOfKey(day))) open.add(day);
+        });
+      });
+      monthAvailCache[key] = open;
+      delete monthAvailPending[key];
+      return open;
+    });
+    return monthAvailPending[key];
+  }
+
+  async function findNextAvailable(fromDateStr) {
+    const start = new Date(fromDateStr + 'T00:00:00Z');
+    start.setUTCDate(start.getUTCDate() + 1);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 30);
+    const results = await Promise.all(Object.keys(STAFF_SCHEDULE).map(id =>
+      searchAvailability(id, start.toISOString(), end.toISOString())
+        .then(av => slotsAreValid(id, av).map(a => ({ ...a, staffId: id })))
+        .catch(() => [])
+    ));
+    const all = results.flat().filter(a => STAFF_SCHEDULE[a.staffId].days.includes(weekdayOfKey(dayKeyNY(a.startAt))));
+    all.sort((x, y) => new Date(x.startAt) - new Date(y.startAt));
+    return all[0] || null;
+  }
+
   function renderCalendar() {
     calMonthLabel.textContent = calViewDate.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
     renderWeekdayHeaders();
@@ -778,15 +867,21 @@
     const startWeekday = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+    const openDays = apptServices.length ? monthAvailCache[monthAvailKey(year, month)] : null;
+    if (apptServices.length && !openDays) {
+      loadMonthAvailability(year, month).then(() => renderCalendar()).catch(() => {});
+    }
+
     let html = '';
     for (let i = 0; i < startWeekday; i++) html += `<button type="button" class="cal-day empty" disabled></button>`;
     for (let d = 1; d <= daysInMonth; d++) {
       const dateObj = new Date(year, month, d);
       const dStr = toDateStr(dateObj);
       const disabled = dateObj < minDate;
+      const unavailable = !disabled && openDays && !openDays.has(dStr);
       const isSelected = dStr === toDateStr(selectedDate);
       const isToday = dStr === toDateStr(new Date());
-      html += `<button type="button" class="cal-day${isSelected ? ' selected' : ''}${isToday ? ' today' : ''}" data-date="${dStr}"${disabled ? ' disabled' : ''}>${d}</button>`;
+      html += `<button type="button" class="cal-day${isSelected ? ' selected' : ''}${isToday ? ' today' : ''}${unavailable ? ' unavail' : ''}" data-date="${dStr}"${disabled || unavailable ? ' disabled' : ''}>${d}</button>`;
     }
     calDays.innerHTML = html;
 
@@ -887,6 +982,23 @@
   }
   loadApptServices();
 
+  function showRecommendation(rec) {
+    const d = new Date(rec.startAt);
+    const dateTxt = d.toLocaleDateString(dateLocale(), { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/New_York' });
+    const timeTxt = d.toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+    apptStatusEl.innerHTML = `${t()['checkout.recommendPrefix']} <strong>${dateTxt}</strong>, ${timeTxt} <button type="button" id="apptRecommendBtn" class="appt-recommend-btn">${t()['checkout.recommendUse']}</button>`;
+    apptStatusEl.style.color = '#5c6b6e';
+    document.getElementById('apptRecommendBtn').addEventListener('click', () => {
+      const [y, m, day] = dayKeyNY(rec.startAt).split('-').map(Number);
+      selectedDate = new Date(y, m - 1, day);
+      selectedStaffId = rec.staffId;
+      updateDateLabel();
+      renderStaffPicker();
+      renderCalendar();
+      apptSearchBtn.click();
+    });
+  }
+
   apptSearchBtn.addEventListener('click', async () => {
     if (!apptServices.length) { setApptStatus(t()['checkout.noServicesToSchedule'], 'error'); return; }
     if (!selectedStaffId) { setApptStatus(t()['checkout.noTechSelectDate'], 'error'); return; }
@@ -929,7 +1041,11 @@
       });
 
       if (!apptAvailabilities.length) {
-        setApptStatus(t()['checkout.noSlotsThatDay'], 'error');
+        const dayBefore = new Date(dateVal + 'T00:00:00Z');
+        dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
+        const next = await findNextAvailable(dayBefore.toISOString().slice(0, 10));
+        if (next) showRecommendation(next);
+        else setApptStatus(t()['checkout.noUpcomingSlots'], 'error');
         return;
       }
 
