@@ -276,6 +276,8 @@
         <span data-i18n="checkout.totalLabel">Total</span>
         <span id="confirmModalTotal"></span>
       </div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.confirmModalDepositLabel">Depósito pagado (20%)</span><span class="confirm-modal-detail-value" id="confirmModalDeposit"></span></div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.confirmModalBalanceLabel">Saldo a pagar en sitio</span><span class="confirm-modal-detail-value" id="confirmModalBalance"></span></div>
     </div>
 
     <div class="confirm-modal-section">
@@ -333,7 +335,9 @@
       'checkout.state': 'State',
       'checkout.zip': 'ZIP code',
       'checkout.paymentTitle': 'Payment details',
-      'checkout.paymentGateNote': 'Complete your appointment details above, then pay here to submit your request.',
+      'checkout.paymentGateNote': 'We charge a 20% deposit now to reserve your spot; the remaining balance is paid on-site. Cancellations less than 24 hours before the appointment are non-refundable.',
+      'checkout.confirmModalDepositLabel': 'Deposit paid (20%)',
+      'checkout.confirmModalBalanceLabel': 'Balance due on-site',
       'checkout.cardLabel': 'Card',
       'checkout.payButton': 'Pay',
       'checkout.paymentNote': '🔒 Secure payment processed by Square. Your card details never pass through our servers.',
@@ -404,7 +408,9 @@
       'checkout.state': 'Estado',
       'checkout.zip': 'Código postal',
       'checkout.paymentTitle': 'Datos de pago',
-      'checkout.paymentGateNote': 'Completa los datos de tu cita arriba y paga aquí para enviar tu solicitud.',
+      'checkout.paymentGateNote': 'Cobramos un depósito del 20% ahora para reservar tu lugar; el saldo se paga en sitio. Las cancelaciones con menos de 24 horas de anticipación no son reembolsables.',
+      'checkout.confirmModalDepositLabel': 'Depósito pagado (20%)',
+      'checkout.confirmModalBalanceLabel': 'Saldo a pagar en sitio',
       'checkout.cardLabel': 'Tarjeta',
       'checkout.payButton': 'Pagar',
       'checkout.paymentNote': '🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.',
@@ -999,6 +1005,8 @@
         // se crea con los IDs de arriba, no con este texto.
         serviceSummary: details.serviceSummary,
         staffName: details.staffName,
+        depositPaid: details.depositPaid,
+        balanceDue: details.balanceDue,
       }),
     });
     const data = await res.json();
@@ -1034,6 +1042,8 @@
       </div>
     `).join('');
     document.getElementById('confirmModalTotal').textContent = formatUSD(total);
+    document.getElementById('confirmModalDeposit').textContent = formatUSD(details.depositPaid);
+    document.getElementById('confirmModalBalance').textContent = formatUSD(details.balanceDue);
 
     document.getElementById('confirmModalDateTime').textContent = dateStr;
     document.getElementById('confirmModalStaff').textContent = details.staffName;
@@ -1081,6 +1091,9 @@
       try { freshCart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { freshCart = []; }
       cart = freshCart;
       total = freshCart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
+
+      apptDetails.depositPaid = depositCents() / 100;
+      apptDetails.balanceDue = Math.round((total * 100 - depositCents())) / 100;
 
       cardButton.disabled = true;
       try {

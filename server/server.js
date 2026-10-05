@@ -127,6 +127,8 @@ async function sendApprovalEmail(req, payload, token) {
           <p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>
           <p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary) || '—'}</p>
           <p><strong>Técnico:</strong> ${escapeHtml(payload.staffName) || '—'}</p>
+          <p><strong>Depósito pagado (20%):</strong> ${payload.depositPaid != null ? '$' + Number(payload.depositPaid).toFixed(2) : '—'}</p>
+          <p><strong>Saldo a cobrar en sitio:</strong> ${payload.balanceDue != null ? '$' + Number(payload.balanceDue).toFixed(2) : '—'}</p>
           <p><strong>Fecha y hora:</strong> ${formatApptDate(payload.startAt)}</p>
           <div style="margin-top:24px;">
             <a href="${approveUrl}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;margin-right:12px;">✅ Aceptar cita</a>
@@ -368,6 +370,8 @@ app.post('/create-booking', async (req, res) => {
     postalCode,
     serviceSummary,
     staffName,
+    depositPaid,
+    balanceDue,
   } = req.body || {};
 
   // Square solo acepta estos sub-campos en address (ni booking.address ni
@@ -440,6 +444,8 @@ app.post('/create-booking', async (req, res) => {
       address: address || null,
       serviceSummary: serviceSummary || null,
       staffName: staffName || null,
+      depositPaid: depositPaid ?? null,
+      balanceDue: balanceDue ?? null,
       exp: Date.now() + BOOKING_REQUEST_TTL_MS,
     };
 
