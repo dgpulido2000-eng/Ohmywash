@@ -378,6 +378,7 @@
       'checkout.paymentSuccess': '✅ Payment successful',
       'checkout.paymentRejected': 'Backend rejected the payment',
       'checkout.recommendPrefix': 'Next available:',
+      'checkout.slotTakenRefunded': 'That time was just taken, so we refunded your deposit. Please choose another time.',
       'checkout.recommendUse': 'Use this date',
       'checkout.noUpcomingSlots': 'No availability in the next month. Please call us at +1 678-895-5812.',
       'checkout.confirmModalServicesTitle': 'Requested services',
@@ -454,6 +455,7 @@
       'checkout.paymentSuccess': '✅ Pago exitoso',
       'checkout.paymentRejected': 'El backend rechazó el pago',
       'checkout.recommendPrefix': 'Próxima disponibilidad:',
+      'checkout.slotTakenRefunded': 'Ese horario acaba de ocuparse, así que reembolsamos tu depósito. Elige otro horario, por favor.',
       'checkout.recommendUse': 'Usar esta fecha',
       'checkout.noUpcomingSlots': 'No hay disponibilidad en el próximo mes. Llámanos al +1 678-895-5812.',
       'checkout.confirmModalServicesTitle': 'Servicios solicitados',
@@ -1152,7 +1154,11 @@
       }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.error);
+    if (!data.success) {
+      const err = new Error(data.error);
+      err.refunded = !!data.refunded;
+      throw err;
+    }
     return data;
   }
 
@@ -1272,7 +1278,7 @@
           await submitBookingRequest(apptDetails);
         } catch (bookingErr) {
           console.error(bookingErr);
-          setApptStatus(`❌ ${t()['checkout.bookingAfterPaymentError']}`, 'error');
+          setApptStatus(`❌ ${bookingErr.refunded ? t()['checkout.slotTakenRefunded'] : t()['checkout.bookingAfterPaymentError']}`, 'error');
           cardButton.disabled = false;
           return;
         }

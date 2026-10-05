@@ -429,12 +429,36 @@ app.post('/create-booking', async (req, res) => {
       customerId = (createResp.result?.customer ?? createResp.customer)?.id;
     }
 
-    // No se llama a bookingsApi.createBooking aquí. En su lugar, se firma
-    // un token con todos los datos necesarios para crear la cita después,
-    // y se manda por correo con botones de Aceptar/Rechazar — la cita real
-    // en Square solo se crea cuando el dueño hace clic en "Aceptar"
-    // (endpoint /approve-booking).
+    // La cita se crea en Square desde el momento de la solicitud para bloquear
+    // el horario. Si el dueño rechaza, se cancela (y se reembolsa el depósito).
+    let bookingId;
+    try {
+      const bookingResp = await squareClient.bookingsApi.createBooking({
+        idempotencyKey: randomUUID(),
+        booking: {
+          locationId: process.env.SQUARE_LOCATION_ID,
+          startAt,
+          customerId,
+          locationType: address ? 'CUSTOMER_LOCATION' : undefined,
+          address,
+          appointmentSegments: segmentList.map(s => ({
+            teamMemberId: s.teamMemberId,
+            serviceVariationId: s.serviceVariationId,
+            serviceVariationVersion: s.serviceVariationVersion != null ? BigInt(s.serviceVariationVersion) : undefined,
+            durationMinutes: s.durationMinutes,
+          })),
+        },
+      });
+      bookingId = (bookingResp.result?.booking ?? bookingResp.booking).id;
+    } catch (bookingErr) {
+      console.error('Error bloqueando el horario en Square:', bookingErr);
+      const refunded = await refundDepositSafely(paymentId, depositPaid, 'Horario no disponible al solicitar la cita', randomUUID());
+      const detail = bookingErr?.errors?.[0]?.detail || bookingErr?.body?.errors?.[0]?.detail || bookingErr.message || 'Error desconocido';
+      return res.status(409).json({ success: false, error: detail, refunded });
+    }
+
     const pendingPayload = {
+      bookingId,
       segments: segmentList.map(s => ({
         serviceVariationId: s.serviceVariationId,
         serviceVariationVersion: s.serviceVariationVersion,
@@ -457,7 +481,12 @@ app.post('/create-booking', async (req, res) => {
     };
 
     const token = signBookingToken(pendingPayload);
-    await sendApprovalEmail(req, pendingPayload, token);
+    try {
+      await sendApprovalEmail(req, pendingPayload, token);
+    } catch (emailErr) {
+      await squareClient.bookingsApi.cancelBooking(bookingId, { idempotencyKey: randomUUID() }).catch(() => {});
+      throw emailErr;
+    }
 
     res.json({ success: true, pending: true });
   } catch (err) {
@@ -487,6 +516,18 @@ async function refundDeposit(paymentId, amountCents, reason, seed) {
   });
 }
 
+async function refundDepositSafely(paymentId, depositPaid, reason, seed) {
+  const cents = Math.round(Number(depositPaid || 0) * 100);
+  if (!paymentId || cents <= 0) return false;
+  try {
+    await refundDeposit(paymentId, cents, reason, seed);
+    return true;
+  } catch (err) {
+    console.error('Reembolso automático fallido:', err);
+    return false;
+  }
+}
+
 async function sendOwnerEmail(subject, html) {
   if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) return;
   await fetch('https://api.resend.com/emails', {
@@ -512,27 +553,32 @@ app.get('/approve-booking', async (req, res) => {
   }
 
   try {
-    const bookingResp = await squareClient.bookingsApi.createBooking({
-      idempotencyKey: idempotencyFrom(String(req.query.token)),
-      booking: {
-        locationId: process.env.SQUARE_LOCATION_ID,
-        startAt: payload.startAt,
-        customerId: payload.customerId,
-        locationType: payload.address ? 'CUSTOMER_LOCATION' : undefined,
-        address: payload.address || undefined,
-        appointmentSegments: payload.segments.map(s => ({
-          teamMemberId: s.teamMemberId,
-          serviceVariationId: s.serviceVariationId,
-          serviceVariationVersion: s.serviceVariationVersion != null ? BigInt(s.serviceVariationVersion) : undefined,
-          durationMinutes: s.durationMinutes,
-        })),
-      },
-    });
+    // Solicitudes creadas antes del bloqueo inmediato no tienen bookingId:
+    // para esas todavía se crea la cita al aprobar.
+    let bookingId = payload.bookingId;
+    if (!bookingId) {
+      const bookingResp = await squareClient.bookingsApi.createBooking({
+        idempotencyKey: idempotencyFrom(String(req.query.token)),
+        booking: {
+          locationId: process.env.SQUARE_LOCATION_ID,
+          startAt: payload.startAt,
+          customerId: payload.customerId,
+          locationType: payload.address ? 'CUSTOMER_LOCATION' : undefined,
+          address: payload.address || undefined,
+          appointmentSegments: payload.segments.map(s => ({
+            teamMemberId: s.teamMemberId,
+            serviceVariationId: s.serviceVariationId,
+            serviceVariationVersion: s.serviceVariationVersion != null ? BigInt(s.serviceVariationVersion) : undefined,
+            durationMinutes: s.durationMinutes,
+          })),
+        },
+      });
+      bookingId = (bookingResp.result?.booking ?? bookingResp.booking).id;
+    }
 
-    const booking = bookingResp.result?.booking ?? bookingResp.booking;
     const cancelToken = signBookingToken({
       kind: 'cancel',
-      bookingId: booking.id,
+      bookingId,
       paymentId: payload.paymentId || null,
       depositCents: depositCentsOf(payload),
       startAt: payload.startAt,
@@ -551,7 +597,7 @@ app.get('/approve-booking', async (req, res) => {
 
     res.send(approvalHtmlPage(
       '✅ Cita aceptada',
-      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue creada en Square.`,
+      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} quedó confirmada en Square.`,
       `<a class="btn btn-secondary" href="${cancelUrl}">Cancelar esta cita</a>`,
     ));
   } catch (err) {
@@ -569,19 +615,36 @@ app.get('/decline-booking', async (req, res) => {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace ya no es válido.'));
   }
   const cents = depositCentsOf(payload);
-  try {
-    if (payload.paymentId && cents > 0) {
-      await refundDeposit(payload.paymentId, cents, 'Solicitud de cita rechazada por el negocio', String(req.query.token) + ':refund');
+  const amount = `$${(cents / 100).toFixed(2)}`;
+
+  if (payload.bookingId) {
+    try {
+      await squareClient.bookingsApi.cancelBooking(payload.bookingId, { idempotencyKey: idempotencyFrom(String(req.query.token) + ':cancel') });
+    } catch (err) {
+      console.error('Error liberando el horario rechazado:', err);
+      const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
+      return res.status(500).send(approvalHtmlPage('❌ No se pudo liberar el horario', escapeHtml(detail)));
     }
+  }
+
+  if (!payload.paymentId || cents <= 0) {
+    return res.send(approvalHtmlPage(
+      '🚫 Solicitud rechazada',
+      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada y el horario quedó libre.`,
+    ));
+  }
+
+  try {
+    await refundDeposit(payload.paymentId, cents, 'Solicitud de cita rechazada por el negocio', String(req.query.token) + ':refund');
     res.send(approvalHtmlPage(
       '🚫 Solicitud rechazada',
-      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada.${cents > 0 ? ` Se reembolsaron $${(cents / 100).toFixed(2)} del depósito.` : ''}`,
+      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada, el horario quedó libre y se reembolsaron ${amount}.`,
     ));
   } catch (err) {
     console.error('Error reembolsando la solicitud rechazada:', err);
     res.status(500).send(approvalHtmlPage(
       '⚠️ Rechazada, pero el reembolso falló',
-      `La solicitud de ${escapeHtml(payload.customerName)} fue rechazada, pero el reembolso de $${(cents / 100).toFixed(2)} no se pudo procesar. Hazlo manualmente desde Square.`,
+      `El horario quedó libre, pero el reembolso de ${amount} no se pudo procesar. Hazlo manualmente desde Square.`,
     ));
   }
 });
