@@ -377,6 +377,8 @@ app.post('/create-booking', async (req, res) => {
     depositPaid,
     balanceDue,
     paymentId,
+    termsAccepted,
+    marketingOptIn,
   } = req.body || {};
 
   // Square solo acepta estos sub-campos en address (ni booking.address ni
@@ -391,6 +393,9 @@ app.post('/create-booking', async (req, res) => {
 
   if (!segmentList.length || !startAt || !customerName) {
     return res.status(400).json({ success: false, error: 'Faltan datos requeridos para la reserva' });
+  }
+  if (termsAccepted !== true) {
+    return res.status(400).json({ success: false, error: 'Debes aceptar los términos de servicio y la política de privacidad' });
   }
   if (segmentList.some(s => !s.serviceVariationId || !s.teamMemberId)) {
     return res.status(400).json({ success: false, error: 'Cada servicio de la reserva necesita serviceVariationId y teamMemberId' });
@@ -415,6 +420,7 @@ app.post('/create-booking', async (req, res) => {
           givenName: customerName,
           phoneNumber: customerPhone || undefined,
           address,
+          preferences: { emailUnsubscribed: marketingOptIn !== true },
         });
       }
     }
@@ -425,6 +431,8 @@ app.post('/create-booking', async (req, res) => {
         emailAddress: customerEmail || undefined,
         phoneNumber: customerPhone || undefined,
         address,
+        preferences: { emailUnsubscribed: marketingOptIn !== true },
+        note: `Aceptó términos y política de privacidad el ${new Date().toISOString().slice(0, 10)}`,
       });
       customerId = (createResp.result?.customer ?? createResp.customer)?.id;
     }

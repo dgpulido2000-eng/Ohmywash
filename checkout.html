@@ -165,6 +165,9 @@
   .pay-field{margin-bottom:18px;}
   .pay-field label{display:block;font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:8px;}
   #card-container{padding:2px;border-radius:12px;min-height:56px;}
+  .consent-row{display:flex;gap:10px;align-items:flex-start;font-size:.88rem;color:#2b3b3d;margin-bottom:12px;line-height:1.5;cursor:pointer;}
+  .consent-row input[type=checkbox]{margin-top:4px;width:16px;height:16px;accent-color:var(--teal);flex:0 0 auto;}
+  .consent-row a{color:var(--teal-deep);}
   #card-button{
     width:100%;padding:15px;border-radius:100px;border:none;background:var(--teal);color:#fff;
     font-family:'Inter',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
@@ -381,6 +384,9 @@
       'checkout.paymentSuccess': '✅ Payment successful',
       'checkout.paymentRejected': 'Backend rejected the payment',
       'checkout.recommendPrefix': 'Next available:',
+      'checkout.acceptTermsLabel': 'I agree to the <a href="terminos.html" target="_blank">Terms of Service</a> and <a href="privacidad.html" target="_blank">Privacy Policy</a>.',
+      'checkout.marketingLabel': 'Yes, send me promotions and special offers by email (optional).',
+      'checkout.mustAcceptTerms': 'Please accept the Terms of Service and Privacy Policy to continue.',
       'footer.terms': 'Terms of Service', 'footer.privacy': 'Privacy Policy',
       'checkout.slotTakenRefunded': 'That time was just taken, so we refunded your deposit. Please choose another time.',
       'checkout.recommendUse': 'Use this date',
@@ -459,6 +465,9 @@
       'checkout.paymentSuccess': '✅ Pago exitoso',
       'checkout.paymentRejected': 'El backend rechazó el pago',
       'checkout.recommendPrefix': 'Próxima disponibilidad:',
+      'checkout.acceptTermsLabel': 'Acepto los <a href="terminos.html" target="_blank">Términos de servicio</a> y la <a href="privacidad.html" target="_blank">Política de privacidad</a>.',
+      'checkout.marketingLabel': 'Sí, envíenme promociones y ofertas por correo electrónico (opcional).',
+      'checkout.mustAcceptTerms': 'Acepta los Términos de servicio y la Política de privacidad para continuar.',
       'footer.terms': 'Términos de servicio', 'footer.privacy': 'Política de privacidad',
       'checkout.slotTakenRefunded': 'Ese horario acaba de ocuparse, así que reembolsamos tu depósito. Elige otro horario, por favor.',
       'checkout.recommendUse': 'Usar esta fecha',
@@ -604,6 +613,8 @@
           <label data-i18n="checkout.cardLabel">Tarjeta</label>
           <div id="card-container"></div>
         </div>
+        <label class="consent-row"><input type="checkbox" id="acceptTerms"><span data-i18n="checkout.acceptTermsLabel">Acepto los <a href="terminos.html" target="_blank">Términos de servicio</a> y la <a href="privacidad.html" target="_blank">Política de privacidad</a>.</span></label>
+        <label class="consent-row"><input type="checkbox" id="marketingOptIn"><span data-i18n="checkout.marketingLabel">Sí, envíenme promociones y ofertas por correo electrónico (opcional).</span></label>
         <button id="card-button" type="button"></button>
         <p id="payment-status"></p>
         <p class="payment-note" data-i18n="checkout.paymentNote">🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.</p>
@@ -1156,6 +1167,8 @@
         depositPaid: details.depositPaid,
         balanceDue: details.balanceDue,
         paymentId: details.paymentId,
+        termsAccepted: details.termsAccepted,
+        marketingOptIn: details.marketingOptIn,
       }),
     });
     const data = await res.json();
@@ -1232,7 +1245,15 @@
       return;
     }
 
+    const acceptTermsEl = document.getElementById('acceptTerms');
+    cardButton.disabled = !acceptTermsEl.checked;
+    acceptTermsEl.addEventListener('change', () => { cardButton.disabled = !acceptTermsEl.checked; });
+
     cardButton.addEventListener('click', async () => {
+      if (!acceptTermsEl.checked) {
+        setStatus(t()['checkout.mustAcceptTerms'], 'error');
+        return;
+      }
       const apptDetails = readApptDetails();
       if (!apptDetails) return;
 
@@ -1274,6 +1295,8 @@
         }
 
         apptDetails.paymentId = paymentData.paymentId;
+        apptDetails.termsAccepted = true;
+        apptDetails.marketingOptIn = document.getElementById('marketingOptIn').checked;
 
         // El pago (si aplicaba) ya se cobró — ahora se manda la solicitud
         // de cita. Si esto falla, el dinero ya se cobró, así que se avisa
