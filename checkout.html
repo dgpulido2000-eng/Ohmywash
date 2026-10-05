@@ -598,8 +598,12 @@
   const cardButton = document.getElementById('card-button');
   const paymentPanel = document.getElementById('paymentPanel');
 
+  // Depósito del 20% que se cobra al reservar; el saldo se paga en sitio.
+  function depositCents() {
+    return Math.round(total * 20);
+  }
   function updatePayButtonText() {
-    cardButton.textContent = `${t()['checkout.payButton']} ${formatUSD(total)}`;
+    cardButton.textContent = `${t()['checkout.payButton']} ${formatUSD(depositCents() / 100)}`;
   }
   updatePayButtonText();
 
@@ -1101,7 +1105,7 @@
 
         if (total > 0) {
           setStatus(t()['checkout.processing'], 'info');
-          const amountCents = Math.round(total * 100);
+          const amountCents = depositCents();
           const tokenResult = await card.tokenize();
           if (tokenResult.status !== 'OK') {
             throw new Error(tokenResult.errors?.[0]?.message || t()['checkout.cardError']);
