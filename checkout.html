@@ -1011,6 +1011,7 @@
         staffName: details.staffName,
         depositPaid: details.depositPaid,
         balanceDue: details.balanceDue,
+        paymentId: details.paymentId,
       }),
     });
     const data = await res.json();
@@ -1123,6 +1124,8 @@
         } else {
           setStatus(t()['checkout.noChargeConfirmed'], 'ok');
         }
+
+        apptDetails.paymentId = paymentData.paymentId;
 
         // El pago (si aplicaba) ya se cobró — ahora se manda la solicitud
         // de cita. Si esto falla, el dinero ya se cobró, así que se avisa

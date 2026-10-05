@@ -16,6 +16,7 @@ app.set('trust proxy', true);
 // abierto como file:// (origen "null" en el navegador).
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Por defecto usa producción (dinero real). Para volver a pruebas sin tocar
 // código, pon SQUARE_ENVIRONMENT=sandbox en las variables de entorno de Render
@@ -52,7 +53,7 @@ function signBookingToken(payload) {
   return `${body}.${sig}`;
 }
 
-function verifyBookingToken(token) {
+function verifyBookingToken(token, kind = 'request') {
   if (!APPROVAL_SECRET || !token || typeof token !== 'string' || !token.includes('.')) return null;
   const [body, sig] = token.split('.');
   const expectedSig = createHmac('sha256', APPROVAL_SECRET).update(body).digest('base64url');
@@ -62,6 +63,7 @@ function verifyBookingToken(token) {
   try {
     const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
     if (!payload.exp || Date.now() > payload.exp) return null;
+    if ((payload.kind ?? 'request') !== kind) return null;
     return payload;
   } catch {
     return null;
@@ -78,14 +80,16 @@ function escapeHtml(value) {
   }[c]));
 }
 
-function approvalHtmlPage(title, message) {
+function approvalHtmlPage(title, message, extraHtml = '') {
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
 <style>
   body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#f4fafb;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box;}
   .card{max-width:420px;background:#fff;border-radius:20px;padding:36px 30px;box-shadow:0 20px 50px rgba(20,50,55,.12);text-align:center;}
   h1{font-size:1.3rem;margin:0 0 12px;color:#12191a;}
   p{color:#5c6b6e;line-height:1.6;margin:0;}
-</style></head><body><div class="card"><h1>${title}</h1><p>${message}</p></div></body></html>`;
+  .btn{display:inline-block;margin-top:22px;padding:14px 26px;border-radius:100px;border:none;background:#e2574c;color:#fff;font-weight:bold;font-size:1rem;cursor:pointer;text-decoration:none;}
+  .btn-secondary{background:#2ec4b6;}
+</style></head><body><div class="card"><h1>${title}</h1><p>${message}</p>${extraHtml}</div></body></html>`;
 }
 
 function formatApptDate(startAt) {
@@ -372,6 +376,7 @@ app.post('/create-booking', async (req, res) => {
     staffName,
     depositPaid,
     balanceDue,
+    paymentId,
   } = req.body || {};
 
   // Square solo acepta estos sub-campos en address (ni booking.address ni
@@ -446,6 +451,8 @@ app.post('/create-booking', async (req, res) => {
       staffName: staffName || null,
       depositPaid: depositPaid ?? null,
       balanceDue: balanceDue ?? null,
+      paymentId: paymentId || null,
+      kind: 'request',
       exp: Date.now() + BOOKING_REQUEST_TTL_MS,
     };
 
@@ -460,20 +467,53 @@ app.post('/create-booking', async (req, res) => {
   }
 });
 
+const DEPOSIT_REFUND_MIN_HOURS = 24;
+const TOKEN_LONG_TTL_MS = 365 * 24 * 60 * 60 * 1000;
+
+function depositCentsOf(payload) {
+  return Math.round(Number(payload.depositPaid || 0) * 100);
+}
+
+function idempotencyFrom(seed) {
+  return createHash('sha256').update(seed).digest('hex').slice(0, 45);
+}
+
+async function refundDeposit(paymentId, amountCents, reason, seed) {
+  await squareClient.refundsApi.refundPayment({
+    idempotencyKey: idempotencyFrom(seed),
+    paymentId,
+    amountMoney: { amount: BigInt(amountCents), currency: 'USD' },
+    reason,
+  });
+}
+
+async function sendOwnerEmail(subject, html) {
+  if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) return;
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: process.env.NOTIFY_FROM || 'Oh My Wash <onboarding@resend.dev>',
+      to: [process.env.NOTIFY_EMAIL],
+      subject,
+      html,
+    }),
+  });
+}
+
 // El dueño hace clic en este link desde el correo para aceptar la cita —
 // aquí sí se crea la cita real en Square. idempotencyKey se deriva del
 // token para que hacer clic dos veces (o recargar la página) no cree dos
 // citas duplicadas.
 app.get('/approve-booking', async (req, res) => {
-  const payload = verifyBookingToken(req.query.token);
+  const payload = verifyBookingToken(req.query.token, 'request');
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de aprobación ya no es válido (venció a los 7 días, o el token está mal formado).'));
   }
 
   try {
-    const idempotencyKey = createHash('sha256').update(String(req.query.token)).digest('hex').slice(0, 45);
     const bookingResp = await squareClient.bookingsApi.createBooking({
-      idempotencyKey,
+      idempotencyKey: idempotencyFrom(String(req.query.token)),
       booking: {
         locationId: process.env.SQUARE_LOCATION_ID,
         startAt: payload.startAt,
@@ -490,9 +530,29 @@ app.get('/approve-booking', async (req, res) => {
     });
 
     const booking = bookingResp.result?.booking ?? bookingResp.booking;
+    const cancelToken = signBookingToken({
+      kind: 'cancel',
+      bookingId: booking.id,
+      paymentId: payload.paymentId || null,
+      depositCents: depositCentsOf(payload),
+      startAt: payload.startAt,
+      customerName: payload.customerName,
+      exp: Date.now() + TOKEN_LONG_TTL_MS,
+    });
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const cancelUrl = `${baseUrl}/cancel-booking?token=${encodeURIComponent(cancelToken)}`;
+
+    await sendOwnerEmail(
+      `Cita aceptada — ${escapeHtml(payload.customerName)}`,
+      `<p>La cita de <strong>${escapeHtml(payload.customerName)}</strong> para el ${formatApptDate(payload.startAt)} quedó aceptada en Square.</p>
+       <p>Si el cliente necesita cancelar, usa este link (reembolsa el depósito solo si cancela con más de 24 horas de anticipación):</p>
+       <p><a href="${cancelUrl}">${cancelUrl}</a></p>`,
+    );
+
     res.send(approvalHtmlPage(
       '✅ Cita aceptada',
-      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue creada en Square (ID: ${escapeHtml(booking.id)}).`,
+      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue creada en Square.`,
+      `<a class="btn btn-secondary" href="${cancelUrl}">Cancelar esta cita</a>`,
     ));
   } catch (err) {
     console.error('Error aprobando la cita:', err);
@@ -501,17 +561,93 @@ app.get('/approve-booking', async (req, res) => {
   }
 });
 
-// El dueño hace clic en este link para rechazar la solicitud — como la
-// cita nunca se creó en Square, no hay nada que cancelar ahí.
+// Rechazar una solicitud: como la cita nunca se creó en Square, no hay nada
+// que cancelar ahí, pero el cliente ya pagó el depósito, así que se reembolsa.
 app.get('/decline-booking', async (req, res) => {
-  const payload = verifyBookingToken(req.query.token);
+  const payload = verifyBookingToken(req.query.token, 'request');
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace ya no es válido.'));
   }
+  const cents = depositCentsOf(payload);
+  try {
+    if (payload.paymentId && cents > 0) {
+      await refundDeposit(payload.paymentId, cents, 'Solicitud de cita rechazada por el negocio', String(req.query.token) + ':refund');
+    }
+    res.send(approvalHtmlPage(
+      '🚫 Solicitud rechazada',
+      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada.${cents > 0 ? ` Se reembolsaron $${(cents / 100).toFixed(2)} del depósito.` : ''}`,
+    ));
+  } catch (err) {
+    console.error('Error reembolsando la solicitud rechazada:', err);
+    res.status(500).send(approvalHtmlPage(
+      '⚠️ Rechazada, pero el reembolso falló',
+      `La solicitud de ${escapeHtml(payload.customerName)} fue rechazada, pero el reembolso de $${(cents / 100).toFixed(2)} no se pudo procesar. Hazlo manualmente desde Square.`,
+    ));
+  }
+});
+
+// Cancelación de una cita ya aceptada. Con más de 24 horas de anticipación
+// se reembolsa el depósito; con menos, no hay reembolso. La cita siempre se
+// libera del calendario.
+app.get('/cancel-booking', (req, res) => {
+  const payload = verifyBookingToken(req.query.token, 'cancel');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de cancelación no es válido.'));
+  }
+  const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
+  const cents = payload.depositCents || 0;
+  const refundable = hours >= DEPOSIT_REFUND_MIN_HOURS && cents > 0 && !!payload.paymentId;
+  const policyText = cents <= 0
+    ? 'No hay depósito que reembolsar.'
+    : refundable
+      ? `Se reembolsarán $${(cents / 100).toFixed(2)} (cancelación con más de 24 horas de anticipación).`
+      : `No hay reembolso: la cancelación es con menos de 24 horas de anticipación ($${(cents / 100).toFixed(2)} no reembolsables).`;
+
   res.send(approvalHtmlPage(
-    '🚫 Solicitud rechazada',
-    `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada. No se creó ninguna cita en Square.`,
+    'Cancelar cita',
+    `Cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)}. ${policyText}`,
+    `<form method="post" action="/cancel-booking"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn" type="submit">Confirmar cancelación</button></form>`,
   ));
+});
+
+app.post('/cancel-booking', async (req, res) => {
+  const token = req.body?.token;
+  const payload = verifyBookingToken(token, 'cancel');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de cancelación no es válido.'));
+  }
+  const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
+  const cents = payload.depositCents || 0;
+  const refundable = hours >= DEPOSIT_REFUND_MIN_HOURS && cents > 0 && !!payload.paymentId;
+
+  try {
+    await squareClient.bookingsApi.cancelBooking(payload.bookingId, { idempotencyKey: idempotencyFrom(token + ':cancel') });
+  } catch (err) {
+    console.error('Error cancelando la cita:', err);
+    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
+    return res.status(500).send(approvalHtmlPage('❌ No se pudo cancelar', escapeHtml(detail)));
+  }
+
+  if (!refundable) {
+    return res.send(approvalHtmlPage(
+      '✅ Cita cancelada',
+      `La cita de ${escapeHtml(payload.customerName)} fue cancelada. ${cents > 0 ? 'No hubo reembolso (menos de 24 horas).' : ''}`,
+    ));
+  }
+
+  try {
+    await refundDeposit(payload.paymentId, cents, 'Cancelación con más de 24 horas de anticipación', token + ':refund');
+    res.send(approvalHtmlPage(
+      '✅ Cita cancelada y reembolsada',
+      `La cita de ${escapeHtml(payload.customerName)} fue cancelada y se reembolsaron $${(cents / 100).toFixed(2)}.`,
+    ));
+  } catch (err) {
+    console.error('Error reembolsando la cancelación:', err);
+    res.status(500).send(approvalHtmlPage(
+      '⚠️ Cancelada, pero el reembolso falló',
+      `La cita fue cancelada, pero el reembolso de $${(cents / 100).toFixed(2)} no se pudo procesar. Hazlo manualmente desde Square.`,
+    ));
+  }
 });
 
 const PORT = process.env.PORT || 3000;
