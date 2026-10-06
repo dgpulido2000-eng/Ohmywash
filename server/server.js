@@ -420,7 +420,7 @@ app.post('/create-booking', async (req, res) => {
           givenName: customerName,
           phoneNumber: customerPhone || undefined,
           address,
-          preferences: { emailUnsubscribed: marketingOptIn !== true },
+          ...(marketingOptIn === true ? { preferences: { emailUnsubscribed: false } } : {}),
         });
       }
     }
