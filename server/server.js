@@ -660,19 +660,22 @@ app.get('/decline-booking', async (req, res) => {
 // Cancelación de una cita ya aceptada. Con más de 24 horas de anticipación
 // se reembolsa el depósito; con menos, no hay reembolso. La cita siempre se
 // libera del calendario.
+function refundStatus(payload) {
+  const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
+  const cents = payload.depositCents || 0;
+  const amount = `$${(cents / 100).toFixed(2)}`;
+  if (cents <= 0) return { refundable: false, text: 'No hay depósito que reembolsar.' };
+  if (!payload.paymentId) return { refundable: false, text: `No se puede reembolsar automáticamente (falta el ID del pago). Reembolsa ${amount} manualmente desde Square.` };
+  if (hours < DEPOSIT_REFUND_MIN_HOURS) return { refundable: false, text: `No hay reembolso: la cancelación es con menos de 24 horas de anticipación (${amount} no reembolsables).` };
+  return { refundable: true, text: `Se reembolsarán ${amount} (cancelación con más de 24 horas de anticipación).` };
+}
+
 app.get('/cancel-booking', (req, res) => {
   const payload = verifyBookingToken(req.query.token, 'cancel');
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de cancelación no es válido.'));
   }
-  const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
-  const cents = payload.depositCents || 0;
-  const refundable = hours >= DEPOSIT_REFUND_MIN_HOURS && cents > 0 && !!payload.paymentId;
-  const policyText = cents <= 0
-    ? 'No hay depósito que reembolsar.'
-    : refundable
-      ? `Se reembolsarán $${(cents / 100).toFixed(2)} (cancelación con más de 24 horas de anticipación).`
-      : `No hay reembolso: la cancelación es con menos de 24 horas de anticipación ($${(cents / 100).toFixed(2)} no reembolsables).`;
+  const { text: policyText } = refundStatus(payload);
 
   res.send(approvalHtmlPage(
     'Cancelar cita',
@@ -687,9 +690,8 @@ app.post('/cancel-booking', async (req, res) => {
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de cancelación no es válido.'));
   }
-  const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
+  const { refundable, text: policyText } = refundStatus(payload);
   const cents = payload.depositCents || 0;
-  const refundable = hours >= DEPOSIT_REFUND_MIN_HOURS && cents > 0 && !!payload.paymentId;
 
   try {
     await squareClient.bookingsApi.cancelBooking(payload.bookingId, { idempotencyKey: idempotencyFrom(token + ':cancel') });
@@ -702,7 +704,7 @@ app.post('/cancel-booking', async (req, res) => {
   if (!refundable) {
     return res.send(approvalHtmlPage(
       '✅ Cita cancelada',
-      `La cita de ${escapeHtml(payload.customerName)} fue cancelada. ${cents > 0 ? 'No hubo reembolso (menos de 24 horas).' : ''}`,
+      `La cita de ${escapeHtml(payload.customerName)} fue cancelada. ${escapeHtml(policyText)}`,
     ));
   }
 
