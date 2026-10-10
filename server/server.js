@@ -437,36 +437,11 @@ app.post('/create-booking', async (req, res) => {
       customerId = (createResp.result?.customer ?? createResp.customer)?.id;
     }
 
-    // La cita se crea en Square desde el momento de la solicitud para bloquear
-    // el horario. Si el dueño rechaza, se cancela (y se reembolsa el depósito).
-    let bookingId;
-    try {
-      const bookingResp = await squareClient.bookingsApi.createBooking({
-        idempotencyKey: randomUUID(),
-        booking: {
-          locationId: process.env.SQUARE_LOCATION_ID,
-          startAt,
-          customerId,
-          locationType: address ? 'CUSTOMER_LOCATION' : undefined,
-          address,
-          appointmentSegments: segmentList.map(s => ({
-            teamMemberId: s.teamMemberId,
-            serviceVariationId: s.serviceVariationId,
-            serviceVariationVersion: s.serviceVariationVersion != null ? BigInt(s.serviceVariationVersion) : undefined,
-            durationMinutes: s.durationMinutes,
-          })),
-        },
-      });
-      bookingId = (bookingResp.result?.booking ?? bookingResp.booking).id;
-    } catch (bookingErr) {
-      console.error('Error bloqueando el horario en Square:', bookingErr);
-      const refunded = await refundDepositSafely(paymentId, depositPaid, 'Horario no disponible al solicitar la cita', randomUUID());
-      const detail = bookingErr?.errors?.[0]?.detail || bookingErr?.body?.errors?.[0]?.detail || bookingErr.message || 'Error desconocido';
-      return res.status(409).json({ success: false, error: detail, refunded });
-    }
-
+    // La cita NO se crea en Square todavía — solo se firma un token con
+    // todos los datos y se manda por correo con Aceptar/Rechazar. Square
+    // solo se entera (y le manda confirmación al cliente) cuando el equipo
+    // acepta — así nadie recibe un "confirmado" de algo que puede rechazarse.
     const pendingPayload = {
-      bookingId,
       segments: segmentList.map(s => ({
         serviceVariationId: s.serviceVariationId,
         serviceVariationVersion: s.serviceVariationVersion,
@@ -489,12 +464,7 @@ app.post('/create-booking', async (req, res) => {
     };
 
     const token = signBookingToken(pendingPayload);
-    try {
-      await sendApprovalEmail(req, pendingPayload, token);
-    } catch (emailErr) {
-      await squareClient.bookingsApi.cancelBooking(bookingId, { idempotencyKey: randomUUID() }).catch(() => {});
-      throw emailErr;
-    }
+    await sendApprovalEmail(req, pendingPayload, token);
 
     res.json({ success: true, pending: true });
   } catch (err) {
@@ -524,30 +494,91 @@ async function refundDeposit(paymentId, amountCents, reason, seed) {
   });
 }
 
-async function refundDepositSafely(paymentId, depositPaid, reason, seed) {
-  const cents = Math.round(Number(depositPaid || 0) * 100);
-  if (!paymentId || cents <= 0) return false;
-  try {
-    await refundDeposit(paymentId, cents, reason, seed);
-    return true;
-  } catch (err) {
-    console.error('Reembolso automático fallido:', err);
-    return false;
-  }
-}
-
-async function sendOwnerEmail(subject, html) {
-  if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) return;
-  await fetch('https://api.resend.com/emails', {
+async function sendEmail(to, subject, html) {
+  if (!process.env.RESEND_API_KEY || !to) return false;
+  const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: process.env.NOTIFY_FROM || 'Oh My Wash <onboarding@resend.dev>',
-      to: [process.env.NOTIFY_EMAIL],
+      to: [to],
       subject,
       html,
     }),
   });
+  return resp.ok;
+}
+
+async function sendOwnerEmail(subject, html) {
+  await sendEmail(process.env.NOTIFY_EMAIL, subject, html);
+}
+
+// Solo funciona de verdad una vez que se verifique un dominio propio en
+// Resend — con el remitente genérico "onboarding@resend.dev" (sin dominio
+// verificado) Resend solo entrega al correo dueño de la cuenta, así que
+// esto fallará en silencio (devuelve false) hasta entonces. Por eso el
+// correo al dueño SIEMPRE incluye los mismos links, como respaldo manual.
+async function sendCustomerEmail(to, subject, html) {
+  return sendEmail(to, subject, html);
+}
+
+// Mismo horario de técnicos que usa checkout.html (STAFF_SCHEDULE) — debe
+// mantenerse igual en los dos archivos. Se usa para proponerle al cliente
+// horarios alternativos cuando se rechaza su solicitud.
+const STAFF_SCHEDULE = {
+  'TMqtFAlpFqDV-l_j': { name: 'JP', days: [0, 1, 2, 3, 4, 5, 6], startMin: 9 * 60, endMin: 17 * 60 },
+  'TMP0GRLy0FkLW_bt': { name: 'Jose Castro', days: [6], startMin: 9 * 60, endMin: 17 * 60 },
+  'TMhQVvzCRfnsr5Bf': { name: 'Miguel Alvarado', days: [5], startMin: 9 * 60, endMin: 14 * 60 },
+};
+
+function nyMinutesOfDay(date) {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false });
+  const parts = fmt.formatToParts(date);
+  const h = parseInt(parts.find(p => p.type === 'hour').value, 10) % 24;
+  const m = parseInt(parts.find(p => p.type === 'minute').value, 10);
+  return h * 60 + m;
+}
+
+function nyDateKey(iso) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+}
+
+// Busca hasta `limit` horarios alternativos, en cualquiera de los 3
+// técnicos, para los mismos servicios de una solicitud rechazada — se
+// usan para ofrecérselos al cliente y que pueda reagendar sin tener que
+// volver a buscar nada ni pagar el depósito otra vez.
+async function findAlternativeSlots(serviceVariationIds, totalDurationMin, excludeStartAt, limit) {
+  const start = new Date(Date.now() + 60 * 60 * 1000); // desde dentro de 1 hora
+  const end = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 días
+
+  const perStaff = await Promise.all(Object.entries(STAFF_SCHEDULE).map(async ([staffId, cfg]) => {
+    try {
+      const segmentFilters = serviceVariationIds.map(id => ({ serviceVariationId: id, teamMemberIdFilter: { any: [staffId] } }));
+      const response = await squareClient.bookingsApi.searchAvailability({
+        query: { filter: { startAtRange: { startAt: start.toISOString(), endAt: end.toISOString() }, locationId: process.env.SQUARE_LOCATION_ID, segmentFilters } },
+      });
+      const availabilities = response.result?.availabilities ?? response.availabilities ?? [];
+      return availabilities
+        .filter(a => a.startAt !== excludeStartAt)
+        .filter(a => nyMinutesOfDay(new Date(new Date(a.startAt).getTime() + totalDurationMin * 60000)) <= cfg.endMin)
+        .filter(a => cfg.days.includes(new Date(nyDateKey(a.startAt) + 'T12:00:00').getDay()))
+        .map(a => ({ startAt: a.startAt, staffId }));
+    } catch (err) {
+      console.error(`Error buscando horarios alternativos para ${staffId}:`, err);
+      return [];
+    }
+  }));
+
+  const seen = new Set();
+  const all = perStaff.flat().sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
+  const picked = [];
+  for (const slot of all) {
+    if (seen.has(slot.startAt)) continue;
+    seen.add(slot.startAt);
+    picked.push(slot);
+    if (picked.length >= limit) break;
+  }
+  return picked;
 }
 
 // El dueño hace clic en este link desde el correo para aceptar la cita —
@@ -561,8 +592,9 @@ app.get('/approve-booking', async (req, res) => {
   }
 
   try {
-    // Solicitudes creadas antes del bloqueo inmediato no tienen bookingId:
-    // para esas todavía se crea la cita al aprobar.
+    // La cita se crea en Square justo aquí, al aceptar — es el único
+    // momento en que el horario queda bloqueado y el cliente recibe la
+    // confirmación automática de Square.
     let bookingId = payload.bookingId;
     if (!bookingId) {
       const bookingResp = await squareClient.bookingsApi.createBooking({
@@ -616,7 +648,10 @@ app.get('/approve-booking', async (req, res) => {
 });
 
 // Rechazar una solicitud: como la cita nunca se creó en Square, no hay nada
-// que cancelar ahí, pero el cliente ya pagó el depósito, así que se reembolsa.
+// que cancelar ahí. En vez de reembolsar de inmediato, el depósito queda en
+// espera: se le ofrecen al cliente hasta 3 horarios alternativos (si elige
+// uno, se reutiliza el mismo pago — no se le cobra otra vez) y un link para
+// pedir el reembolso si prefiere no reagendar.
 app.get('/decline-booking', async (req, res) => {
   const payload = verifyBookingToken(req.query.token, 'request');
   if (!payload) {
@@ -624,6 +659,7 @@ app.get('/decline-booking', async (req, res) => {
   }
   const cents = depositCentsOf(payload);
   const amount = `$${(cents / 100).toFixed(2)}`;
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
 
   if (payload.bookingId) {
     try {
@@ -635,25 +671,169 @@ app.get('/decline-booking', async (req, res) => {
     }
   }
 
+  // Sin depósito que ofrecer o reembolsar: solo avisar que se rechazó.
   if (!payload.paymentId || cents <= 0) {
     return res.send(approvalHtmlPage(
       '🚫 Solicitud rechazada',
-      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada y el horario quedó libre.`,
+      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada.`,
     ));
   }
 
+  const serviceVariationIds = (payload.segments || []).map(s => s.serviceVariationId);
+  const totalDurationMin = (payload.segments || []).reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+  let alternatives = [];
   try {
-    await refundDeposit(payload.paymentId, cents, 'Solicitud de cita rechazada por el negocio', String(req.query.token) + ':refund');
+    alternatives = await findAlternativeSlots(serviceVariationIds, totalDurationMin, payload.startAt, 3);
+  } catch (err) {
+    console.error('Error buscando horarios alternativos:', err);
+  }
+
+  const rebookLinks = alternatives.map(alt => {
+    const segs = (payload.segments || []).map(s => ({ ...s, teamMemberId: alt.staffId }));
+    const rebookToken = signBookingToken({
+      kind: 'rebook',
+      segments: segs,
+      startAt: alt.startAt,
+      customerId: payload.customerId,
+      customerName: payload.customerName,
+      customerEmail: payload.customerEmail,
+      customerPhone: payload.customerPhone,
+      address: payload.address,
+      serviceSummary: payload.serviceSummary,
+      staffName: STAFF_SCHEDULE[alt.staffId]?.name || alt.staffId,
+      depositPaid: payload.depositPaid,
+      balanceDue: payload.balanceDue,
+      paymentId: payload.paymentId,
+      exp: Date.now() + BOOKING_REQUEST_TTL_MS,
+    });
+    return { url: `${baseUrl}/rebook?token=${encodeURIComponent(rebookToken)}`, dateStr: formatApptDate(alt.startAt) };
+  });
+
+  const refundToken = signBookingToken({
+    kind: 'rebook-refund',
+    paymentId: payload.paymentId,
+    depositCents: cents,
+    customerName: payload.customerName,
+    exp: Date.now() + BOOKING_REQUEST_TTL_MS,
+  });
+  const refundUrl = `${baseUrl}/rebook-refund?token=${encodeURIComponent(refundToken)}`;
+
+  const optionsHtml = rebookLinks.length
+    ? rebookLinks.map(l => `<p><a href="${l.url}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;margin:4px 0;">${escapeHtml(l.dateStr)}</a></p>`).join('')
+    : '<p>No encontramos horarios disponibles en los próximos 30 días — contáctanos directamente.</p>';
+
+  const customerHtml = `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+      <h2 style="color:#0f6a62;">No pudimos confirmar tu cita</h2>
+      <p>Hola ${escapeHtml(payload.customerName)}, lamentablemente no pudimos confirmar tu solicitud para el ${formatApptDate(payload.startAt)}.</p>
+      <p>Ya tienes un depósito de ${amount} pagado — elige uno de estos horarios y <strong>no se te cobrará de nuevo</strong>:</p>
+      ${optionsHtml}
+      <p style="margin-top:20px;">¿Prefieres que te devolvamos el depósito? <a href="${refundUrl}">Pide tu reembolso aquí</a>.</p>
+      <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">Estos enlaces vencen en 7 días.</p>
+    </div>`;
+
+  const customerEmailSent = payload.customerEmail
+    ? await sendCustomerEmail(payload.customerEmail, 'No pudimos confirmar tu cita — elige otro horario', customerHtml).catch(() => false)
+    : false;
+
+  // El dueño siempre recibe los mismos links, por si el correo al cliente no
+  // se pudo mandar (ej. todavía no se verifica un dominio propio en Resend)
+  // — así los puede compartir a mano por WhatsApp o llamada.
+  await sendOwnerEmail(
+    `Solicitud rechazada — ${escapeHtml(payload.customerName)}`,
+    `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+      <p>Rechazaste la solicitud de <strong>${escapeHtml(payload.customerName)}</strong> (${escapeHtml(payload.customerPhone) || 'sin teléfono'}) para el ${formatApptDate(payload.startAt)}.</p>
+      <p>${customerEmailSent ? 'Ya le mandamos por correo estas opciones de reagendar:' : 'No le pudimos mandar el correo (verifica tu dominio en Resend) — compártele tú estos links:'}</p>
+      ${optionsHtml}
+      <p>Link de reembolso: <a href="${refundUrl}">${refundUrl}</a></p>
+    </div>`,
+  );
+
+  res.send(approvalHtmlPage(
+    '🚫 Solicitud rechazada',
+    `La solicitud de ${escapeHtml(payload.customerName)} fue rechazada. ${customerEmailSent ? 'Le mandamos por correo los horarios alternativos y la opción de reembolso.' : 'No se pudo mandar el correo al cliente — revisa tu propio correo para compartirle las opciones manualmente.'}`,
+  ));
+});
+
+// El cliente elige uno de los horarios alternativos — no se le cobra de
+// nuevo, se reutiliza el mismo depósito. Esto crea una solicitud normal,
+// que pasa otra vez por el mismo correo de Aceptar/Rechazar al dueño.
+app.get('/rebook', (req, res) => {
+  const payload = verifyBookingToken(req.query.token, 'rebook');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace para reagendar ya no es válido.'));
+  }
+  res.send(approvalHtmlPage(
+    'Confirmar nuevo horario',
+    `¿Confirmas tu cita para el ${formatApptDate(payload.startAt)} con ${escapeHtml(payload.staffName)}? No se te cobrará de nuevo.`,
+    `<form method="post" action="/rebook"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn btn-secondary" type="submit">Confirmar este horario</button></form>`,
+  ));
+});
+
+app.post('/rebook', async (req, res) => {
+  const payload = verifyBookingToken(req.body?.token, 'rebook');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace para reagendar ya no es válido.'));
+  }
+
+  const pendingPayload = {
+    segments: payload.segments,
+    startAt: payload.startAt,
+    customerId: payload.customerId,
+    customerName: payload.customerName,
+    customerEmail: payload.customerEmail || null,
+    customerPhone: payload.customerPhone || null,
+    address: payload.address || null,
+    serviceSummary: payload.serviceSummary || null,
+    staffName: payload.staffName || null,
+    depositPaid: payload.depositPaid ?? null,
+    balanceDue: payload.balanceDue ?? null,
+    paymentId: payload.paymentId || null,
+    kind: 'request',
+    exp: Date.now() + BOOKING_REQUEST_TTL_MS,
+  };
+
+  try {
+    const newToken = signBookingToken(pendingPayload);
+    await sendApprovalEmail(req, pendingPayload, newToken);
     res.send(approvalHtmlPage(
-      '🚫 Solicitud rechazada',
-      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada, el horario quedó libre y se reembolsaron ${amount}.`,
+      '✅ Nueva solicitud enviada',
+      `Tu solicitud para el ${formatApptDate(payload.startAt)} fue enviada a nuestro equipo. Te confirmaremos pronto — no se te cobró de nuevo.`,
     ));
   } catch (err) {
-    console.error('Error reembolsando la solicitud rechazada:', err);
-    res.status(500).send(approvalHtmlPage(
-      '⚠️ Rechazada, pero el reembolso falló',
-      `El horario quedó libre, pero el reembolso de ${amount} no se pudo procesar. Hazlo manualmente desde Square.`,
-    ));
+    console.error('Error reenviando la solicitud reagendada:', err);
+    res.status(500).send(approvalHtmlPage('❌ No se pudo enviar la solicitud', 'Contáctanos directamente para agendar este horario.'));
+  }
+});
+
+// El cliente prefiere no reagendar y pide el reembolso del depósito que
+// había quedado en espera.
+app.get('/rebook-refund', (req, res) => {
+  const payload = verifyBookingToken(req.query.token, 'rebook-refund');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de reembolso ya no es válido.'));
+  }
+  const amount = `$${((payload.depositCents || 0) / 100).toFixed(2)}`;
+  res.send(approvalHtmlPage(
+    'Pedir reembolso',
+    `¿Confirmas que quieres el reembolso de ${amount} en vez de reagendar?`,
+    `<form method="post" action="/rebook-refund"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn" type="submit">Confirmar reembolso</button></form>`,
+  ));
+});
+
+app.post('/rebook-refund', async (req, res) => {
+  const payload = verifyBookingToken(req.body?.token, 'rebook-refund');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de reembolso ya no es válido.'));
+  }
+  const cents = payload.depositCents || 0;
+  const amount = `$${(cents / 100).toFixed(2)}`;
+  try {
+    await refundDeposit(payload.paymentId, cents, 'Cliente no quiso reagendar tras rechazo', req.body.token + ':rebook-refund');
+    res.send(approvalHtmlPage('✅ Reembolso procesado', `Se reembolsaron ${amount} a ${escapeHtml(payload.customerName)}.`));
+  } catch (err) {
+    console.error('Error procesando el reembolso de reagendar:', err);
+    res.status(500).send(approvalHtmlPage('❌ No se pudo reembolsar', `Hazlo manualmente desde Square por ${amount}.`));
   }
 });
 
