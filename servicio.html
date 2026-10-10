@@ -768,17 +768,17 @@
     },
     'stain-removal': {
       photoFile: 'assets/servicio-stain-removal.jpg',
-      options: [{ label: 'Estándar', price: null, duration: '2 hr 30 min' }],
+      options: [{ label: 'Estándar', price: 50, duration: '2 hr 30 min', startingPrice: true }],
       es: {
         name: 'Stain Removal',
         category: 'Add-ons',
-        description: 'Tratamiento especializado para eliminar manchas difíciles de tapicería, alfombras y superficies interiores que el lavado normal no puede quitar. Se cotiza en sitio según el tipo y tamaño de la mancha.',
+        description: 'Tratamiento especializado para eliminar manchas difíciles de tapicería, alfombras y superficies interiores que el lavado normal no puede quitar. El precio final puede variar según el tipo y tamaño de la mancha.',
         bullets: ['Identificación y pretratamiento de la mancha', 'Producto especializado según el tipo de mancha', 'Secado y revisión final'],
       },
       en: {
         name: 'Stain Removal',
         category: 'Add-ons',
-        description: "Specialized treatment to remove tough stains from upholstery, carpets, and interior surfaces that regular washing can't remove. Quoted on-site based on stain type and size.",
+        description: "Specialized treatment to remove tough stains from upholstery, carpets, and interior surfaces that regular washing can't remove. Final price may vary based on stain type and size.",
         bullets: ['Stain identification and pre-treatment', 'Specialized product based on stain type', 'Drying and final check'],
       },
     },
@@ -800,7 +800,7 @@
     },
     'engine-bay-cleaning': {
       photoFile: 'assets/servicio-engine-bay-cleaning.jpg',
-      options: [{ label: 'Estándar', price: null, duration: '1 hr 30 min' }],
+      options: [{ label: 'Estándar', price: 100, duration: '1 hr 30 min', startingPrice: true }],
       es: {
         name: 'Engine Bay Cleaning',
         category: 'Add-ons',
@@ -816,7 +816,7 @@
     },
     'upholstery-cleaning': {
       photoFile: 'assets/servicio-upholstery-cleaning.jpg',
-      options: [{ label: 'Estándar', price: null, duration: '2 hr 40 min' }],
+      options: [{ label: 'Estándar', price: 100, duration: '2 hr 40 min', startingPrice: true }],
       es: {
         name: 'Upholstery Cleaning',
         category: 'Add-ons',
@@ -832,7 +832,7 @@
     },
     'carpet-cleaning': {
       photoFile: 'assets/servicio-carpet-cleaning.jpg',
-      options: [{ label: 'Estándar', price: null, duration: '1 hr 30 min' }],
+      options: [{ label: 'Estándar', price: 100, duration: '1 hr 30 min', startingPrice: true }],
       es: {
         name: 'Carpet Cleaning',
         category: 'Add-ons',
@@ -880,6 +880,11 @@
     const hasQuotedPrice = isSingleOption && singleOption.price == null;
     const isAddon = service.category === 'Add-ons';
     const cheapest = isSingleOption ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
+    // Algunos add-ons tienen precio de partida (ej. Stain Removal "desde
+    // $50") en vez de un precio fijo exacto como Headlight Restoration.
+    const singleOptionPriceText = isSingleOption && !hasQuotedPrice
+      ? (singleOption.startingPrice ? `${t['service.from']} $${singleOption.price.toFixed(2)}` : '$' + singleOption.price.toFixed(2))
+      : '';
 
     contentEl.innerHTML = `
       <div class="breadcrumb"><a href="servicios.html" aria-label="${t['service.allServices']}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></a><span>/ ${service.name}</span></div>
@@ -887,7 +892,7 @@
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
-        <span class="service-duration">${hasQuotedPrice ? t['service.variablePrice'] : isSingleOption ? '$' + singleOption.price.toFixed(2) : t['service.from'] + ' $' + cheapest}</span>
+        <span class="service-duration">${hasQuotedPrice ? t['service.variablePrice'] : isSingleOption ? singleOptionPriceText : t['service.from'] + ' $' + cheapest}</span>
         <span class="service-varies">${hasQuotedPrice ? t['service.quotedOnSite'] : isSingleOption ? '' : t['service.priceVaries']}</span>
       </div>
       ${service.description ? `<p class="service-description">${service.description}</p>` : ''}
@@ -914,7 +919,7 @@
         <div class="wrap add-bar-inner">
           <div class="add-bar-price" id="addBarPrice">
             ${isSingleOption
-              ? `${hasQuotedPrice ? t['service.variablePrice'] : '$' + singleOption.price.toFixed(2)}<small>${singleOption.duration}</small>`
+              ? `${hasQuotedPrice ? t['service.variablePrice'] : singleOptionPriceText}<small>${singleOption.duration}</small>`
               : `${t['service.chooseCarType2']}<small>${t['service.toSeePrice']}</small>`}
           </div>
           <button class="btn btn-solid" id="addToCartBtn" ${isSingleOption ? '' : 'disabled'}>${t['service.addToCart']}</button>
@@ -1156,11 +1161,11 @@
     'Oh My Wash | Full Detailing': ['Upholstery Cleaning', 'Stain Removal'],
   };
   const ADDON_CATALOG = [
-    { name: 'Stain Removal', duration: '2h 30m', price: null },
+    { name: 'Stain Removal', duration: '2h 30m', price: 50 },
     { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 0.01 },
-    { name: 'Engine Bay Cleaning', duration: '1h 30m', price: null },
-    { name: 'Upholstery Cleaning', duration: '2h 40m', price: null },
-    { name: 'Carpet Cleaning', duration: '1h 30m', price: null },
+    { name: 'Engine Bay Cleaning', duration: '1h 30m', price: 100 },
+    { name: 'Upholstery Cleaning', duration: '2h 40m', price: 100 },
+    { name: 'Carpet Cleaning', duration: '1h 30m', price: 100 },
   ];
 
   function getAvailableAddons() {

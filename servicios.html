@@ -475,12 +475,12 @@
     </div>
 
     <div class="tab-panel" id="panel-addons">
-      <p style="color:#5c6b6e;margin-bottom:24px;max-width:640px;" data-i18n="addons.intro">Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se cobra por la web.</p>
+      <p style="color:#5c6b6e;margin-bottom:24px;max-width:640px;" data-i18n="addons.intro">Extras que se pueden agregar a cualquier servicio. Los precios son de partida — el precio final puede variar según el tamaño o estado del área a tratar.</p>
       <div class="card-grid stagger in">
         <a class="card addon-card" href="servicio.html?id=stain-removal">
           <h3>Stain Removal</h3>
           <p data-i18n="card.stainRemoval.desc">Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.</p>
-          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">2h 30m</span></div>
+          <div class="card-footer"><span class="price">$50+</span><span class="duration">2h 30m</span></div>
           <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=headlight-restoration">
@@ -492,19 +492,19 @@
         <a class="card addon-card" href="servicio.html?id=engine-bay-cleaning">
           <h3>Engine Bay Cleaning</h3>
           <p data-i18n="card.engineBayCleaning.desc">Limpieza y desengrasado profundo del compartimento del motor.</p>
-          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">1h 30m</span></div>
+          <div class="card-footer"><span class="price">$100+</span><span class="duration">1h 30m</span></div>
           <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=upholstery-cleaning">
           <h3>Upholstery Cleaning</h3>
           <p data-i18n="card.upholsteryCleaning.desc">Limpieza profunda de asientos y tapicería de tela.</p>
-          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">2h 40m</span></div>
+          <div class="card-footer"><span class="price">$100+</span><span class="duration">2h 40m</span></div>
           <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
         <a class="card addon-card" href="servicio.html?id=carpet-cleaning">
           <h3>Carpet Cleaning</h3>
           <p data-i18n="card.carpetCleaning.desc">Limpieza profunda de alfombras y tapetes interiores.</p>
-          <div class="card-footer"><span class="price" data-i18n="cart.variablePrice">Precio variable</span><span class="duration">1h 30m</span></div>
+          <div class="card-footer"><span class="price">$100+</span><span class="duration">1h 30m</span></div>
           <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
       </div>
@@ -650,7 +650,7 @@
       'card.ceramic5yCorrection.title': 'Ceramic Coating · 5 Years + Correction',
       'card.ceramic5yCorrection.desc': 'Includes paint correction before the ceramic seal for a flawless finish.',
       'card.paintCorrection.desc': 'Removes 70%–85% of swirl marks, light scratches, and imperfections in your paint...',
-      'addons.intro': 'Extras that can be added to any service. Price is quoted and charged on-site with the technician — not charged through the website.',
+      'addons.intro': 'Extras that can be added to any service. Prices are starting prices — the final price may vary based on the size or condition of the area treated.',
       'card.stainRemoval.desc': 'Removal of tough stains from upholstery, carpets, or interior surfaces.',
       'card.headlightRestoration.desc': 'Restoration of foggy or yellowed headlights, sealed with ceramic for lasting protection.',
       'card.engineBayCleaning.desc': 'Deep cleaning and degreasing of the engine bay.',
@@ -710,7 +710,7 @@
       'card.ceramic5yCorrection.title': 'Ceramic Coating · 5 años + corrección',
       'card.ceramic5yCorrection.desc': 'Incluye corrección de pintura previa al sellado cerámico para un acabado impecable.',
       'card.paintCorrection.desc': 'Elimina entre el 70%–85% de remolinos, rayones leves e imperfecciones de tu pintura...',
-      'addons.intro': 'Extras que se pueden agregar a cualquier servicio. El precio se cotiza y se cobra directamente en sitio con el técnico — no se cobra por la web.',
+      'addons.intro': 'Extras que se pueden agregar a cualquier servicio. Los precios son de partida — el precio final puede variar según el tamaño o estado del área a tratar.',
       'card.stainRemoval.desc': 'Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.',
       'card.headlightRestoration.desc': 'Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.',
       'card.engineBayCleaning.desc': 'Limpieza y desengrasado profundo del compartimento del motor.',
@@ -825,11 +825,11 @@
     'Oh My Wash | Full Detailing': ['Upholstery Cleaning', 'Stain Removal'],
   };
   const ADDON_CATALOG = [
-    { name: 'Stain Removal', duration: '2h 30m', price: null },
+    { name: 'Stain Removal', duration: '2h 30m', price: 50 },
     { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 0.01 },
-    { name: 'Engine Bay Cleaning', duration: '1h 30m', price: null },
-    { name: 'Upholstery Cleaning', duration: '2h 40m', price: null },
-    { name: 'Carpet Cleaning', duration: '1h 30m', price: null },
+    { name: 'Engine Bay Cleaning', duration: '1h 30m', price: 100 },
+    { name: 'Upholstery Cleaning', duration: '2h 40m', price: 100 },
+    { name: 'Carpet Cleaning', duration: '1h 30m', price: 100 },
   ];
 
   function getAvailableAddons() {
