@@ -616,6 +616,24 @@ app.get('/approve-booking', async (req, res) => {
       bookingId = (bookingResp.result?.booking ?? bookingResp.booking).id;
     }
 
+    // Si este depósito ya se había reembolsado (ej. el cliente pidió el
+    // reembolso después de pedir que lo reagendaran, o al revés), hay que
+    // avisarlo aquí — es el último momento antes de confirmar la cita sin
+    // depósito asegurado.
+    let depositWarning = '';
+    if (payload.paymentId) {
+      try {
+        const paymentResp = await squareClient.paymentsApi.getPayment(payload.paymentId);
+        const payment = paymentResp.result?.payment ?? paymentResp.payment;
+        const refundedCents = payment?.refundedMoney?.amount != null ? Number(payment.refundedMoney.amount) : 0;
+        if (refundedCents > 0) {
+          depositWarning = `⚠️ Ojo: el depósito de esta cita ya fue reembolsado ($${(refundedCents / 100).toFixed(2)}). Es posible que el cliente también haya pedido el reembolso por otro link. Considera pedirle que pague el depósito de nuevo.`;
+        }
+      } catch (err) {
+        console.error('Error revisando el estado del pago al aceptar:', err);
+      }
+    }
+
     const cancelToken = signBookingToken({
       kind: 'cancel',
       bookingId,
@@ -630,14 +648,15 @@ app.get('/approve-booking', async (req, res) => {
 
     await sendOwnerEmail(
       `Cita aceptada — ${escapeHtml(payload.customerName)}`,
-      `<p>La cita de <strong>${escapeHtml(payload.customerName)}</strong> para el ${formatApptDate(payload.startAt)} quedó aceptada en Square.</p>
+      `${depositWarning ? `<p style="color:#b45309;"><strong>${escapeHtml(depositWarning)}</strong></p>` : ''}
+       <p>La cita de <strong>${escapeHtml(payload.customerName)}</strong> para el ${formatApptDate(payload.startAt)} quedó aceptada en Square.</p>
        <p>Si el cliente necesita cancelar, usa este link (reembolsa el depósito solo si cancela con más de 24 horas de anticipación):</p>
        <p><a href="${cancelUrl}">${cancelUrl}</a></p>`,
     );
 
     res.send(approvalHtmlPage(
       '✅ Cita aceptada',
-      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} quedó confirmada en Square.`,
+      `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} quedó confirmada en Square.${depositWarning ? ' ' + escapeHtml(depositWarning) : ''}`,
       `<a class="btn btn-secondary" href="${cancelUrl}">Cancelar esta cita</a>`,
     ));
   } catch (err) {
@@ -714,6 +733,11 @@ app.get('/decline-booking', async (req, res) => {
     paymentId: payload.paymentId,
     depositCents: cents,
     customerName: payload.customerName,
+    customerId: payload.customerId,
+    // Horarios que se le ofrecieron al cliente para reagendar — si ya tiene
+    // una cita ACEPTADA en Square para alguno de estos, este depósito ya se
+    // está usando ahí y no se debe reembolsar por separado.
+    candidateStartAts: alternatives.map(a => a.startAt),
     exp: Date.now() + BOOKING_REQUEST_TTL_MS,
   });
   const refundUrl = `${baseUrl}/rebook-refund?token=${encodeURIComponent(refundToken)}`;
@@ -776,6 +800,25 @@ app.post('/rebook', async (req, res) => {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace para reagendar ya no es válido.'));
   }
 
+  // El cliente pudo haber pedido el reembolso de este mismo depósito por el
+  // otro link del correo — si ya se devolvió el dinero en Square, no se
+  // puede reagendar "gratis" con un depósito que ya no existe.
+  if (payload.paymentId) {
+    try {
+      const paymentResp = await squareClient.paymentsApi.getPayment(payload.paymentId);
+      const payment = paymentResp.result?.payment ?? paymentResp.payment;
+      const refundedCents = payment?.refundedMoney?.amount != null ? Number(payment.refundedMoney.amount) : 0;
+      if (refundedCents > 0) {
+        return res.status(409).send(approvalHtmlPage(
+          '❌ Ese depósito ya fue reembolsado',
+          'Ya procesamos el reembolso de tu depósito, así que este horario ya no se puede reservar con él. Por favor haz una reserva nueva desde la página.',
+        ));
+      }
+    } catch (err) {
+      console.error('Error revisando el estado del pago antes de reagendar:', err);
+    }
+  }
+
   const pendingPayload = {
     segments: payload.segments,
     startAt: payload.startAt,
@@ -808,10 +851,39 @@ app.post('/rebook', async (req, res) => {
 
 // El cliente prefiere no reagendar y pide el reembolso del depósito que
 // había quedado en espera.
-app.get('/rebook-refund', (req, res) => {
+// Revisa si el cliente ya tiene una cita ACEPTADA en Square para alguno de
+// los horarios que le propusimos al rechazar su solicitud original — si la
+// tiene, este depósito ya está asegurando esa cita y no se debe reembolsar
+// aparte (se le dirige al link de cancelación de esa cita, que ya tiene la
+// regla correcta de 24 horas).
+async function findConfirmedAlternative(payload) {
+  if (!payload.customerId || !payload.candidateStartAts?.length) return null;
+  try {
+    const response = await squareClient.bookingsApi.listBookings(
+      undefined, undefined, payload.customerId, undefined,
+      process.env.SQUARE_LOCATION_ID,
+      new Date().toISOString(),
+      new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
+    );
+    const bookings = response.result?.bookings ?? response.bookings ?? [];
+    return bookings.find(b => b.status === 'ACCEPTED' && payload.candidateStartAts.includes(b.startAt)) || null;
+  } catch (err) {
+    console.error('Error revisando si ya hay una cita confirmada:', err);
+    return null;
+  }
+}
+
+app.get('/rebook-refund', async (req, res) => {
   const payload = verifyBookingToken(req.query.token, 'rebook-refund');
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de reembolso ya no es válido.'));
+  }
+  const confirmed = await findConfirmedAlternative(payload);
+  if (confirmed) {
+    return res.status(409).send(approvalHtmlPage(
+      '❌ Ya tienes una cita confirmada',
+      `Ya tienes una cita aceptada para el ${formatApptDate(confirmed.startAt)} — ese depósito ya está asegurando esa cita. Si necesitas cancelarla, usa el link de cancelación que te mandamos cuando se confirmó, o contáctanos.`,
+    ));
   }
   const amount = `$${((payload.depositCents || 0) / 100).toFixed(2)}`;
   res.send(approvalHtmlPage(
@@ -825,6 +897,13 @@ app.post('/rebook-refund', async (req, res) => {
   const payload = verifyBookingToken(req.body?.token, 'rebook-refund');
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de reembolso ya no es válido.'));
+  }
+  const confirmed = await findConfirmedAlternative(payload);
+  if (confirmed) {
+    return res.status(409).send(approvalHtmlPage(
+      '❌ Ya tienes una cita confirmada',
+      `Ya tienes una cita aceptada para el ${formatApptDate(confirmed.startAt)} — ese depósito ya está asegurando esa cita. Si necesitas cancelarla, usa el link de cancelación que te mandamos cuando se confirmó, o contáctanos.`,
+    ));
   }
   const cents = payload.depositCents || 0;
   const amount = `$${(cents / 100).toFixed(2)}`;
