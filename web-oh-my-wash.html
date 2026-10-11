@@ -748,7 +748,7 @@
           <div class="staff-role"></div>
         </div>
         <div class="staff-card" data-staff="joseMiguel" tabindex="0" role="button">
-          <div class="staff-photo" data-initials="JM"><img src="assets/staff-jose-miguel.jpg?v=2" alt="Jose Miguel — equipo Oh My Wash"></div>
+          <div class="staff-photo" data-initials="JM"><img src="assets/staff-jose-miguel.jpg?v=2" alt="Jose Miguel — equipo Oh My Wash" style="object-position:center 25%"></div>
           <div class="staff-name">Jose Miguel</div>
           <div class="staff-role"></div>
         </div>
@@ -1303,7 +1303,7 @@
       bio: null,
     },
     joseMiguel: {
-      photo: 'assets/staff-jose-miguel.jpg?v=2', initials: 'JM', name: 'Jose Miguel',
+      photo: 'assets/staff-jose-miguel.jpg?v=2', photoPosition: 'center 25%', initials: 'JM', name: 'Jose Miguel',
       role: { en: 'CEO / Detailer', es: 'CEO / Detailer' },
       bio: {
         en: [
@@ -1365,7 +1365,7 @@
   function renderStaffModal() {
     const person = STAFF_DATA[openStaffId];
     if (!person) return;
-    staffModalPhoto.innerHTML = `<img src="${person.photo}" alt="${person.name}">`;
+    staffModalPhoto.innerHTML = `<img src="${person.photo}" alt="${person.name}"${person.photoPosition ? ` style="object-position:${person.photoPosition}"` : ''}>`;
     const modalImg = staffModalPhoto.querySelector('img');
     modalImg.addEventListener('error', () => {
       staffModalPhoto.innerHTML = `<div class="avatar-fallback">${person.initials}</div>`;
