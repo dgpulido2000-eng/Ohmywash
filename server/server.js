@@ -641,15 +641,38 @@ app.get('/approve-booking', async (req, res) => {
       depositCents: depositCentsOf(payload),
       startAt: payload.startAt,
       customerName: payload.customerName,
+      customerEmail: payload.customerEmail || null,
       exp: Date.now() + TOKEN_LONG_TTL_MS,
     });
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const cancelUrl = `${baseUrl}/cancel-booking?token=${encodeURIComponent(cancelToken)}`;
 
+    // Square no le avisa al cliente de citas creadas por API con el token
+    // del negocio, así que la confirmación se la mandamos nosotros.
+    const addressStr = payload.address
+      ? [payload.address.addressLine1, payload.address.locality, payload.address.administrativeDistrictLevel1, payload.address.postalCode].filter(Boolean).join(', ')
+      : '';
+    const customerEmailSent = payload.customerEmail
+      ? await sendCustomerEmail(
+          payload.customerEmail,
+          'Tu cita con Oh My Wash está confirmada',
+          `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+            <h2 style="color:#0f6a62;">¡Tu cita está confirmada!</h2>
+            <p>Hola ${escapeHtml(payload.customerName)}, confirmamos tu cita para el <strong>${formatApptDate(payload.startAt)}</strong>.</p>
+            ${payload.serviceSummary ? `<p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary)}</p>` : ''}
+            ${addressStr ? `<p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>` : ''}
+            ${payload.depositPaid != null ? `<p><strong>Depósito pagado:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
+            ${payload.balanceDue != null ? `<p><strong>Saldo a pagar el día del servicio:</strong> $${Number(payload.balanceDue).toFixed(2)}</p>` : ''}
+            <p style="margin-top:20px;">Si necesitas cancelar o cambiar tu cita, contáctanos. El depósito se reembolsa si cancelas con más de 24 horas de anticipación.</p>
+          </div>`,
+        ).catch(() => false)
+      : false;
+
     await sendOwnerEmail(
       `Cita aceptada — ${escapeHtml(payload.customerName)}`,
       `${depositWarning ? `<p style="color:#b45309;"><strong>${escapeHtml(depositWarning)}</strong></p>` : ''}
        <p>La cita de <strong>${escapeHtml(payload.customerName)}</strong> para el ${formatApptDate(payload.startAt)} quedó aceptada en Square.</p>
+       <p>${customerEmailSent ? 'Le mandamos la confirmación por correo al cliente.' : 'No se le pudo mandar la confirmación por correo al cliente (verifica tu dominio en Resend) — avísale tú.'}</p>
        <p>Si el cliente necesita cancelar, usa este link (reembolsa el depósito solo si cancela con más de 24 horas de anticipación):</p>
        <p><a href="${cancelUrl}">${cancelUrl}</a></p>`,
     );
@@ -958,6 +981,23 @@ app.post('/cancel-booking', async (req, res) => {
     console.error('Error cancelando la cita:', err);
     const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
     return res.status(500).send(approvalHtmlPage('❌ No se pudo cancelar', escapeHtml(detail)));
+  }
+
+  // Igual que al aceptar, Square no le avisa al cliente de la cancelación.
+  // Los links de cancelación creados antes de este cambio no traen el correo.
+  if (payload.customerEmail) {
+    await sendCustomerEmail(
+      payload.customerEmail,
+      'Tu cita con Oh My Wash fue cancelada',
+      `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#0f6a62;">Tu cita fue cancelada</h2>
+        <p>Hola ${escapeHtml(payload.customerName)}, tu cita para el <strong>${formatApptDate(payload.startAt)}</strong> fue cancelada.</p>
+        <p>${refundable
+          ? `Te reembolsaremos el depósito de $${(cents / 100).toFixed(2)}. Puede tardar unos días hábiles en aparecer en tu tarjeta.`
+          : cents > 0 ? 'Como la cancelación fue con menos de 24 horas de anticipación, el depósito no es reembolsable.' : ''}</p>
+        <p style="margin-top:20px;">Si quieres agendar otra fecha, con gusto te ayudamos.</p>
+      </div>`,
+    ).catch(() => false);
   }
 
   if (!refundable) {
