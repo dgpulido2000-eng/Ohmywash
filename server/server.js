@@ -80,8 +80,9 @@ function escapeHtml(value) {
   }[c]));
 }
 
-function approvalHtmlPage(title, message, extraHtml = '') {
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
+// lang: 'es' para las páginas del dueño, 'en' para las que ve el cliente.
+function approvalHtmlPage(title, message, extraHtml = '', lang = 'es') {
+  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title>
 <style>
   body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#f4fafb;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box;}
   .card{max-width:420px;background:#fff;border-radius:20px;padding:36px 30px;box-shadow:0 20px 50px rgba(20,50,55,.12);text-align:center;}
@@ -94,6 +95,13 @@ function approvalHtmlPage(title, message, extraHtml = '') {
 
 function formatApptDate(startAt) {
   return new Date(startAt).toLocaleString('es-US', {
+    timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  });
+}
+
+// Versión en inglés para todo lo que ve el cliente (correos y páginas).
+function formatApptDateEn(startAt) {
+  return new Date(startAt).toLocaleString('en-US', {
     timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
   });
 }
@@ -655,15 +663,15 @@ app.get('/approve-booking', async (req, res) => {
     const customerEmailSent = payload.customerEmail
       ? await sendCustomerEmail(
           payload.customerEmail,
-          'Tu cita con Oh My Wash está confirmada',
+          'Your Oh My Wash appointment is confirmed',
           `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
-            <h2 style="color:#0f6a62;">¡Tu cita está confirmada!</h2>
-            <p>Hola ${escapeHtml(payload.customerName)}, confirmamos tu cita para el <strong>${formatApptDate(payload.startAt)}</strong>.</p>
-            ${payload.serviceSummary ? `<p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary)}</p>` : ''}
-            ${addressStr ? `<p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>` : ''}
-            ${payload.depositPaid != null ? `<p><strong>Depósito pagado:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
-            ${payload.balanceDue != null ? `<p><strong>Saldo a pagar el día del servicio:</strong> $${Number(payload.balanceDue).toFixed(2)}</p>` : ''}
-            <p style="margin-top:20px;">Si necesitas cancelar o cambiar tu cita, contáctanos. El depósito se reembolsa si cancelas con más de 24 horas de anticipación.</p>
+            <h2 style="color:#0f6a62;">Your appointment is confirmed!</h2>
+            <p>Hi ${escapeHtml(payload.customerName)}, your appointment is confirmed for <strong>${formatApptDateEn(payload.startAt)}</strong>.</p>
+            ${payload.serviceSummary ? `<p><strong>Service(s):</strong> ${escapeHtml(payload.serviceSummary)}</p>` : ''}
+            ${addressStr ? `<p><strong>Address:</strong> ${escapeHtml(addressStr)}</p>` : ''}
+            ${payload.depositPaid != null ? `<p><strong>Deposit paid:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
+            ${payload.balanceDue != null ? `<p><strong>Balance due on the day of service:</strong> $${Number(payload.balanceDue).toFixed(2)}</p>` : ''}
+            <p style="margin-top:20px;">If you need to cancel or change your appointment, please contact us. Your deposit is refundable if you cancel more than 24 hours in advance.</p>
           </div>`,
         ).catch(() => false)
       : false;
@@ -748,8 +756,27 @@ app.get('/decline-booking', async (req, res) => {
       paymentId: payload.paymentId,
       exp: Date.now() + BOOKING_REQUEST_TTL_MS,
     });
-    return { url: `${baseUrl}/rebook?token=${encodeURIComponent(rebookToken)}`, dateStr: formatApptDate(alt.startAt) };
+    return { url: `${baseUrl}/rebook?token=${encodeURIComponent(rebookToken)}`, startAt: alt.startAt };
   });
+
+  // Link a la página donde el cliente elige él mismo fecha, técnico y
+  // horario (la misma sección "Schedule your appointment" del checkout) —
+  // así no queda limitado a los 3 horarios sugeridos.
+  const scheduleToken = signBookingToken({
+    kind: 'rebook-pick',
+    segments: payload.segments || [],
+    customerId: payload.customerId,
+    customerName: payload.customerName,
+    customerEmail: payload.customerEmail,
+    customerPhone: payload.customerPhone,
+    address: payload.address,
+    serviceSummary: payload.serviceSummary,
+    depositPaid: payload.depositPaid,
+    balanceDue: payload.balanceDue,
+    paymentId: payload.paymentId,
+    exp: Date.now() + BOOKING_REQUEST_TTL_MS,
+  });
+  const scheduleUrl = `${baseUrl}/rebook-schedule?token=${encodeURIComponent(scheduleToken)}`;
 
   const refundToken = signBookingToken({
     kind: 'rebook-refund',
@@ -761,26 +788,31 @@ app.get('/decline-booking', async (req, res) => {
     // una cita ACEPTADA en Square para alguno de estos, este depósito ya se
     // está usando ahí y no se debe reembolsar por separado.
     candidateStartAts: alternatives.map(a => a.startAt),
+    // Como ahora el cliente también puede elegir cualquier otro horario,
+    // cualquier cita aceptada creada después del rechazo cuenta igual.
+    declinedAt: Date.now(),
     exp: Date.now() + BOOKING_REQUEST_TTL_MS,
   });
   const refundUrl = `${baseUrl}/rebook-refund?token=${encodeURIComponent(refundToken)}`;
 
-  const optionsHtml = rebookLinks.length
-    ? rebookLinks.map(l => `<p><a href="${l.url}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;margin:4px 0;">${escapeHtml(l.dateStr)}</a></p>`).join('')
-    : '<p>No encontramos horarios disponibles en los próximos 30 días — contáctanos directamente.</p>';
+  const btnStyle = 'display:inline-block;background:#2ec4b6;color:#fff;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;margin:4px 0;';
+  const outlineBtnStyle = 'display:inline-block;background:#fff;color:#0f6a62;border:2px solid #2ec4b6;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;margin:4px 0;';
+  const optionsHtml = (fmt) => rebookLinks.map(l => `<p><a href="${l.url}" style="${btnStyle}">${escapeHtml(fmt(l.startAt))}</a></p>`).join('');
 
   const customerHtml = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
-      <h2 style="color:#0f6a62;">No pudimos confirmar tu cita</h2>
-      <p>Hola ${escapeHtml(payload.customerName)}, lamentablemente no pudimos confirmar tu solicitud para el ${formatApptDate(payload.startAt)}.</p>
-      <p>Ya tienes un depósito de ${amount} pagado — elige uno de estos horarios y <strong>no se te cobrará de nuevo</strong>:</p>
-      ${optionsHtml}
-      <p style="margin-top:20px;">¿Prefieres que te devolvamos el depósito? <a href="${refundUrl}">Pide tu reembolso aquí</a>.</p>
-      <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">Estos enlaces vencen en 7 días.</p>
+      <h2 style="color:#0f6a62;">We couldn't confirm your appointment</h2>
+      <p>Hi ${escapeHtml(payload.customerName)}, unfortunately we weren't able to confirm your request for ${formatApptDateEn(payload.startAt)}.</p>
+      <p>You already paid a ${amount} deposit, so <strong>you won't be charged again</strong> when you reschedule.</p>
+      ${rebookLinks.length ? `<p><strong>Suggested times</strong> — tap one to request it:</p>${optionsHtml(formatApptDateEn)}` : ''}
+      <p style="margin-top:18px;"><strong>Prefer a different day?</strong> Pick any date, technician and time that works for you:</p>
+      <p><a href="${scheduleUrl}" style="${outlineBtnStyle}">📅 Choose another date &amp; time</a></p>
+      <p style="margin-top:20px;">Would you rather get your deposit back? <a href="${refundUrl}">Request a refund here</a>.</p>
+      <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">These links expire in 7 days.</p>
     </div>`;
 
   const customerEmailSent = payload.customerEmail
-    ? await sendCustomerEmail(payload.customerEmail, 'No pudimos confirmar tu cita — elige otro horario', customerHtml).catch(() => false)
+    ? await sendCustomerEmail(payload.customerEmail, "We couldn't confirm your appointment — choose a new time", customerHtml).catch(() => false)
     : false;
 
   // El dueño siempre recibe los mismos links, por si el correo al cliente no
@@ -791,7 +823,8 @@ app.get('/decline-booking', async (req, res) => {
     `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
       <p>Rechazaste la solicitud de <strong>${escapeHtml(payload.customerName)}</strong> (${escapeHtml(payload.customerPhone) || 'sin teléfono'}) para el ${formatApptDate(payload.startAt)}.</p>
       <p>${customerEmailSent ? 'Ya le mandamos por correo estas opciones de reagendar:' : 'No le pudimos mandar el correo (verifica tu dominio en Resend) — compártele tú estos links:'}</p>
-      ${optionsHtml}
+      ${rebookLinks.length ? optionsHtml(formatApptDate) : '<p>No se encontraron horarios sugeridos en los próximos 30 días.</p>'}
+      <p>Link para que elija otra fecha y horario: <a href="${scheduleUrl}">${scheduleUrl}</a></p>
       <p>Link de reembolso: <a href="${refundUrl}">${refundUrl}</a></p>
     </div>`,
   );
@@ -802,85 +835,517 @@ app.get('/decline-booking', async (req, res) => {
   ));
 });
 
-// El cliente elige uno de los horarios alternativos — no se le cobra de
-// nuevo, se reutiliza el mismo depósito. Esto crea una solicitud normal,
-// que pasa otra vez por el mismo correo de Aceptar/Rechazar al dueño.
-app.get('/rebook', (req, res) => {
-  const payload = verifyBookingToken(req.query.token, 'rebook');
-  if (!payload) {
-    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace para reagendar ya no es válido.'));
+// Monto ya reembolsado (en centavos) de un depósito en Square. Si el
+// cliente pidió el reembolso por el otro link del correo, ya no se puede
+// reagendar "gratis" con ese depósito. Si Square falla al responder, se
+// asume 0 para no bloquear al cliente (el dueño igual lo ve al aceptar).
+async function depositRefundedCents(paymentId) {
+  if (!paymentId) return 0;
+  try {
+    const paymentResp = await squareClient.paymentsApi.getPayment(paymentId);
+    const payment = paymentResp.result?.payment ?? paymentResp.payment;
+    return payment?.refundedMoney?.amount != null ? Number(payment.refundedMoney.amount) : 0;
+  } catch (err) {
+    console.error('Error revisando el estado del pago antes de reagendar:', err);
+    return 0;
   }
-  res.send(approvalHtmlPage(
-    'Confirmar nuevo horario',
-    `¿Confirmas tu cita para el ${formatApptDate(payload.startAt)} con ${escapeHtml(payload.staffName)}? No se te cobrará de nuevo.`,
-    `<form method="post" action="/rebook"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn btn-secondary" type="submit">Confirmar este horario</button></form>`,
-  ));
-});
+}
 
-app.post('/rebook', async (req, res) => {
-  const payload = verifyBookingToken(req.body?.token, 'rebook');
-  if (!payload) {
-    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace para reagendar ya no es válido.'));
-  }
+const DEPOSIT_ALREADY_REFUNDED_PAGE = () => approvalHtmlPage(
+  '❌ This deposit was already refunded',
+  "We've already refunded your deposit, so it can't be used to book this time. Please make a new booking from our website.",
+  '', 'en',
+);
 
-  // El cliente pudo haber pedido el reembolso de este mismo depósito por el
-  // otro link del correo — si ya se devolvió el dinero en Square, no se
-  // puede reagendar "gratis" con un depósito que ya no existe.
-  if (payload.paymentId) {
-    try {
-      const paymentResp = await squareClient.paymentsApi.getPayment(payload.paymentId);
-      const payment = paymentResp.result?.payment ?? paymentResp.payment;
-      const refundedCents = payment?.refundedMoney?.amount != null ? Number(payment.refundedMoney.amount) : 0;
-      if (refundedCents > 0) {
-        return res.status(409).send(approvalHtmlPage(
-          '❌ Ese depósito ya fue reembolsado',
-          'Ya procesamos el reembolso de tu depósito, así que este horario ya no se puede reservar con él. Por favor haz una reserva nueva desde la página.',
-        ));
-      }
-    } catch (err) {
-      console.error('Error revisando el estado del pago antes de reagendar:', err);
-    }
-  }
-
-  const pendingPayload = {
-    segments: payload.segments,
-    startAt: payload.startAt,
+// Arma la solicitud normal (kind "request") que pasa otra vez por el mismo
+// correo de Aceptar/Rechazar al dueño — sirve tanto para los 3 horarios
+// sugeridos como para el horario que el cliente elige él mismo.
+function buildRebookRequest(payload, startAt, segments, staffName) {
+  return {
+    segments,
+    startAt,
     customerId: payload.customerId,
     customerName: payload.customerName,
     customerEmail: payload.customerEmail || null,
     customerPhone: payload.customerPhone || null,
     address: payload.address || null,
     serviceSummary: payload.serviceSummary || null,
-    staffName: payload.staffName || null,
+    staffName: staffName || null,
     depositPaid: payload.depositPaid ?? null,
     balanceDue: payload.balanceDue ?? null,
     paymentId: payload.paymentId || null,
     kind: 'request',
     exp: Date.now() + BOOKING_REQUEST_TTL_MS,
   };
+}
+
+// El cliente elige uno de los horarios alternativos — no se le cobra de
+// nuevo, se reutiliza el mismo depósito. Esto crea una solicitud normal,
+// que pasa otra vez por el mismo correo de Aceptar/Rechazar al dueño.
+app.get('/rebook', (req, res) => {
+  const payload = verifyBookingToken(req.query.token, 'rebook');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This rescheduling link is no longer valid.', '', 'en'));
+  }
+  res.send(approvalHtmlPage(
+    'Confirm your new time',
+    `Would you like to request your appointment for ${formatApptDateEn(payload.startAt)} with ${escapeHtml(payload.staffName)}? You won't be charged again.`,
+    `<form method="post" action="/rebook"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn btn-secondary" type="submit">Request this time</button></form>`,
+    'en',
+  ));
+});
+
+app.post('/rebook', async (req, res) => {
+  const payload = verifyBookingToken(req.body?.token, 'rebook');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This rescheduling link is no longer valid.', '', 'en'));
+  }
+
+  if (await depositRefundedCents(payload.paymentId) > 0) {
+    return res.status(409).send(DEPOSIT_ALREADY_REFUNDED_PAGE());
+  }
+
+  const pendingPayload = buildRebookRequest(payload, payload.startAt, payload.segments, payload.staffName);
 
   try {
     const newToken = signBookingToken(pendingPayload);
     await sendApprovalEmail(req, pendingPayload, newToken);
     res.send(approvalHtmlPage(
-      '✅ Nueva solicitud enviada',
-      `Tu solicitud para el ${formatApptDate(payload.startAt)} fue enviada a nuestro equipo. Te confirmaremos pronto — no se te cobró de nuevo.`,
+      '✅ Request sent',
+      `Your request for ${formatApptDateEn(payload.startAt)} was sent to our team. We'll confirm it shortly — you were not charged again.`,
+      '', 'en',
     ));
   } catch (err) {
     console.error('Error reenviando la solicitud reagendada:', err);
-    res.status(500).send(approvalHtmlPage('❌ No se pudo enviar la solicitud', 'Contáctanos directamente para agendar este horario.'));
+    res.status(500).send(approvalHtmlPage('❌ We couldn\'t send your request', 'Please contact us directly to book this time.', '', 'en'));
+  }
+});
+
+// --- Reagendar eligiendo cualquier fecha ---
+// Página con la misma sección "Schedule your appointment" del checkout
+// (servicio, calendario, técnico y horarios), para que el cliente no quede
+// limitado a los 3 horarios sugeridos del correo. Se puede elegir hasta
+// REBOOK_PICK_MAX_DAYS días hacia adelante.
+const REBOOK_PICK_MAX_DAYS = 30;
+
+function rebookSchedulePage(token, payload) {
+  const segments = payload.segments || [];
+  const totalDurationMin = segments.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+  const totalPrice = (Number(payload.depositPaid) || 0) + (Number(payload.balanceDue) || 0);
+  const data = {
+    token,
+    serviceVariationIds: segments.map(s => s.serviceVariationId),
+    totalDurationMin,
+    staff: Object.fromEntries(Object.entries(STAFF_SCHEDULE).map(([id, s]) => [id, { name: s.name, days: s.days, endMin: s.endMin }])),
+    maxDays: REBOOK_PICK_MAX_DAYS,
+  };
+  // "<" escapado para que nada dentro del JSON pueda cerrar el <script>.
+  const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
+  const meta = [totalPrice > 0 ? `$${totalPrice.toFixed(2)}` : '', totalDurationMin ? `${totalDurationMin} min` : ''].filter(Boolean).join(' · ');
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reschedule — Oh My Wash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--teal:#2ec4b6;--teal-deep:#0f6a62;--teal-light:#7de0d4;--teal-pale:#e6faf7;--ink:#12191a;--off:#f4fafb;--shadow:0 20px 50px rgba(20,50,55,.12);--ease:cubic-bezier(.22,1,.36,1);}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--off);-webkit-font-smoothing:antialiased;min-height:100vh;padding:40px 16px 80px;}
+  .wrap{max-width:640px;margin:0 auto;}
+  .brand{text-align:center;font-weight:800;font-size:1.3rem;color:var(--teal-deep);margin-bottom:24px;letter-spacing:.3px;}
+  .panel{background:#fff;border-radius:22px;padding:32px;box-shadow:var(--shadow);}
+  .panel h1{font-weight:700;font-size:1.2rem;margin-bottom:22px;}
+  .section-hint{color:#5c6b6e;font-size:.88rem;margin-bottom:18px;line-height:1.5;}
+  .notice{background:var(--teal-pale);border-radius:14px;padding:14px 16px;color:var(--teal-deep);font-size:.88rem;font-weight:600;line-height:1.5;margin-bottom:22px;}
+  .pay-field{margin-bottom:18px;}
+  .pay-field label{display:block;font-weight:600;font-size:.88rem;margin-bottom:8px;}
+  .appt-service-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:12px;background:var(--teal-pale);border:1.5px solid var(--teal-light);}
+  .appt-service-name{font-weight:700;font-size:.95rem;}
+  .appt-service-meta{font-size:.8rem;color:var(--teal-deep);font-weight:700;white-space:nowrap;}
+  .date-picker-wrap{position:relative;}
+  .date-picker-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;border:1.5px solid #d8e8ea;background:#fff;font-size:.95rem;font-family:inherit;color:var(--ink);cursor:pointer;text-align:left;}
+  .date-picker-btn:hover{border-color:var(--teal);}
+  .appt-calendar{position:absolute;top:calc(100% + 10px);left:0;z-index:20;background:#fff;border-radius:20px;box-shadow:var(--shadow);border:1px solid #eaf1f2;padding:22px;width:320px;max-width:calc(100vw - 32px);}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .cal-header span{font-weight:700;font-size:1.05rem;}
+  .cal-nav{width:34px;height:34px;border-radius:50%;border:none;background:var(--teal-pale);color:var(--teal-deep);font-size:1.15rem;cursor:pointer;font-weight:700;}
+  .cal-nav:hover:not(:disabled){background:var(--teal);color:#fff;}
+  .cal-nav:disabled{opacity:.35;cursor:not-allowed;}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px;}
+  .cal-weekdays span{text-align:center;font-size:.7rem;font-weight:700;color:#8b9a9c;text-transform:uppercase;}
+  .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:none;background:transparent;font-size:.92rem;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .cal-day:hover:not(:disabled):not(.empty){background:var(--teal-pale);}
+  .cal-day.selected{background:var(--teal);color:#fff;}
+  .cal-day.today:not(.selected){border:1.5px solid var(--teal);}
+  .cal-day:disabled{color:#d0dbdc;cursor:not-allowed;}
+  .cal-day.empty{visibility:hidden;}
+  .cal-day.unavail{color:#b4bfc1;background:#f1f4f5;position:relative;}
+  .cal-day.unavail::after{content:'/';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:400;color:#9aa6a8;}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{padding:10px 16px;border-radius:100px;border:1.5px solid #d8e8ea;background:#fff;color:var(--ink);font-weight:600;font-size:.88rem;cursor:pointer;font-family:inherit;transition:all .2s var(--ease);}
+  .chip:hover{border-color:var(--teal);}
+  .chip.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .empty-note{font-size:.85rem;color:#8b9a9c;}
+  .btn-secondary{width:100%;padding:13px;border-radius:100px;border:1.5px solid var(--teal);background:#fff;color:var(--teal-deep);font-weight:600;font-size:.94rem;cursor:pointer;font-family:inherit;margin-top:4px;}
+  .btn-secondary:hover{background:var(--teal-pale);}
+  .btn-secondary:disabled,.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{width:100%;padding:14px;border-radius:100px;border:none;background:var(--teal);color:#fff;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit;margin-top:20px;}
+  .btn-primary:hover:not(:disabled){background:#22a89c;}
+  #slots{margin-top:18px;}
+  .link-btn{margin-left:8px;padding:6px 14px;border-radius:100px;border:1.5px solid var(--teal);background:#fff;color:var(--teal-deep);font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit;}
+  #status{margin-top:16px;font-weight:600;font-size:.9rem;min-height:20px;line-height:1.5;}
+  .done{text-align:center;padding:12px 0;}
+  .done h1{margin-bottom:12px;}
+  .done p{color:#5c6b6e;line-height:1.6;}
+  @media (max-width:480px){.panel{padding:24px 18px;}}
+</style></head><body><div class="wrap">
+  <div class="brand">Oh My Wash</div>
+  <div class="panel" id="panel">
+    <h1>Schedule your appointment</h1>
+    <p class="section-hint">Choose the date and confirm an available time with our team.</p>
+    <div class="notice">Your deposit is already paid — you won't be charged again.</div>
+    <div class="pay-field">
+      <label>Service</label>
+      <div class="appt-service-summary">
+        <span class="appt-service-name">${escapeHtml(payload.serviceSummary || 'Your service')}</span>
+        ${meta ? `<span class="appt-service-meta">${meta}</span>` : ''}
+      </div>
+    </div>
+    <div class="pay-field">
+      <label>Date</label>
+      <div class="date-picker-wrap">
+        <button type="button" id="dateBtn" class="date-picker-btn"><span id="dateLabel">Choose a date</span><span>📅</span></button>
+        <div id="calendar" class="appt-calendar" hidden>
+          <div class="cal-header">
+            <button type="button" id="calPrev" class="cal-nav" aria-label="Previous month">‹</button>
+            <span id="calMonth"></span>
+            <button type="button" id="calNext" class="cal-nav" aria-label="Next month">›</button>
+          </div>
+          <div class="cal-weekdays">${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<span>${d}</span>`).join('')}</div>
+          <div id="calDays" class="cal-days"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pay-field">
+      <label>Technician</label>
+      <div id="staffPicker" class="chips"></div>
+    </div>
+    <button id="searchBtn" type="button" class="btn-secondary">Search available times</button>
+    <div id="slots" class="chips"></div>
+    <button id="submitBtn" type="button" class="btn-primary" hidden>Request this time</button>
+    <p id="status"></p>
+  </div>
+</div>
+<script>
+(() => {
+  const DATA = ${dataJson};
+  const STAFF = DATA.staff;
+  const TZ = 'America/New_York';
+
+  const $ = (id) => document.getElementById(id);
+  const dateBtn = $('dateBtn'), dateLabel = $('dateLabel'), calendar = $('calendar');
+  const calMonth = $('calMonth'), calDays = $('calDays'), calPrev = $('calPrev'), calNext = $('calNext');
+  const staffPicker = $('staffPicker'), searchBtn = $('searchBtn'), slotsEl = $('slots');
+  const submitBtn = $('submitBtn'), statusEl = $('status');
+
+  function setStatus(html, kind) {
+    statusEl.innerHTML = html;
+    statusEl.style.color = kind === 'error' ? '#c0392b' : kind === 'ok' ? '#1d8a4a' : '#5c6b6e';
+  }
+
+  const toDateStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const dayKeyNY = (iso) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+  const weekdayOfKey = (key) => new Date(key + 'T12:00:00').getDay();
+  function nyMinutesOfDay(date) {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(date);
+    return (parseInt(parts.find(p => p.type === 'hour').value, 10) % 24) * 60 + parseInt(parts.find(p => p.type === 'minute').value, 10);
+  }
+
+  const today = new Date();
+  const minDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + DATA.maxDays);
+  let selectedDate = new Date(minDate);
+  let calView = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  let selectedStaffId = null;
+  let slots = [];
+  let selectedSlot = null;
+  let userPickedDate = false;
+
+  function updateDateLabel() {
+    dateLabel.textContent = selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  function renderStaffPicker() {
+    const dow = selectedDate.getDay();
+    const eligible = Object.entries(STAFF).filter(([, s]) => s.days.includes(dow));
+    if (!eligible.length) {
+      staffPicker.innerHTML = '<span class="empty-note">No technicians work this day. Please choose another date.</span>';
+      selectedStaffId = null;
+      return;
+    }
+    if (!eligible.some(([id]) => id === selectedStaffId)) selectedStaffId = eligible[0][0];
+    staffPicker.innerHTML = eligible.map(([id, s]) => '<button type="button" class="chip' + (id === selectedStaffId ? ' selected' : '') + '" data-id="' + id + '">' + s.name + '</button>').join('');
+    staffPicker.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
+      selectedStaffId = btn.dataset.id;
+      staffPicker.querySelectorAll('.chip').forEach(b => b.classList.toggle('selected', b === btn));
+      clearSlots();
+    }));
+  }
+
+  function clearSlots() {
+    slots = []; selectedSlot = null;
+    slotsEl.innerHTML = ''; submitBtn.hidden = true;
+  }
+
+  // Igual que en el checkout: Square conoce el horario del local y las citas
+  // ya tomadas; aquí se recortan los horarios que terminarían después de la
+  // hora de salida de cada técnico.
+  const validFor = (staffId, av) => av.filter(a =>
+    nyMinutesOfDay(new Date(new Date(a.startAt).getTime() + DATA.totalDurationMin * 60000)) <= STAFF[staffId].endMin
+    && STAFF[staffId].days.includes(weekdayOfKey(dayKeyNY(a.startAt))));
+
+  async function searchAvailability(staffId, startAt, endAt) {
+    const res = await fetch('/availability', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serviceVariationIds: DATA.serviceVariationIds, teamMemberId: staffId, startAt, endAt }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    return data.availabilities || [];
+  }
+
+  const monthCache = {}, monthPending = {};
+  function loadMonth(year, month) {
+    const key = year + '-' + month;
+    if (monthCache[key]) return Promise.resolve(monthCache[key]);
+    if (monthPending[key]) return monthPending[key];
+    const startAt = new Date(Math.max(Date.UTC(year, month, 1), Date.now() + 60000)).toISOString();
+    const endAt = new Date(Math.min(Date.UTC(year, month + 1, 1), maxDate.getTime() + 2 * 86400000)).toISOString();
+    monthPending[key] = Promise.all(Object.keys(STAFF).map(id =>
+      searchAvailability(id, startAt, endAt).then(av => validFor(id, av)).catch(() => [])
+    )).then(results => {
+      const open = new Set(results.flat().map(a => dayKeyNY(a.startAt)));
+      monthCache[key] = open;
+      delete monthPending[key];
+      return open;
+    });
+    return monthPending[key];
+  }
+
+  function renderCalendar() {
+    calMonth.textContent = calView.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const year = calView.getFullYear(), month = calView.getMonth();
+    const openDays = monthCache[year + '-' + month];
+    if (!openDays) loadMonth(year, month).then(renderCalendar).catch(() => {});
+    let html = '';
+    for (let i = 0; i < new Date(year, month, 1).getDay(); i++) html += '<button type="button" class="cal-day empty" disabled></button>';
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      const dStr = toDateStr(dateObj);
+      const disabled = dateObj < minDate || dateObj > maxDate;
+      const unavail = !disabled && openDays && !openDays.has(dStr);
+      const cls = 'cal-day' + (dStr === toDateStr(selectedDate) ? ' selected' : '') + (dStr === toDateStr(today) ? ' today' : '') + (unavail ? ' unavail' : '');
+      html += '<button type="button" class="' + cls + '" data-date="' + dStr + '"' + (disabled || unavail ? ' disabled' : '') + '>' + d + '</button>';
+    }
+    calDays.innerHTML = html;
+    calPrev.disabled = year === minDate.getFullYear() && month === minDate.getMonth();
+    calNext.disabled = year === maxDate.getFullYear() && month === maxDate.getMonth();
+    calDays.querySelectorAll('.cal-day[data-date]:not(:disabled)').forEach(btn => btn.addEventListener('click', () => {
+      const [y, m, day] = btn.dataset.date.split('-').map(Number);
+      selectDay(new Date(y, m - 1, day));
+      userPickedDate = true;
+      calendar.hidden = true;
+      searchBtn.click();
+    }));
+  }
+
+  function selectDay(date, staffId) {
+    selectedDate = date;
+    if (staffId) selectedStaffId = staffId;
+    updateDateLabel();
+    renderStaffPicker();
+    renderCalendar();
+    clearSlots();
+  }
+
+  dateBtn.addEventListener('click', () => { calendar.hidden = !calendar.hidden; if (!calendar.hidden) renderCalendar(); });
+  calPrev.addEventListener('click', () => { calView.setMonth(calView.getMonth() - 1); renderCalendar(); });
+  calNext.addEventListener('click', () => { calView.setMonth(calView.getMonth() + 1); renderCalendar(); });
+  document.addEventListener('click', (e) => {
+    if (!calendar.hidden && !calendar.contains(e.target) && !dateBtn.contains(e.target)) calendar.hidden = true;
+  });
+
+  async function findNextAvailable(fromDate) {
+    const start = new Date(Math.max(fromDate.getTime(), Date.now() + 60000));
+    const end = new Date(maxDate.getTime() + 2 * 86400000);
+    if (end <= start) return null;
+    const results = await Promise.all(Object.keys(STAFF).map(id =>
+      searchAvailability(id, start.toISOString(), end.toISOString())
+        .then(av => validFor(id, av).map(a => ({ ...a, staffId: id })))
+        .catch(() => [])
+    ));
+    const minKey = toDateStr(minDate), maxKey = toDateStr(maxDate);
+    const all = results.flat().filter(a => dayKeyNY(a.startAt) >= minKey && dayKeyNY(a.startAt) <= maxKey);
+    all.sort((x, y) => new Date(x.startAt) - new Date(y.startAt));
+    return all[0] || null;
+  }
+
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: TZ });
+  const fmtDay = (iso) => new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: TZ });
+  const keyToDate = (key) => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); };
+
+  searchBtn.addEventListener('click', async () => {
+    if (!selectedStaffId) { setStatus('No technicians work this day. Please choose another date.', 'error'); return; }
+    const dateVal = toDateStr(selectedDate);
+    clearSlots();
+    setStatus('Searching for available times...', 'info');
+    searchBtn.disabled = true;
+    try {
+      // Rango amplio en UTC que cubre todo el día en Nueva York; luego se
+      // filtra por la fecha local de cada horario.
+      const startAt = new Date(Math.max(Date.parse(dateVal + 'T00:00:00Z'), Date.now() + 60000)).toISOString();
+      const endAt = new Date(Date.parse(dateVal + 'T00:00:00Z') + 36 * 3600000).toISOString();
+      const av = await searchAvailability(selectedStaffId, startAt, endAt);
+      slots = validFor(selectedStaffId, av).filter(a => dayKeyNY(a.startAt) === dateVal);
+      if (!slots.length) {
+        const next = await findNextAvailable(new Date(dateVal + 'T00:00:00Z'));
+        if (next) {
+          setStatus('No available times that day. Next available: <strong>' + fmtDay(next.startAt) + '</strong>, ' + fmtTime(next.startAt) + ' <button type="button" id="useNext" class="link-btn">Use this</button>', 'info');
+          $('useNext').addEventListener('click', () => { selectDay(keyToDate(dayKeyNY(next.startAt)), next.staffId); searchBtn.click(); });
+        } else {
+          setStatus('No availability in the next ' + DATA.maxDays + ' days. Please call us at +1 678-895-5812.', 'error');
+        }
+        return;
+      }
+      slotsEl.innerHTML = slots.map((a, i) => '<button type="button" class="chip" data-i="' + i + '">' + fmtTime(a.startAt) + '</button>').join('');
+      slotsEl.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
+        selectedSlot = slots[Number(btn.dataset.i)];
+        slotsEl.querySelectorAll('.chip').forEach(b => b.classList.toggle('selected', b === btn));
+        submitBtn.hidden = false;
+        setStatus('Selected: <strong>' + fmtDay(selectedSlot.startAt) + ', ' + fmtTime(selectedSlot.startAt) + '</strong> with ' + STAFF[selectedStaffId].name + '.', 'info');
+      }));
+      setStatus('', 'info');
+    } catch (err) {
+      console.error(err);
+      setStatus('We couldn\\'t load available times. Please try again.', 'error');
+    } finally {
+      searchBtn.disabled = false;
+    }
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    if (!selectedSlot) return;
+    submitBtn.disabled = true;
+    setStatus('Sending your request...', 'info');
+    try {
+      const res = await fetch('/rebook-schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: DATA.token, staffId: selectedStaffId, startAt: selectedSlot.startAt }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Unknown error');
+      $('panel').innerHTML = '<div class="done"><h1>✅ Request sent</h1><p>Your request for <strong>' + fmtDay(selectedSlot.startAt) + ', ' + fmtTime(selectedSlot.startAt) + '</strong> was sent to our team. We\\'ll confirm it by email shortly — you were not charged again.</p></div>';
+    } catch (err) {
+      setStatus(err.message, 'error');
+      submitBtn.disabled = false;
+    }
+  });
+
+  updateDateLabel();
+  renderStaffPicker();
+  // Igual que el checkout: arranca en el próximo horario disponible.
+  findNextAvailable(minDate).then(next => {
+    if (userPickedDate) return;
+    if (!next) { setStatus('No availability in the next ' + DATA.maxDays + ' days. Please call us at +1 678-895-5812.', 'error'); return; }
+    selectDay(keyToDate(dayKeyNY(next.startAt)), next.staffId);
+    searchBtn.click();
+  }).catch(() => {});
+})();
+</script></body></html>`;
+}
+
+app.get('/rebook-schedule', (req, res) => {
+  const payload = verifyBookingToken(req.query.token, 'rebook-pick');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This rescheduling link is no longer valid. Please contact us to book a new time.', '', 'en'));
+  }
+  res.send(rebookSchedulePage(String(req.query.token), payload));
+});
+
+// El cliente manda el horario que eligió en la página de arriba. Se vuelve
+// a validar todo en el servidor (día y hora de salida del técnico, y que
+// Square siga teniendo ese horario libre) antes de mandar la solicitud al
+// dueño — el navegador del cliente no es de fiar.
+app.post('/rebook-schedule', async (req, res) => {
+  const { token, staffId, startAt } = req.body || {};
+  const payload = verifyBookingToken(token, 'rebook-pick');
+  if (!payload) {
+    return res.status(400).json({ success: false, error: 'This rescheduling link is no longer valid. Please contact us.' });
+  }
+  const cfg = STAFF_SCHEDULE[staffId];
+  const startMs = Date.parse(startAt);
+  if (!cfg || !Number.isFinite(startMs)) {
+    return res.status(400).json({ success: false, error: 'Please choose a technician and a time.' });
+  }
+  if (startMs < Date.now() || startMs > Date.now() + (REBOOK_PICK_MAX_DAYS + 2) * 24 * 60 * 60 * 1000) {
+    return res.status(400).json({ success: false, error: 'That time is outside the dates we can book. Please choose another.' });
+  }
+  const segments = (payload.segments || []).map(s => ({ ...s, teamMemberId: staffId }));
+  const totalDurationMin = segments.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+  const fitsSchedule = cfg.days.includes(new Date(nyDateKey(startAt) + 'T12:00:00').getDay())
+    && nyMinutesOfDay(new Date(startMs + totalDurationMin * 60000)) <= cfg.endMin;
+  if (!fitsSchedule) {
+    return res.status(400).json({ success: false, error: `${cfg.name} isn't available at that time. Please choose another.` });
+  }
+
+  try {
+    const rangeStart = new Date(Math.max(Date.now() + 60000, startMs - 60 * 60 * 1000));
+    const rangeEnd = new Date(rangeStart.getTime() + 25 * 60 * 60 * 1000);
+    const response = await squareClient.bookingsApi.searchAvailability({
+      query: { filter: {
+        startAtRange: { startAt: rangeStart.toISOString(), endAt: rangeEnd.toISOString() },
+        locationId: process.env.SQUARE_LOCATION_ID,
+        segmentFilters: segments.map(s => ({ serviceVariationId: s.serviceVariationId, teamMemberIdFilter: { any: [staffId] } })),
+      } },
+    });
+    const availabilities = response.result?.availabilities ?? response.availabilities ?? [];
+    if (!availabilities.some(a => Date.parse(a.startAt) === startMs)) {
+      return res.status(409).json({ success: false, error: 'Sorry, that time was just taken. Please choose another.' });
+    }
+  } catch (err) {
+    console.error('Error verificando el horario elegido para reagendar:', err);
+    return res.status(500).json({ success: false, error: "We couldn't check that time. Please try again." });
+  }
+
+  if (await depositRefundedCents(payload.paymentId) > 0) {
+    return res.status(409).json({ success: false, error: "Your deposit was already refunded, so it can't be used for this booking. Please make a new booking from our website." });
+  }
+
+  try {
+    const pendingPayload = buildRebookRequest(payload, new Date(startMs).toISOString(), segments, cfg.name);
+    await sendApprovalEmail(req, pendingPayload, signBookingToken(pendingPayload));
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error enviando la solicitud reagendada (horario elegido):', err);
+    res.status(500).json({ success: false, error: "We couldn't send your request. Please contact us directly." });
   }
 });
 
 // El cliente prefiere no reagendar y pide el reembolso del depósito que
 // había quedado en espera.
-// Revisa si el cliente ya tiene una cita ACEPTADA en Square para alguno de
-// los horarios que le propusimos al rechazar su solicitud original — si la
-// tiene, este depósito ya está asegurando esa cita y no se debe reembolsar
-// aparte (se le dirige al link de cancelación de esa cita, que ya tiene la
-// regla correcta de 24 horas).
+// Revisa si el cliente ya tiene una cita ACEPTADA en Square que esté usando
+// este depósito — ya sea uno de los horarios sugeridos al rechazar, o
+// cualquier cita creada después del rechazo (el cliente pudo elegir otro
+// horario en /rebook-schedule). Si la tiene, este depósito ya está
+// asegurando esa cita y no se debe reembolsar aparte (se le dirige al link
+// de cancelación de esa cita, que ya tiene la regla correcta de 24 horas).
 async function findConfirmedAlternative(payload) {
-  if (!payload.customerId || !payload.candidateStartAts?.length) return null;
+  if (!payload.customerId || (!payload.candidateStartAts?.length && !payload.declinedAt)) return null;
   try {
     const response = await squareClient.bookingsApi.listBookings(
       undefined, undefined, payload.customerId, undefined,
@@ -889,53 +1354,66 @@ async function findConfirmedAlternative(payload) {
       new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
     );
     const bookings = response.result?.bookings ?? response.bookings ?? [];
-    return bookings.find(b => b.status === 'ACCEPTED' && payload.candidateStartAts.includes(b.startAt)) || null;
+    return bookings.find(b => b.status === 'ACCEPTED' && (
+      (payload.candidateStartAts || []).includes(b.startAt)
+      || (payload.declinedAt && Date.parse(b.createdAt) > payload.declinedAt)
+    )) || null;
   } catch (err) {
     console.error('Error revisando si ya hay una cita confirmada:', err);
     return null;
   }
 }
 
+const ALREADY_CONFIRMED_PAGE = (confirmed) => approvalHtmlPage(
+  '❌ You already have a confirmed appointment',
+  `You already have an appointment confirmed for ${formatApptDateEn(confirmed.startAt)}, and your deposit is being used for it. If you need to cancel it, please contact us.`,
+  '', 'en',
+);
+
 app.get('/rebook-refund', async (req, res) => {
   const payload = verifyBookingToken(req.query.token, 'rebook-refund');
   if (!payload) {
-    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de reembolso ya no es válido.'));
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This refund link is no longer valid.', '', 'en'));
   }
   const confirmed = await findConfirmedAlternative(payload);
-  if (confirmed) {
-    return res.status(409).send(approvalHtmlPage(
-      '❌ Ya tienes una cita confirmada',
-      `Ya tienes una cita aceptada para el ${formatApptDate(confirmed.startAt)} — ese depósito ya está asegurando esa cita. Si necesitas cancelarla, usa el link de cancelación que te mandamos cuando se confirmó, o contáctanos.`,
-    ));
-  }
+  if (confirmed) return res.status(409).send(ALREADY_CONFIRMED_PAGE(confirmed));
   const amount = `$${((payload.depositCents || 0) / 100).toFixed(2)}`;
   res.send(approvalHtmlPage(
-    'Pedir reembolso',
-    `¿Confirmas que quieres el reembolso de ${amount} en vez de reagendar?`,
-    `<form method="post" action="/rebook-refund"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn" type="submit">Confirmar reembolso</button></form>`,
+    'Request a refund',
+    `Do you want a refund of your ${amount} deposit instead of rescheduling?`,
+    `<form method="post" action="/rebook-refund"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn" type="submit">Confirm refund</button></form>`,
+    'en',
   ));
 });
 
 app.post('/rebook-refund', async (req, res) => {
   const payload = verifyBookingToken(req.body?.token, 'rebook-refund');
   if (!payload) {
-    return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de reembolso ya no es válido.'));
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This refund link is no longer valid.', '', 'en'));
   }
   const confirmed = await findConfirmedAlternative(payload);
-  if (confirmed) {
-    return res.status(409).send(approvalHtmlPage(
-      '❌ Ya tienes una cita confirmada',
-      `Ya tienes una cita aceptada para el ${formatApptDate(confirmed.startAt)} — ese depósito ya está asegurando esa cita. Si necesitas cancelarla, usa el link de cancelación que te mandamos cuando se confirmó, o contáctanos.`,
-    ));
-  }
+  if (confirmed) return res.status(409).send(ALREADY_CONFIRMED_PAGE(confirmed));
   const cents = payload.depositCents || 0;
   const amount = `$${(cents / 100).toFixed(2)}`;
   try {
     await refundDeposit(payload.paymentId, cents, 'Cliente no quiso reagendar tras rechazo', req.body.token + ':rebook-refund');
-    res.send(approvalHtmlPage('✅ Reembolso procesado', `Se reembolsaron ${amount} a ${escapeHtml(payload.customerName)}.`));
+    res.send(approvalHtmlPage(
+      '✅ Refund processed',
+      `We've refunded your ${amount} deposit. It may take a few business days to appear on your card.`,
+      '', 'en',
+    ));
   } catch (err) {
     console.error('Error procesando el reembolso de reagendar:', err);
-    res.status(500).send(approvalHtmlPage('❌ No se pudo reembolsar', `Hazlo manualmente desde Square por ${amount}.`));
+    // Esta página la ve el cliente, así que al dueño se le avisa aparte.
+    await sendOwnerEmail(
+      `Reembolso fallido — ${escapeHtml(payload.customerName)}`,
+      `<p>El cliente <strong>${escapeHtml(payload.customerName)}</strong> pidió el reembolso de su depósito, pero no se pudo procesar automáticamente. Hazlo manualmente desde Square por ${amount}.</p>`,
+    ).catch(() => {});
+    res.status(500).send(approvalHtmlPage(
+      "❌ We couldn't process your refund",
+      "Something went wrong while processing your refund. We've notified our team and will take care of it manually.",
+      '', 'en',
+    ));
   }
 });
 
@@ -988,14 +1466,14 @@ app.post('/cancel-booking', async (req, res) => {
   if (payload.customerEmail) {
     await sendCustomerEmail(
       payload.customerEmail,
-      'Tu cita con Oh My Wash fue cancelada',
+      'Your Oh My Wash appointment was canceled',
       `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
-        <h2 style="color:#0f6a62;">Tu cita fue cancelada</h2>
-        <p>Hola ${escapeHtml(payload.customerName)}, tu cita para el <strong>${formatApptDate(payload.startAt)}</strong> fue cancelada.</p>
+        <h2 style="color:#0f6a62;">Your appointment was canceled</h2>
+        <p>Hi ${escapeHtml(payload.customerName)}, your appointment for <strong>${formatApptDateEn(payload.startAt)}</strong> has been canceled.</p>
         <p>${refundable
-          ? `Te reembolsaremos el depósito de $${(cents / 100).toFixed(2)}. Puede tardar unos días hábiles en aparecer en tu tarjeta.`
-          : cents > 0 ? 'Como la cancelación fue con menos de 24 horas de anticipación, el depósito no es reembolsable.' : ''}</p>
-        <p style="margin-top:20px;">Si quieres agendar otra fecha, con gusto te ayudamos.</p>
+          ? `We'll refund your $${(cents / 100).toFixed(2)} deposit. It may take a few business days to appear on your card.`
+          : cents > 0 ? 'Since the cancellation was made less than 24 hours in advance, the deposit is non-refundable.' : ''}</p>
+        <p style="margin-top:20px;">If you'd like to book another date, we'll be happy to help.</p>
       </div>`,
     ).catch(() => false);
   }
