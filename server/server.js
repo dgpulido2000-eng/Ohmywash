@@ -106,7 +106,19 @@ function formatApptDateEn(startAt) {
   });
 }
 
-async function sendApprovalEmail(req, payload, token) {
+// Clave de idempotencia para Resend: si el mismo correo se intenta mandar
+// dos veces (doble clic en Aceptar, el navegador reintentando mientras
+// Render "despierta", o el escáner de links del correo abriendo el enlace),
+// Resend solo lo entrega una vez. Las claves duran 24 horas en Resend.
+function emailKey(kind, seed) {
+  return `${kind}:${createHash('sha256').update(String(seed)).digest('hex').slice(0, 40)}`;
+}
+
+// Resend responde 409 cuando la clave ya se usó (correo ya enviado o en
+// proceso) — eso cuenta como enviado, no como error.
+const resendAccepted = (resp) => resp.ok || resp.status === 409;
+
+async function sendApprovalEmail(req, payload, token, idempotencyKey = emailKey('approval', token)) {
   if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) {
     throw new Error('El correo de aprobación no está configurado (faltan RESEND_API_KEY / NOTIFY_EMAIL en el servidor).');
   }
@@ -122,6 +134,7 @@ async function sendApprovalEmail(req, payload, token) {
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
     },
     body: JSON.stringify({
       // "onboarding@resend.dev" funciona sin verificar un dominio propio,
@@ -152,7 +165,7 @@ async function sendApprovalEmail(req, payload, token) {
     }),
   });
 
-  if (!emailResp.ok) {
+  if (!resendAccepted(emailResp)) {
     const errText = await emailResp.text().catch(() => '');
     throw new Error(`No se pudo enviar el correo de aprobación (Resend respondió ${emailResp.status}): ${errText}`);
   }
@@ -472,7 +485,8 @@ app.post('/create-booking', async (req, res) => {
     };
 
     const token = signBookingToken(pendingPayload);
-    await sendApprovalEmail(req, pendingPayload, token);
+    // Un mismo pago solo puede generar una solicitud para ese horario.
+    await sendApprovalEmail(req, pendingPayload, token, paymentId ? emailKey('approval-checkout', `${paymentId}|${startAt}`) : undefined);
 
     res.json({ success: true, pending: true });
   } catch (err) {
@@ -502,11 +516,13 @@ async function refundDeposit(paymentId, amountCents, reason, seed) {
   });
 }
 
-async function sendEmail(to, subject, html) {
+async function sendEmail(to, subject, html, idempotencyKey) {
   if (!process.env.RESEND_API_KEY || !to) return false;
+  const headers = { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' };
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({
       from: process.env.NOTIFY_FROM || 'Oh My Wash <onboarding@resend.dev>',
       to: [to],
@@ -514,11 +530,11 @@ async function sendEmail(to, subject, html) {
       html,
     }),
   });
-  return resp.ok;
+  return resendAccepted(resp);
 }
 
-async function sendOwnerEmail(subject, html) {
-  await sendEmail(process.env.NOTIFY_EMAIL, subject, html);
+async function sendOwnerEmail(subject, html, idempotencyKey) {
+  await sendEmail(process.env.NOTIFY_EMAIL, subject, html, idempotencyKey);
 }
 
 // Solo funciona de verdad una vez que se verifique un dominio propio en
@@ -526,8 +542,8 @@ async function sendOwnerEmail(subject, html) {
 // verificado) Resend solo entrega al correo dueño de la cuenta, así que
 // esto fallará en silencio (devuelve false) hasta entonces. Por eso el
 // correo al dueño SIEMPRE incluye los mismos links, como respaldo manual.
-async function sendCustomerEmail(to, subject, html) {
-  return sendEmail(to, subject, html);
+async function sendCustomerEmail(to, subject, html, idempotencyKey) {
+  return sendEmail(to, subject, html, idempotencyKey);
 }
 
 // Mismo horario de técnicos que usa checkout.html (STAFF_SCHEDULE) — debe
@@ -686,6 +702,7 @@ app.get('/approve-booking', async (req, res) => {
             <p><a href="${customerCancelUrl}" style="display:inline-block;background:#fff;color:#c0392b;border:2px solid #e2574c;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;">Cancel appointment &amp; request refund</a></p>
             <p style="color:#8b9a9c;font-size:.85rem;">To change your appointment instead, please contact us.</p>
           </div>`,
+          emailKey('confirmed', req.query.token),
         ).catch(() => false)
       : false;
 
@@ -696,6 +713,7 @@ app.get('/approve-booking', async (req, res) => {
        <p>${customerEmailSent ? 'Le mandamos la confirmación por correo al cliente.' : 'No se le pudo mandar la confirmación por correo al cliente (verifica tu dominio en Resend) — avísale tú.'}</p>
        <p>Si el cliente necesita cancelar, usa este link (reembolsa el depósito solo si cancela con más de 24 horas de anticipación):</p>
        <p><a href="${cancelUrl}">${cancelUrl}</a></p>`,
+      emailKey('accepted', req.query.token),
     );
 
     res.send(approvalHtmlPage(
@@ -825,7 +843,7 @@ app.get('/decline-booking', async (req, res) => {
     </div>`;
 
   const customerEmailSent = payload.customerEmail
-    ? await sendCustomerEmail(payload.customerEmail, "We couldn't confirm your appointment — choose a new time", customerHtml).catch(() => false)
+    ? await sendCustomerEmail(payload.customerEmail, "We couldn't confirm your appointment — choose a new time", customerHtml, emailKey('declined', req.query.token)).catch(() => false)
     : false;
 
   // El dueño siempre recibe los mismos links, por si el correo al cliente no
@@ -840,6 +858,7 @@ app.get('/decline-booking', async (req, res) => {
       <p>Link para que elija otra fecha y horario: <a href="${scheduleUrl}">${scheduleUrl}</a></p>
       <p>Link de reembolso: <a href="${refundUrl}">${refundUrl}</a></p>
     </div>`,
+    emailKey('declined-owner', req.query.token),
   );
 
   res.send(approvalHtmlPage(
@@ -922,7 +941,7 @@ app.post('/rebook', async (req, res) => {
 
   try {
     const newToken = signBookingToken(pendingPayload);
-    await sendApprovalEmail(req, pendingPayload, newToken);
+    await sendApprovalEmail(req, pendingPayload, newToken, emailKey('approval-rebook', req.body.token));
     res.send(approvalHtmlPage(
       '✅ Request sent',
       `Your request for ${formatApptDateEn(payload.startAt)} was sent to our team. We'll confirm it shortly — you were not charged again.`,
@@ -1341,7 +1360,7 @@ app.post('/rebook-schedule', async (req, res) => {
 
   try {
     const pendingPayload = buildRebookRequest(payload, new Date(startMs).toISOString(), segments, cfg.name);
-    await sendApprovalEmail(req, pendingPayload, signBookingToken(pendingPayload));
+    await sendApprovalEmail(req, pendingPayload, signBookingToken(pendingPayload), emailKey('approval-pick', `${token}|${startMs}|${staffId}`));
     res.json({ success: true });
   } catch (err) {
     console.error('Error enviando la solicitud reagendada (horario elegido):', err);
@@ -1421,6 +1440,7 @@ app.post('/rebook-refund', async (req, res) => {
     await sendOwnerEmail(
       `Reembolso fallido — ${escapeHtml(payload.customerName)}`,
       `<p>El cliente <strong>${escapeHtml(payload.customerName)}</strong> pidió el reembolso de su depósito, pero no se pudo procesar automáticamente. Hazlo manualmente desde Square por ${amount}.</p>`,
+      emailKey('refund-failed', req.body.token),
     ).catch(() => {});
     res.status(500).send(approvalHtmlPage(
       "❌ We couldn't process your refund",
@@ -1485,6 +1505,7 @@ async function cancelAcceptedBooking(token, payload) {
           : cents > 0 ? 'Since the cancellation was made less than 24 hours in advance, the deposit is non-refundable.' : ''}</p>
         <p style="margin-top:20px;">If you'd like to book another date, we'll be happy to help.</p>
       </div>`,
+      emailKey('canceled', payload.bookingId),
     ).catch(() => false);
   }
 
@@ -1596,6 +1617,7 @@ app.post('/cancel-appointment', async (req, res) => {
      <p>${result.refundFailed
        ? `⚠️ Le correspondía el reembolso de ${amount}, pero falló — hazlo manualmente desde Square.`
        : result.refunded ? `Se le reembolsaron ${amount} automáticamente.` : escapeHtml(result.policyText)}</p>`,
+    emailKey('customer-canceled', payload.bookingId),
   ).catch(() => {});
 
   if (result.refundFailed) {
