@@ -654,6 +654,17 @@ app.get('/approve-booking', async (req, res) => {
     });
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const cancelUrl = `${baseUrl}/cancel-booking?token=${encodeURIComponent(cancelToken)}`;
+    const customerCancelToken = signBookingToken({
+      kind: 'customer-cancel',
+      bookingId,
+      paymentId: payload.paymentId || null,
+      depositCents: depositCentsOf(payload),
+      startAt: payload.startAt,
+      customerName: payload.customerName,
+      customerEmail: payload.customerEmail || null,
+      exp: Date.now() + TOKEN_LONG_TTL_MS,
+    });
+    const customerCancelUrl = `${baseUrl}/cancel-appointment?token=${encodeURIComponent(customerCancelToken)}`;
 
     // Square no le avisa al cliente de citas creadas por API con el token
     // del negocio, así que la confirmación se la mandamos nosotros.
@@ -671,7 +682,9 @@ app.get('/approve-booking', async (req, res) => {
             ${addressStr ? `<p><strong>Address:</strong> ${escapeHtml(addressStr)}</p>` : ''}
             ${payload.depositPaid != null ? `<p><strong>Deposit paid:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
             ${payload.balanceDue != null ? `<p><strong>Balance due on the day of service:</strong> $${Number(payload.balanceDue).toFixed(2)}</p>` : ''}
-            <p style="margin-top:20px;">If you need to cancel or change your appointment, please contact us. Your deposit is refundable if you cancel more than 24 hours in advance.</p>
+            <p style="margin-top:20px;">Need to cancel? You can do it online. Your deposit is refunded automatically if you cancel more than 24 hours before your appointment; cancellations made less than 24 hours in advance are non-refundable.</p>
+            <p><a href="${customerCancelUrl}" style="display:inline-block;background:#fff;color:#c0392b;border:2px solid #e2574c;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;">Cancel appointment &amp; request refund</a></p>
+            <p style="color:#8b9a9c;font-size:.85rem;">To change your appointment instead, please contact us.</p>
           </div>`,
         ).catch(() => false)
       : false;
@@ -1430,6 +1443,62 @@ function refundStatus(payload) {
   return { refundable: true, text: `Se reembolsarán ${amount} (cancelación con más de 24 horas de anticipación).` };
 }
 
+// Lógica compartida por el link del dueño (/cancel-booking) y el del
+// cliente (/cancel-appointment): libera la cita en Square, le avisa al
+// cliente por correo y reembolsa el depósito si aplica la regla de 24 horas.
+// Las idempotencyKey se derivan del token, así que hacer clic dos veces no
+// cancela ni reembolsa dos veces. Si la cita ya estaba cancelada (por el
+// otro link), no se hace nada más — así nunca se reembolsa dos veces.
+async function cancelAcceptedBooking(token, payload) {
+  const { refundable, text: policyText } = refundStatus(payload);
+  const cents = payload.depositCents || 0;
+
+  try {
+    const bookingResp = await squareClient.bookingsApi.retrieveBooking(payload.bookingId);
+    const booking = bookingResp.result?.booking ?? bookingResp.booking;
+    if (booking?.status && booking.status.startsWith('CANCELLED')) {
+      return { outcome: 'already', cents, policyText };
+    }
+  } catch (err) {
+    console.error('Error revisando el estado de la cita antes de cancelar:', err);
+  }
+
+  try {
+    await squareClient.bookingsApi.cancelBooking(payload.bookingId, { idempotencyKey: idempotencyFrom(token + ':cancel') });
+  } catch (err) {
+    console.error('Error cancelando la cita:', err);
+    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
+    return { outcome: 'error', detail, cents, policyText };
+  }
+
+  // Igual que al aceptar, Square no le avisa al cliente de la cancelación.
+  // Los links de cancelación creados antes de este cambio no traen el correo.
+  if (payload.customerEmail) {
+    await sendCustomerEmail(
+      payload.customerEmail,
+      'Your Oh My Wash appointment was canceled',
+      `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#0f6a62;">Your appointment was canceled</h2>
+        <p>Hi ${escapeHtml(payload.customerName)}, your appointment for <strong>${formatApptDateEn(payload.startAt)}</strong> has been canceled.</p>
+        <p>${refundable
+          ? `We'll refund your $${(cents / 100).toFixed(2)} deposit. It may take a few business days to appear on your card.`
+          : cents > 0 ? 'Since the cancellation was made less than 24 hours in advance, the deposit is non-refundable.' : ''}</p>
+        <p style="margin-top:20px;">If you'd like to book another date, we'll be happy to help.</p>
+      </div>`,
+    ).catch(() => false);
+  }
+
+  if (!refundable) return { outcome: 'canceled', refunded: false, cents, policyText };
+
+  try {
+    await refundDeposit(payload.paymentId, cents, 'Cancelación con más de 24 horas de anticipación', token + ':refund');
+    return { outcome: 'canceled', refunded: true, cents, policyText };
+  } catch (err) {
+    console.error('Error reembolsando la cancelación:', err);
+    return { outcome: 'canceled', refunded: false, refundFailed: true, cents, policyText };
+  }
+}
+
 app.get('/cancel-booking', (req, res) => {
   const payload = verifyBookingToken(req.query.token, 'cancel');
   if (!payload) {
@@ -1450,54 +1519,93 @@ app.post('/cancel-booking', async (req, res) => {
   if (!payload) {
     return res.status(400).send(approvalHtmlPage('❌ Enlace inválido o vencido', 'Este enlace de cancelación no es válido.'));
   }
-  const { refundable, text: policyText } = refundStatus(payload);
-  const cents = payload.depositCents || 0;
+  const result = await cancelAcceptedBooking(token, payload);
+  const amount = `$${(result.cents / 100).toFixed(2)}`;
 
-  try {
-    await squareClient.bookingsApi.cancelBooking(payload.bookingId, { idempotencyKey: idempotencyFrom(token + ':cancel') });
-  } catch (err) {
-    console.error('Error cancelando la cita:', err);
-    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido';
-    return res.status(500).send(approvalHtmlPage('❌ No se pudo cancelar', escapeHtml(detail)));
+  if (result.outcome === 'already') {
+    return res.send(approvalHtmlPage('ℹ️ La cita ya estaba cancelada', `La cita de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} ya se había cancelado (quizás el cliente la canceló desde su correo). No se hizo ningún cambio.`));
   }
-
-  // Igual que al aceptar, Square no le avisa al cliente de la cancelación.
-  // Los links de cancelación creados antes de este cambio no traen el correo.
-  if (payload.customerEmail) {
-    await sendCustomerEmail(
-      payload.customerEmail,
-      'Your Oh My Wash appointment was canceled',
-      `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
-        <h2 style="color:#0f6a62;">Your appointment was canceled</h2>
-        <p>Hi ${escapeHtml(payload.customerName)}, your appointment for <strong>${formatApptDateEn(payload.startAt)}</strong> has been canceled.</p>
-        <p>${refundable
-          ? `We'll refund your $${(cents / 100).toFixed(2)} deposit. It may take a few business days to appear on your card.`
-          : cents > 0 ? 'Since the cancellation was made less than 24 hours in advance, the deposit is non-refundable.' : ''}</p>
-        <p style="margin-top:20px;">If you'd like to book another date, we'll be happy to help.</p>
-      </div>`,
-    ).catch(() => false);
+  if (result.outcome === 'error') {
+    return res.status(500).send(approvalHtmlPage('❌ No se pudo cancelar', escapeHtml(result.detail)));
   }
-
-  if (!refundable) {
-    return res.send(approvalHtmlPage(
-      '✅ Cita cancelada',
-      `La cita de ${escapeHtml(payload.customerName)} fue cancelada. ${escapeHtml(policyText)}`,
-    ));
-  }
-
-  try {
-    await refundDeposit(payload.paymentId, cents, 'Cancelación con más de 24 horas de anticipación', token + ':refund');
-    res.send(approvalHtmlPage(
-      '✅ Cita cancelada y reembolsada',
-      `La cita de ${escapeHtml(payload.customerName)} fue cancelada y se reembolsaron $${(cents / 100).toFixed(2)}.`,
-    ));
-  } catch (err) {
-    console.error('Error reembolsando la cancelación:', err);
-    res.status(500).send(approvalHtmlPage(
+  if (result.refundFailed) {
+    return res.status(500).send(approvalHtmlPage(
       '⚠️ Cancelada, pero el reembolso falló',
-      `La cita fue cancelada, pero el reembolso de $${(cents / 100).toFixed(2)} no se pudo procesar. Hazlo manualmente desde Square.`,
+      `La cita fue cancelada, pero el reembolso de ${amount} no se pudo procesar. Hazlo manualmente desde Square.`,
     ));
   }
+  if (result.refunded) {
+    return res.send(approvalHtmlPage('✅ Cita cancelada y reembolsada', `La cita de ${escapeHtml(payload.customerName)} fue cancelada y se reembolsaron ${amount}.`));
+  }
+  res.send(approvalHtmlPage('✅ Cita cancelada', `La cita de ${escapeHtml(payload.customerName)} fue cancelada. ${escapeHtml(result.policyText)}`));
+});
+
+// Link de cancelación que va en el correo de confirmación del cliente — en
+// inglés y con la política de reembolso explicada antes de confirmar. Usa
+// su propio tipo de token ("customer-cancel") para que el cliente no reciba
+// el link del dueño (páginas en español).
+function customerRefundPolicy(payload) {
+  const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
+  const cents = payload.depositCents || 0;
+  const amount = `$${(cents / 100).toFixed(2)}`;
+  if (cents <= 0) return '';
+  if (hours >= DEPOSIT_REFUND_MIN_HOURS && !payload.paymentId) return `Since you're canceling more than 24 hours in advance, our team will refund your ${amount} deposit.`;
+  if (hours >= DEPOSIT_REFUND_MIN_HOURS) return `Since you're canceling more than 24 hours in advance, your ${amount} deposit will be refunded to your card.`;
+  return `Because your appointment is less than 24 hours away, your ${amount} deposit is <strong>non-refundable</strong>.`;
+}
+
+app.get('/cancel-appointment', async (req, res) => {
+  const payload = verifyBookingToken(req.query.token, 'customer-cancel');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This cancellation link is no longer valid. Please contact us.', '', 'en'));
+  }
+  if (Date.parse(payload.startAt) < Date.now()) {
+    return res.status(400).send(approvalHtmlPage('❌ This appointment has already passed', 'This appointment can no longer be canceled online. Please contact us if you need help.', '', 'en'));
+  }
+  res.send(approvalHtmlPage(
+    'Cancel your appointment',
+    `Your appointment is scheduled for <strong>${formatApptDateEn(payload.startAt)}</strong>. ${customerRefundPolicy(payload)}<br><br>Are you sure you want to cancel?`,
+    `<form method="post" action="/cancel-appointment"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn" type="submit">Yes, cancel my appointment</button></form>`,
+    'en',
+  ));
+});
+
+app.post('/cancel-appointment', async (req, res) => {
+  const token = req.body?.token;
+  const payload = verifyBookingToken(token, 'customer-cancel');
+  if (!payload) {
+    return res.status(400).send(approvalHtmlPage('❌ Invalid or expired link', 'This cancellation link is no longer valid. Please contact us.', '', 'en'));
+  }
+  if (Date.parse(payload.startAt) < Date.now()) {
+    return res.status(400).send(approvalHtmlPage('❌ This appointment has already passed', 'This appointment can no longer be canceled online. Please contact us if you need help.', '', 'en'));
+  }
+  const result = await cancelAcceptedBooking(token, payload);
+  const amount = `$${(result.cents / 100).toFixed(2)}`;
+
+  if (result.outcome === 'already') {
+    return res.send(approvalHtmlPage('ℹ️ Already canceled', 'This appointment was already canceled. No further changes were made.', '', 'en'));
+  }
+  if (result.outcome === 'error') {
+    return res.status(500).send(approvalHtmlPage("❌ We couldn't cancel your appointment", 'Something went wrong. Please try again or contact us directly.', '', 'en'));
+  }
+
+  // El dueño se entera de inmediato de las cancelaciones que hace el cliente.
+  await sendOwnerEmail(
+    `Cita cancelada por el cliente — ${escapeHtml(payload.customerName)}`,
+    `<p><strong>${escapeHtml(payload.customerName)}</strong> canceló su cita del ${formatApptDate(payload.startAt)} desde el link de su correo de confirmación. Ya se liberó en Square.</p>
+     <p>${result.refundFailed
+       ? `⚠️ Le correspondía el reembolso de ${amount}, pero falló — hazlo manualmente desde Square.`
+       : result.refunded ? `Se le reembolsaron ${amount} automáticamente.` : escapeHtml(result.policyText)}</p>`,
+  ).catch(() => {});
+
+  if (result.refundFailed) {
+    return res.send(approvalHtmlPage('✅ Appointment canceled', `Your appointment was canceled. We had a problem processing your ${amount} refund automatically — our team has been notified and will take care of it.`, '', 'en'));
+  }
+  res.send(approvalHtmlPage(
+    '✅ Appointment canceled',
+    `Your appointment for ${formatApptDateEn(payload.startAt)} was canceled.${result.refunded ? ` Your ${amount} deposit has been refunded — it may take a few business days to appear on your card.` : ''} We've also sent you a confirmation email.`,
+    '', 'en',
+  ));
 });
 
 const PORT = process.env.PORT || 3000;
