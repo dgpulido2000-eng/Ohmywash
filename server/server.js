@@ -543,8 +543,17 @@ async function sendOwnerEmail(subject, html, idempotencyKey) {
 // esto fallará en silencio (devuelve false) hasta entonces. Por eso el
 // correo al dueño SIEMPRE incluye los mismos links, como respaldo manual.
 async function sendCustomerEmail(to, subject, html, idempotencyKey) {
-  return sendEmail(to, subject, html, idempotencyKey);
+  return sendEmail(to, subject, html + CUSTOMER_EMAIL_FOOTER, idempotencyKey);
 }
+
+// Pie que llevan todos los correos al cliente: teléfono del negocio y links
+// a los términos y la política de privacidad del sitio.
+const SITE_URL = 'https://ohmywashdetailing.com';
+const CUSTOMER_EMAIL_FOOTER = `
+  <div style="font-family:Arial,sans-serif;max-width:480px;margin:28px auto 0;padding-top:16px;border-top:1px solid #e3eaeb;color:#8b9a9c;font-size:.8rem;text-align:center;">
+    <p style="margin:0 0 6px;">Questions? Call or text us at <a href="tel:+16788955812" style="color:#0f6a62;text-decoration:none;font-weight:bold;">+1 678-895-5812</a></p>
+    <p style="margin:0;"><a href="${SITE_URL}/terminos.html" style="color:#8b9a9c;">Terms of Service</a> &nbsp;·&nbsp; <a href="${SITE_URL}/privacidad.html" style="color:#8b9a9c;">Privacy Policy</a></p>
+  </div>`;
 
 // Mismo horario de técnicos que usa checkout.html (STAFF_SCHEDULE) — debe
 // mantenerse igual en los dos archivos. Se usa para proponerle al cliente
