@@ -751,10 +751,15 @@
 
   function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
 
+  // Productos con un máximo por auto (ej. Headlight Restoration se cobra
+  // por faro, y un auto tiene dos) — el carrito no deja pasar de ahí.
+  const MAX_QTY = { 'Headlight Restoration with Ceramic Coating': 2 };
+  const capQty = (name, qty) => Math.min(qty, MAX_QTY[name] || Infinity);
+
   function changeQty(name, delta){
     const item = cart.find(i => i.name === name);
     if (!item) return;
-    item.qty += delta;
+    item.qty = capQty(name, item.qty + delta);
     if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
     saveCart();
     renderCart();

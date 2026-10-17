@@ -475,7 +475,7 @@
 <script>
 (function(){
   // ---------- Datos reales de servicios (de Square), en ES y EN ----------
-  const CAR_LABEL_EN = { 'Sedán': 'Sedan', 'Estándar': 'Standard' };
+  const CAR_LABEL_EN = { 'Sedán': 'Sedan', 'Estándar': 'Standard', 'Un faro': '1 headlight', 'Dos faros': '2 headlights' };
   const SERVICES = {
     'in-n-out': {
       photoFiles: ['assets/servicio-in-n-out-2.jpg', 'assets/servicio-in-n-out-1.jpg'],
@@ -786,16 +786,28 @@
     },
     'headlight-restoration': {
       photoFile: 'assets/servicio-headlight-restoration.jpg',
-      options: [{ label: 'Estándar', price: 50, duration: '1 hr', startingPrice: true }],
+      // Se cobra por faro: el cliente elige 1 o 2, y entran al carrito como
+      // 1 o 2 unidades de $50 (así el checkout reserva el servicio en Square
+      // una vez por faro, con su duración).
+      options: [
+        { label: 'Un faro', price: 50, unitPrice: 50, qty: 1, duration: '1 hr' },
+        { label: 'Dos faros', price: 100, unitPrice: 50, qty: 2, duration: '2 hr' },
+      ],
       es: {
         name: 'Headlight Restoration with Ceramic Coating',
         category: 'Add-ons',
+        priceText: '$50 por faro',
+        priceNote: 'Elige uno o dos faros — $100 por los dos',
+        optionsTitle: '¿Cuántos faros?',
         description: 'Restaura faros opacos, amarillentos o dañados por el sol, y los sella con un recubrimiento cerámico para mantener la claridad por más tiempo y mejorar la visibilidad nocturna.',
         bullets: ['Pulido de faros opacos o amarillentos', 'Sellado con recubrimiento cerámico', 'Mejora la visibilidad nocturna y la apariencia del auto'],
       },
       en: {
         name: 'Headlight Restoration with Ceramic Coating',
         category: 'Add-ons',
+        priceText: '$50 per headlight',
+        priceNote: 'Choose one or two headlights — $100 for both',
+        optionsTitle: 'How many headlights?',
         description: 'Restores foggy, yellowed, or sun-damaged headlights and seals them with a ceramic coating to keep them clear longer and improve nighttime visibility.',
         bullets: ['Polishing of foggy or yellowed headlights', 'Ceramic coating seal', 'Improves nighttime visibility and car appearance'],
       },
@@ -894,8 +906,8 @@
       <span class="service-eyebrow">${service.category}</span>
       <h1 class="service-title">${service.name}</h1>
       <div class="service-meta">
-        <span class="service-duration">${hasQuotedPrice ? t['service.variablePrice'] : isSingleOption ? singleOptionPriceText : t['service.from'] + ' $' + cheapest}</span>
-        <span class="service-varies">${hasQuotedPrice ? t['service.quotedOnSite'] : isSingleOption ? '' : t['service.priceVaries']}</span>
+        <span class="service-duration">${hasQuotedPrice ? t['service.variablePrice'] : service.priceText || (isSingleOption ? singleOptionPriceText : t['service.from'] + ' $' + cheapest)}</span>
+        <span class="service-varies">${hasQuotedPrice ? t['service.quotedOnSite'] : service.priceNote || (isSingleOption ? '' : t['service.priceVaries'])}</span>
       </div>
       ${service.description ? `<p class="service-description">${service.description}</p>` : ''}
       ${service.bullets ? `
@@ -903,7 +915,7 @@
         <ul class="service-bullets">${service.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
       ` : ''}
       ${isSingleOption ? '' : `
-        <div class="options-title">${t['service.chooseCarType']}</div>
+        <div class="options-title">${service.optionsTitle || t['service.chooseCarType']}</div>
         <div id="optionList">
           ${service.options.map((o, i) => `
             <div class="option-row${o.price == null ? ' disabled' : ''}" data-index="${i}">
@@ -922,7 +934,7 @@
           <div class="add-bar-price" id="addBarPrice">
             ${isSingleOption
               ? `${hasQuotedPrice ? t['service.variablePrice'] : singleOptionPriceText}<small>${singleOption.duration}</small>`
-              : `${t['service.chooseCarType2']}<small>${t['service.toSeePrice']}</small>`}
+              : `${service.optionsTitle || t['service.chooseCarType2']}<small>${t['service.toSeePrice']}</small>`}
           </div>
           <button class="btn btn-solid" id="addToCartBtn" ${isSingleOption ? '' : 'disabled'}>${t['service.addToCart']}</button>
         </div>
@@ -981,6 +993,8 @@
 
     addToCartBtn.addEventListener('click', () => {
       if (!selected) return;
+      // Opciones por unidad (ej. faros): mismo producto, distinta cantidad.
+      if (selected.qty) { addToCart(service.name, selected.unitPrice, selected.qty); return; }
       const name = isSingleOption ? service.name : `${service.name} (${selected.label})`;
       if (PET_HAIR_SERVICES.includes(serviceId)) {
         openPetHairModal(name, selected.price);
@@ -1164,7 +1178,7 @@
   };
   const ADDON_CATALOG = [
     { name: 'Stain Removal', duration: '2h 30m', price: 50 },
-    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 50 },
+    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 50, unitLabel: { en: 'per headlight', es: 'por faro' } },
     { name: 'Engine Bay Cleaning', duration: '1h 30m', price: 100 },
     { name: 'Upholstery Cleaning', duration: '2h 40m', price: 100 },
     { name: 'Carpet Cleaning', duration: '1h 30m', price: 100 },
@@ -1194,7 +1208,7 @@
       <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
         <div>
           <div class="addon-modal-item-name">${a.name}</div>
-          <div class="addon-modal-item-meta">${a.duration} · ${a.price != null ? translations[currentLang]['service.from'] + ' $' + a.price.toFixed(2) : translations[currentLang]['cart.variablePrice']}</div>
+          <div class="addon-modal-item-meta">${a.duration} · ${a.unitLabel ? '$' + a.price.toFixed(2) + ' ' + a.unitLabel[currentLang] : a.price != null ? translations[currentLang]['service.from'] + ' $' + a.price.toFixed(2) : translations[currentLang]['cart.variablePrice']}</div>
         </div>
         <button type="button" class="addon-modal-add-btn">+ ${translations[currentLang]['addon.add']}</button>
       </div>
@@ -1308,10 +1322,15 @@
     cartTotalEl.textContent = formatUSD(cartTotal());
   }
 
-  function addToCart(name, price){
+  // Productos con un máximo por auto (ej. Headlight Restoration se cobra
+  // por faro, y un auto tiene dos) — el carrito no deja pasar de ahí.
+  const MAX_QTY = { 'Headlight Restoration with Ceramic Coating': 2 };
+  const capQty = (name, qty) => Math.min(qty, MAX_QTY[name] || Infinity);
+
+  function addToCart(name, price, qty = 1){
     const existing = cart.find(i => i.name === name);
-    if (existing) existing.qty += 1;
-    else cart.push({ name, price, qty: 1 });
+    if (existing) existing.qty = capQty(name, existing.qty + qty);
+    else cart.push({ name, price, qty: capQty(name, qty) });
     saveCart();
     renderCart();
     openCart();
@@ -1320,7 +1339,7 @@
   function changeQty(name, delta){
     const item = cart.find(i => i.name === name);
     if (!item) return;
-    item.qty += delta;
+    item.qty = capQty(name, item.qty + delta);
     if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
     saveCart();
     renderCart();

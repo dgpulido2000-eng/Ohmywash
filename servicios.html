@@ -487,7 +487,7 @@
         </a>
         <a class="card addon-card" href="servicio.html?id=headlight-restoration">
           <h3>Headlight Restoration with Ceramic Coating</h3>
-          <p data-i18n="card.headlightRestoration.desc">Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.</p>
+          <p data-i18n="card.headlightRestoration.desc">Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera. $50 por faro.</p>
           <div class="card-footer"><span class="price">$50+</span><span class="duration">1 hr</span></div>
           <span class="card-book" data-i18n="card.seeDetails">Ver detalles →</span>
         </a>
@@ -654,7 +654,7 @@
       'card.paintCorrection.desc': 'Removes 70%–85% of swirl marks, light scratches, and imperfections in your paint...',
       'addons.intro': 'Extras that can be added to any service. Prices are starting prices — the final price may vary based on the size or condition of the area treated.',
       'card.stainRemoval.desc': 'Removal of tough stains from upholstery, carpets, or interior surfaces.',
-      'card.headlightRestoration.desc': 'Restoration of foggy or yellowed headlights, sealed with ceramic for lasting protection.',
+      'card.headlightRestoration.desc': 'Restoration of foggy or yellowed headlights, sealed with ceramic for lasting protection. $50 per headlight.',
       'card.engineBayCleaning.desc': 'Deep cleaning and degreasing of the engine bay.',
       'card.upholsteryCleaning.desc': 'Deep cleaning of seats and fabric upholstery.',
       'card.carpetCleaning.desc': 'Deep cleaning of interior carpets and mats.',
@@ -715,7 +715,7 @@
       'card.paintCorrection.desc': 'Elimina entre el 70%–85% de remolinos, rayones leves e imperfecciones de tu pintura...',
       'addons.intro': 'Extras que se pueden agregar a cualquier servicio. Los precios son de partida — el precio final puede variar según el tamaño o estado del área a tratar.',
       'card.stainRemoval.desc': 'Eliminación de manchas difíciles en tapicería, alfombras o superficies interiores.',
-      'card.headlightRestoration.desc': 'Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera.',
+      'card.headlightRestoration.desc': 'Restauración de faros opacos o amarillentos, sellados con cerámico para protección duradera. $50 por faro.',
       'card.engineBayCleaning.desc': 'Limpieza y desengrasado profundo del compartimento del motor.',
       'card.upholsteryCleaning.desc': 'Limpieza profunda de asientos y tapicería de tela.',
       'card.carpetCleaning.desc': 'Limpieza profunda de alfombras y tapetes interiores.',
@@ -830,7 +830,7 @@
   };
   const ADDON_CATALOG = [
     { name: 'Stain Removal', duration: '2h 30m', price: 50 },
-    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 50 },
+    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h', price: 50, unitLabel: { en: 'per headlight', es: 'por faro' } },
     { name: 'Engine Bay Cleaning', duration: '1h 30m', price: 100 },
     { name: 'Upholstery Cleaning', duration: '2h 40m', price: 100 },
     { name: 'Carpet Cleaning', duration: '1h 30m', price: 100 },
@@ -860,7 +860,7 @@
       <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
         <div>
           <div class="addon-modal-item-name">${a.name}</div>
-          <div class="addon-modal-item-meta">${a.duration} · ${a.price != null ? translations[currentLang]['card.from'] + ' $' + a.price.toFixed(2) : translations[currentLang]['cart.variablePrice']}</div>
+          <div class="addon-modal-item-meta">${a.duration} · ${a.unitLabel ? '$' + a.price.toFixed(2) + ' ' + a.unitLabel[currentLang] : a.price != null ? translations[currentLang]['card.from'] + ' $' + a.price.toFixed(2) : translations[currentLang]['cart.variablePrice']}</div>
         </div>
         <button type="button" class="addon-modal-add-btn">+ ${translations[currentLang]['addon.add']}</button>
       </div>
@@ -935,9 +935,14 @@
     cartTotalEl.textContent = formatUSD(cartTotal());
   }
 
+  // Productos con un máximo por auto (ej. Headlight Restoration se cobra
+  // por faro, y un auto tiene dos) — el carrito no deja pasar de ahí.
+  const MAX_QTY = { 'Headlight Restoration with Ceramic Coating': 2 };
+  const capQty = (name, qty) => Math.min(qty, MAX_QTY[name] || Infinity);
+
   function addToCart(name, price){
     const existing = cart.find(i => i.name === name);
-    if (existing) existing.qty += 1;
+    if (existing) existing.qty = capQty(name, existing.qty + 1);
     else cart.push({ name, price, qty: 1 });
     saveCart();
     renderCart();
@@ -947,7 +952,7 @@
   function changeQty(name, delta){
     const item = cart.find(i => i.name === name);
     if (!item) return;
-    item.qty += delta;
+    item.qty = capQty(name, item.qty + delta);
     if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
     saveCart();
     renderCart();
