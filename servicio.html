@@ -786,7 +786,7 @@
     },
     'headlight-restoration': {
       photoFile: 'assets/servicio-headlight-restoration.jpg',
-      options: [{ label: 'Estándar', price: 50, duration: '1 hr' }],
+      options: [{ label: 'Estándar', price: 50, duration: '1 hr', startingPrice: true }],
       es: {
         name: 'Headlight Restoration with Ceramic Coating',
         category: 'Add-ons',
@@ -876,14 +876,14 @@
     // muestran directo con "Agregar al carrito" habilitado, sin el paso de
     // "elige el tipo de tu auto" que sí necesitan los servicios con precio
     // por tamaño. La mayoría de los add-ons se cotizan en sitio (precio
-    // null), pero algunos (ej. Headlight Restoration) tienen precio fijo.
+    // null), pero algunos tienen un precio de partida.
     const isSingleOption = service.options.length === 1;
     const singleOption = isSingleOption ? service.options[0] : null;
     const hasQuotedPrice = isSingleOption && singleOption.price == null;
     const isAddon = service.category === 'Add-ons';
     const cheapest = isSingleOption ? null : Math.min(...service.options.filter(o => o.price != null).map(o => o.price));
     // Algunos add-ons tienen precio de partida (ej. Stain Removal "desde
-    // $50") en vez de un precio fijo exacto como Headlight Restoration.
+    // $50") en vez de un precio fijo exacto.
     const singleOptionPriceText = isSingleOption && !hasQuotedPrice
       ? (singleOption.startingPrice ? `${t['service.from']} $${singleOption.price.toFixed(2)}` : '$' + singleOption.price.toFixed(2))
       : '';
