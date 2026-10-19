@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { randomUUID, createHmac, createHash, timingSafeEqual } from 'node:crypto';
+import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import pkg from 'square';
 const { Client, Environment } = pkg;
 
@@ -152,8 +152,8 @@ async function sendApprovalEmail(req, payload, token, idempotencyKey = emailKey(
           <p><strong>Dirección:</strong> ${escapeHtml(addressStr)}</p>
           <p><strong>Servicio(s):</strong> ${escapeHtml(payload.serviceSummary) || '—'}</p>
           <p><strong>Técnico:</strong> ${escapeHtml(payload.staffName) || '—'}</p>
-          <p><strong>Depósito pagado (20%):</strong> ${payload.depositPaid != null ? '$' + Number(payload.depositPaid).toFixed(2) : '—'}</p>
-          <p><strong>Saldo a cobrar en sitio:</strong> ${payload.balanceDue != null ? '$' + Number(payload.balanceDue).toFixed(2) : '—'}</p>
+          ${Number(payload.depositPaid) > 0 ? `<p><strong>Depósito pagado:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
+          <p><strong>${Number(payload.depositPaid) > 0 ? 'Saldo a cobrar en sitio' : 'Total a cobrar en sitio'}:</strong> ${payload.balanceDue != null ? '$' + Number(payload.balanceDue).toFixed(2) : '—'}</p>
           <p><strong>Fecha y hora:</strong> ${formatApptDate(payload.startAt)}</p>
           <div style="margin-top:24px;">
             <a href="${approveUrl}" style="display:inline-block;background:#2ec4b6;color:#fff;padding:14px 26px;border-radius:100px;text-decoration:none;font-weight:bold;margin-right:12px;">✅ Aceptar cita</a>
@@ -201,41 +201,6 @@ app.get('/debug/approval-config', (req, res) => {
     notifyEmailSet: !!process.env.NOTIFY_EMAIL,
     approvalSecretSet: !!process.env.APPROVAL_SECRET,
   });
-});
-
-app.post('/create-payment', async (req, res) => {
-  const { sourceId, amount } = req.body || {};
-
-  if (!sourceId || !amount) {
-    return res.status(400).json({ success: false, error: 'sourceId y amount (en centavos) son requeridos' });
-  }
-
-  try {
-    const response = await squareClient.paymentsApi.createPayment({
-      sourceId,
-      idempotencyKey: randomUUID(),
-      amountMoney: {
-        amount: BigInt(amount),
-        currency: 'USD',
-      },
-      locationId: process.env.SQUARE_LOCATION_ID,
-    });
-
-    const payment = response.result?.payment ?? response.payment ?? response;
-
-    res.json({
-      success: true,
-      paymentId: payment.id,
-      status: payment.status,
-      amount: bigIntSafe(payment.amountMoney?.amount),
-      currency: payment.amountMoney?.currency,
-      receiptUrl: payment.receiptUrl ?? null,
-    });
-  } catch (err) {
-    console.error('Error creando el pago:', err);
-    const detail = err?.errors?.[0]?.detail || err?.body?.errors?.[0]?.detail || err.message || 'Error desconocido al procesar el pago';
-    res.status(500).json({ success: false, error: detail });
-  }
 });
 
 // --- Reservas (Bookings API) ---
@@ -395,9 +360,7 @@ app.post('/create-booking', async (req, res) => {
     postalCode,
     serviceSummary,
     staffName,
-    depositPaid,
     balanceDue,
-    paymentId,
     termsAccepted,
     marketingOptIn,
   } = req.body || {};
@@ -477,16 +440,16 @@ app.post('/create-booking', async (req, res) => {
       address: address || null,
       serviceSummary: serviceSummary || null,
       staffName: staffName || null,
-      depositPaid: depositPaid ?? null,
+      // Ya no se cobra depósito en línea: todo se paga en persona.
+      depositPaid: null,
       balanceDue: balanceDue ?? null,
-      paymentId: paymentId || null,
+      paymentId: null,
       kind: 'request',
       exp: Date.now() + BOOKING_REQUEST_TTL_MS,
     };
 
     const token = signBookingToken(pendingPayload);
-    // Un mismo pago solo puede generar una solicitud para ese horario.
-    await sendApprovalEmail(req, pendingPayload, token, paymentId ? emailKey('approval-checkout', `${paymentId}|${startAt}`) : undefined);
+    await sendApprovalEmail(req, pendingPayload, token);
 
     res.json({ success: true, pending: true });
   } catch (err) {
@@ -696,6 +659,10 @@ app.get('/approve-booking', async (req, res) => {
     const addressStr = payload.address
       ? [payload.address.addressLine1, payload.address.locality, payload.address.administrativeDistrictLevel1, payload.address.postalCode].filter(Boolean).join(', ')
       : '';
+    // Las citas nuevas ya no cobran depósito (todo se paga en sitio); el
+    // texto de depósito/reembolso solo aplica a solicitudes viejas que sí
+    // lo pagaron.
+    const hasDeposit = !!payload.paymentId && depositCentsOf(payload) > 0;
     const customerEmailSent = payload.customerEmail
       ? await sendCustomerEmail(
           payload.customerEmail,
@@ -705,10 +672,12 @@ app.get('/approve-booking', async (req, res) => {
             <p>Hi ${escapeHtml(payload.customerName)}, your appointment is confirmed for <strong>${formatApptDateEn(payload.startAt)}</strong>.</p>
             ${payload.serviceSummary ? `<p><strong>Service(s):</strong> ${escapeHtml(payload.serviceSummary)}</p>` : ''}
             ${addressStr ? `<p><strong>Address:</strong> ${escapeHtml(addressStr)}</p>` : ''}
-            ${payload.depositPaid != null ? `<p><strong>Deposit paid:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
-            ${payload.balanceDue != null ? `<p><strong>Balance due on the day of service:</strong> $${Number(payload.balanceDue).toFixed(2)}</p>` : ''}
-            <p style="margin-top:20px;">Need to cancel? You can do it online. Your deposit is refunded automatically if you cancel more than 24 hours before your appointment; cancellations made less than 24 hours in advance are non-refundable.</p>
-            <p><a href="${customerCancelUrl}" style="display:inline-block;background:#fff;color:#c0392b;border:2px solid #e2574c;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;">Cancel appointment &amp; request refund</a></p>
+            ${hasDeposit ? `<p><strong>Deposit paid:</strong> $${Number(payload.depositPaid).toFixed(2)}</p>` : ''}
+            ${payload.balanceDue != null ? `<p><strong>${hasDeposit ? 'Balance due on the day of service' : 'Total, paid on the day of service'}:</strong> $${Number(payload.balanceDue).toFixed(2)}</p>` : ''}
+            ${hasDeposit
+              ? '<p style="margin-top:20px;">Need to cancel? You can do it online. Your deposit is refunded automatically if you cancel more than 24 hours before your appointment; cancellations made less than 24 hours in advance are non-refundable.</p>'
+              : '<p style="margin-top:20px;">Need to cancel? You can do it online:</p>'}
+            <p><a href="${customerCancelUrl}" style="display:inline-block;background:#fff;color:#c0392b;border:2px solid #e2574c;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;">${hasDeposit ? 'Cancel appointment &amp; request refund' : 'Cancel appointment'}</a></p>
             <p style="color:#8b9a9c;font-size:.85rem;">To change your appointment instead, please contact us.</p>
           </div>`,
           emailKey('confirmed', req.query.token),
@@ -720,7 +689,7 @@ app.get('/approve-booking', async (req, res) => {
       `${depositWarning ? `<p style="color:#b45309;"><strong>${escapeHtml(depositWarning)}</strong></p>` : ''}
        <p>La cita de <strong>${escapeHtml(payload.customerName)}</strong> para el ${formatApptDate(payload.startAt)} quedó aceptada en Square.</p>
        <p>${customerEmailSent ? 'Le mandamos la confirmación por correo al cliente.' : 'No se le pudo mandar la confirmación por correo al cliente (verifica tu dominio en Resend) — avísale tú.'}</p>
-       <p>Si el cliente necesita cancelar, usa este link (reembolsa el depósito solo si cancela con más de 24 horas de anticipación):</p>
+       <p>Si el cliente necesita cancelar, usa este link${hasDeposit ? ' (reembolsa el depósito solo si cancela con más de 24 horas de anticipación)' : ''}:</p>
        <p><a href="${cancelUrl}">${cancelUrl}</a></p>`,
       emailKey('accepted', req.query.token),
     );
@@ -738,10 +707,10 @@ app.get('/approve-booking', async (req, res) => {
 });
 
 // Rechazar una solicitud: como la cita nunca se creó en Square, no hay nada
-// que cancelar ahí. En vez de reembolsar de inmediato, el depósito queda en
-// espera: se le ofrecen al cliente hasta 3 horarios alternativos (si elige
-// uno, se reutiliza el mismo pago — no se le cobra otra vez) y un link para
-// pedir el reembolso si prefiere no reagendar.
+// que cancelar ahí. Se le ofrecen al cliente hasta 3 horarios alternativos
+// y un link para elegir cualquier otra fecha. Si la solicitud es vieja y
+// pagó depósito, el depósito queda en espera (se reutiliza al reagendar) y
+// también se le ofrece un link para pedir el reembolso.
 app.get('/decline-booking', async (req, res) => {
   const payload = verifyBookingToken(req.query.token, 'request');
   if (!payload) {
@@ -761,13 +730,9 @@ app.get('/decline-booking', async (req, res) => {
     }
   }
 
-  // Sin depósito que ofrecer o reembolsar: solo avisar que se rechazó.
-  if (!payload.paymentId || cents <= 0) {
-    return res.send(approvalHtmlPage(
-      '🚫 Solicitud rechazada',
-      `La solicitud de ${escapeHtml(payload.customerName)} para el ${formatApptDate(payload.startAt)} fue rechazada.`,
-    ));
-  }
+  // Las citas nuevas ya no cobran depósito: al cliente se le ofrecen igual
+  // otros horarios, pero sin la parte de reembolso.
+  const hasDeposit = !!payload.paymentId && cents > 0;
 
   const serviceVariationIds = (payload.segments || []).map(s => s.serviceVariationId);
   const totalDurationMin = (payload.segments || []).reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
@@ -818,7 +783,7 @@ app.get('/decline-booking', async (req, res) => {
   });
   const scheduleUrl = `${baseUrl}/rebook-schedule?token=${encodeURIComponent(scheduleToken)}`;
 
-  const refundToken = signBookingToken({
+  const refundToken = hasDeposit && signBookingToken({
     kind: 'rebook-refund',
     paymentId: payload.paymentId,
     depositCents: cents,
@@ -833,7 +798,7 @@ app.get('/decline-booking', async (req, res) => {
     declinedAt: Date.now(),
     exp: Date.now() + BOOKING_REQUEST_TTL_MS,
   });
-  const refundUrl = `${baseUrl}/rebook-refund?token=${encodeURIComponent(refundToken)}`;
+  const refundUrl = hasDeposit ? `${baseUrl}/rebook-refund?token=${encodeURIComponent(refundToken)}` : null;
 
   const btnStyle = 'display:inline-block;background:#2ec4b6;color:#fff;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;margin:4px 0;';
   const outlineBtnStyle = 'display:inline-block;background:#fff;color:#0f6a62;border:2px solid #2ec4b6;padding:12px 22px;border-radius:100px;text-decoration:none;font-weight:bold;margin:4px 0;';
@@ -843,11 +808,11 @@ app.get('/decline-booking', async (req, res) => {
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
       <h2 style="color:#0f6a62;">We couldn't confirm your appointment</h2>
       <p>Hi ${escapeHtml(payload.customerName)}, unfortunately we weren't able to confirm your request for ${formatApptDateEn(payload.startAt)}.</p>
-      <p>You already paid a ${amount} deposit, so <strong>you won't be charged again</strong> when you reschedule.</p>
+      ${hasDeposit ? `<p>You already paid a ${amount} deposit, so <strong>you won't be charged again</strong> when you reschedule.</p>` : ''}
       ${rebookLinks.length ? `<p><strong>Suggested times</strong> — tap one to request it:</p>${optionsHtml(formatApptDateEn)}` : ''}
       <p style="margin-top:18px;"><strong>Prefer a different day?</strong> Pick any date, technician and time that works for you:</p>
       <p><a href="${scheduleUrl}" style="${outlineBtnStyle}">📅 Choose another date &amp; time</a></p>
-      <p style="margin-top:20px;">Would you rather get your deposit back? <a href="${refundUrl}">Request a refund here</a>.</p>
+      ${hasDeposit ? `<p style="margin-top:20px;">Would you rather get your deposit back? <a href="${refundUrl}">Request a refund here</a>.</p>` : ''}
       <p style="margin-top:20px;color:#8b9a9c;font-size:.8rem;">These links expire in 7 days.</p>
     </div>`;
 
@@ -865,14 +830,14 @@ app.get('/decline-booking', async (req, res) => {
       <p>${customerEmailSent ? 'Ya le mandamos por correo estas opciones de reagendar:' : 'No le pudimos mandar el correo (verifica tu dominio en Resend) — compártele tú estos links:'}</p>
       ${rebookLinks.length ? optionsHtml(formatApptDate) : '<p>No se encontraron horarios sugeridos en los próximos 30 días.</p>'}
       <p>Link para que elija otra fecha y horario: <a href="${scheduleUrl}">${scheduleUrl}</a></p>
-      <p>Link de reembolso: <a href="${refundUrl}">${refundUrl}</a></p>
+      ${hasDeposit ? `<p>Link de reembolso: <a href="${refundUrl}">${refundUrl}</a></p>` : ''}
     </div>`,
     emailKey('declined-owner', req.query.token),
   );
 
   res.send(approvalHtmlPage(
     '🚫 Solicitud rechazada',
-    `La solicitud de ${escapeHtml(payload.customerName)} fue rechazada. ${customerEmailSent ? 'Le mandamos por correo los horarios alternativos y la opción de reembolso.' : 'No se pudo mandar el correo al cliente — revisa tu propio correo para compartirle las opciones manualmente.'}`,
+    `La solicitud de ${escapeHtml(payload.customerName)} fue rechazada. ${customerEmailSent ? `Le mandamos por correo los horarios alternativos${hasDeposit ? ' y la opción de reembolso' : ''}.` :'No se pudo mandar el correo al cliente — revisa tu propio correo para compartirle las opciones manualmente.'}`,
   ));
 });
 
@@ -930,7 +895,7 @@ app.get('/rebook', (req, res) => {
   }
   res.send(approvalHtmlPage(
     'Confirm your new time',
-    `Would you like to request your appointment for ${formatApptDateEn(payload.startAt)} with ${escapeHtml(payload.staffName)}? You won't be charged again.`,
+    `Would you like to request your appointment for ${formatApptDateEn(payload.startAt)} with ${escapeHtml(payload.staffName)}?${depositCentsOf(payload) > 0 && payload.paymentId ? " You won't be charged again." : ''}`,
     `<form method="post" action="/rebook"><input type="hidden" name="token" value="${escapeHtml(req.query.token)}"><button class="btn btn-secondary" type="submit">Request this time</button></form>`,
     'en',
   ));
@@ -953,7 +918,7 @@ app.post('/rebook', async (req, res) => {
     await sendApprovalEmail(req, pendingPayload, newToken, emailKey('approval-rebook', req.body.token));
     res.send(approvalHtmlPage(
       '✅ Request sent',
-      `Your request for ${formatApptDateEn(payload.startAt)} was sent to our team. We'll confirm it shortly — you were not charged again.`,
+      `Your request for ${formatApptDateEn(payload.startAt)} was sent to our team. We'll confirm it shortly${depositCentsOf(payload) > 0 && payload.paymentId ? ' — you were not charged again' : ''}.`,
       '', 'en',
     ));
   } catch (err) {
@@ -973,6 +938,7 @@ function rebookSchedulePage(token, payload) {
   const segments = payload.segments || [];
   const totalDurationMin = segments.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
   const totalPrice = (Number(payload.depositPaid) || 0) + (Number(payload.balanceDue) || 0);
+  const paidDeposit = !!payload.paymentId && depositCentsOf(payload) > 0;
   const data = {
     token,
     serviceVariationIds: segments.map(s => s.serviceVariationId),
@@ -1046,7 +1012,7 @@ function rebookSchedulePage(token, payload) {
   <div class="panel" id="panel">
     <h1>Schedule your appointment</h1>
     <p class="section-hint">Choose the date and confirm an available time with our team.</p>
-    <div class="notice">Your deposit is already paid — you won't be charged again.</div>
+    ${paidDeposit ? `<div class="notice">Your deposit is already paid — you won't be charged again.</div>` : ''}
     <div class="pay-field">
       <label>Service</label>
       <div class="appt-service-summary">
@@ -1290,7 +1256,7 @@ function rebookSchedulePage(token, payload) {
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Unknown error');
-      $('panel').innerHTML = '<div class="done"><h1>✅ Request sent</h1><p>Your request for <strong>' + fmtDay(selectedSlot.startAt) + ', ' + fmtTime(selectedSlot.startAt) + '</strong> was sent to our team. We\\'ll confirm it by email shortly — you were not charged again.</p></div>';
+      $('panel').innerHTML = '<div class="done"><h1>✅ Request sent</h1><p>Your request for <strong>' + fmtDay(selectedSlot.startAt) + ', ' + fmtTime(selectedSlot.startAt) + '</strong> was sent to our team. We\\'ll confirm it by email shortly${paidDeposit ? ' — you were not charged again' : ''}.</p></div>';
     } catch (err) {
       setStatus(err.message, 'error');
       submitBtn.disabled = false;
@@ -1466,7 +1432,7 @@ function refundStatus(payload) {
   const hours = (Date.parse(payload.startAt) - Date.now()) / 3600000;
   const cents = payload.depositCents || 0;
   const amount = `$${(cents / 100).toFixed(2)}`;
-  if (cents <= 0) return { refundable: false, text: 'No hay depósito que reembolsar.' };
+  if (cents <= 0) return { refundable: false, text: '' };
   if (!payload.paymentId) return { refundable: false, text: `No se puede reembolsar automáticamente (falta el ID del pago). Reembolsa ${amount} manualmente desde Square.` };
   if (hours < DEPOSIT_REFUND_MIN_HOURS) return { refundable: false, text: `No hay reembolso: la cancelación es con menos de 24 horas de anticipación (${amount} no reembolsables).` };
   return { refundable: true, text: `Se reembolsarán ${amount} (cancelación con más de 24 horas de anticipación).` };
@@ -1509,9 +1475,9 @@ async function cancelAcceptedBooking(token, payload) {
       `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
         <h2 style="color:#0f6a62;">Your appointment was canceled</h2>
         <p>Hi ${escapeHtml(payload.customerName)}, your appointment for <strong>${formatApptDateEn(payload.startAt)}</strong> has been canceled.</p>
-        <p>${refundable
-          ? `We'll refund your $${(cents / 100).toFixed(2)} deposit. It may take a few business days to appear on your card.`
-          : cents > 0 ? 'Since the cancellation was made less than 24 hours in advance, the deposit is non-refundable.' : ''}</p>
+        ${refundable
+          ? `<p>We'll refund your $${(cents / 100).toFixed(2)} deposit. It may take a few business days to appear on your card.</p>`
+          : cents > 0 ? '<p>Since the cancellation was made less than 24 hours in advance, the deposit is non-refundable.</p>' : ''}
         <p style="margin-top:20px;">If you'd like to book another date, we'll be happy to help.</p>
       </div>`,
       emailKey('canceled', payload.bookingId),

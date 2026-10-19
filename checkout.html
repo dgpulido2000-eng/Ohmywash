@@ -164,20 +164,18 @@
 
   .pay-field{margin-bottom:18px;}
   .pay-field label{display:block;font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:8px;}
-  #card-container{padding:2px;border-radius:12px;min-height:56px;}
   .consent-row{display:flex;gap:10px;align-items:flex-start;font-size:.88rem;color:#2b3b3d;margin-bottom:12px;line-height:1.5;cursor:pointer;}
   .consent-row input[type=checkbox]{margin-top:4px;width:16px;height:16px;accent-color:var(--teal);flex:0 0 auto;}
   .consent-row a{color:var(--teal-deep);}
-  #card-button{
+  #request-button{
     width:100%;padding:15px;border-radius:100px;border:none;background:var(--teal);color:#fff;
     font-family:'Inter',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
     transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
     box-shadow:0 12px 30px rgba(46,196,182,.3);
   }
-  #card-button:hover{background:var(--teal-dark);transform:translateY(-2px);}
-  #card-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}
-  #payment-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
-  .payment-note{text-align:center;font-size:.75rem;color:#8b9a9c;margin-top:16px;line-height:1.5;}
+  #request-button:hover{background:var(--teal-dark);transform:translateY(-2px);}
+  #request-button:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+  #request-status{margin-top:16px;font-weight:600;font-size:.92rem;min-height:20px;}
   .powered-by-light{text-align:center;padding:36px 0 10px;font-size:.8rem;color:#8b9a9c;}
   .footer-legal{text-align:center;padding:0 0 36px;font-size:.8rem;color:#8b9a9c;}
   .footer-legal a{color:var(--teal-deep);text-decoration:none;}
@@ -266,7 +264,7 @@
 <main>
   <div class="wrap">
     <h1 class="page-title" data-i18n="checkout.pageTitle">Checkout</h1>
-    <p class="page-sub" data-i18n="checkout.pageSub">Revisa tu pedido y completa el pago para reservar tus servicios.</p>
+    <p class="page-sub" data-i18n="checkout.pageSub">Revisa tu pedido y envía tu solicitud para reservar tus servicios.</p>
 
     <div id="checkoutContent"></div>
 
@@ -288,8 +286,7 @@
         <span data-i18n="checkout.totalLabel">Total</span>
         <span id="confirmModalTotal"></span>
       </div>
-      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.confirmModalDepositLabel">Depósito pagado (20%)</span><span class="confirm-modal-detail-value" id="confirmModalDeposit"></span></div>
-      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.confirmModalBalanceLabel">Saldo a pagar en sitio</span><span class="confirm-modal-detail-value" id="confirmModalBalance"></span></div>
+      <div class="confirm-modal-detail"><span class="confirm-modal-detail-label" data-i18n="checkout.confirmModalPaymentLabel">Pago</span><span class="confirm-modal-detail-value" data-i18n="checkout.confirmModalPaymentValue">En persona, el día del servicio</span></div>
     </div>
 
     <div class="confirm-modal-section">
@@ -311,20 +308,16 @@
   </div>
 </div>
 
-<script src="https://web.squarecdn.com/v1/square.js"></script>
 <script>
 (function(){
   const CART_KEY = 'ohMyWashCart';
-  const SQUARE_APP_ID = 'sq0idp-an9AUhbzuSGcXHZhiw0rfA';
-  const SQUARE_LOCATION_ID = 'L4KR0652S04AJ';
-  const BACKEND_URL = 'https://oh-my-wash-server.onrender.com/create-payment';
 
   // ---------- Idioma (EN/ES) ----------
   const translations = {
     en: {
       'checkout.backToServices': '‹ Back to services',
       'checkout.pageTitle': 'Checkout',
-      'checkout.pageSub': 'Review your order and complete payment to book your services.',
+      'checkout.pageSub': 'Review your order and send your request to book your services.',
       'checkout.emptyTitle': 'Your cart is empty',
       'checkout.emptyHint': 'Add one or more services from the shop before checking out.',
       'checkout.emptyCta': 'View services',
@@ -346,13 +339,11 @@
       'checkout.city': 'City',
       'checkout.state': 'State',
       'checkout.zip': 'ZIP code',
-      'checkout.paymentTitle': 'Payment details',
-      'checkout.paymentGateNote': 'We charge a 20% deposit now to reserve your spot; the remaining balance is paid on-site. Cancellations less than 24 hours before the appointment are non-refundable.',
-      'checkout.confirmModalDepositLabel': 'Deposit paid (20%)',
-      'checkout.confirmModalBalanceLabel': 'Balance due on-site',
-      'checkout.cardLabel': 'Card',
-      'checkout.payButton': 'Pay',
-      'checkout.paymentNote': '🔒 Secure payment processed by Square. Your card details never pass through our servers.',
+      'checkout.requestTitle': 'Confirm your request',
+      'checkout.requestNote': 'No payment is needed now — you pay in person on the day of the service.',
+      'checkout.requestButton': 'Confirm request',
+      'checkout.confirmModalPaymentLabel': 'Payment',
+      'checkout.confirmModalPaymentValue': 'In person, on the day of service',
       'checkout.variablePrice': 'Variable price',
       'checkout.orderNotePlain': 'Starting prices — the final amount may vary based on vehicle size and condition.',
       'checkout.orderNoteAddon': 'Starting prices — the final amount may vary based on vehicle size and condition. Variable-price add-ons are not included in this total — they are quoted and charged on-site with the technician.',
@@ -370,42 +361,29 @@
       'checkout.chooseTimeFirst': 'Choose a time first',
       'checkout.writeYourName': 'Write your name',
       'checkout.completeAddress': 'Fill in the address where the service will take place',
-      'checkout.confirmingAppt': 'Confirming your appointment...',
+      'checkout.confirmingAppt': 'Sending your request...',
       'checkout.apptConfirmedFor': 'Appointment request sent for',
-      'checkout.viewReceipt': 'View receipt',
-      'checkout.paymentIdLabel': 'Payment ID:',
-      'checkout.paymentReceived': 'Payment received!',
       'checkout.apptConfirmedTitle': 'Request received!',
-      'checkout.totalCharged': 'Total charged:',
       'checkout.backToHome': 'Back to home',
-      'checkout.sdkLoadError': 'Could not load Square Web Payments SDK.',
-      'checkout.cardFormError': 'Could not load the card form (check the console).',
-      'checkout.noChargeConfirmed': '✅ Request sent — no charge (only variable-price add-ons). We’ll confirm your appointment soon.',
-      'checkout.processing': 'Processing...',
-      'checkout.cardError': 'Could not process the card',
-      'checkout.paymentSuccess': '✅ Payment successful',
-      'checkout.paymentRejected': 'Backend rejected the payment',
       'checkout.recommendPrefix': 'Next available:',
       'checkout.acceptTermsLabel': 'I agree to the <a href="terminos.html" target="_blank">Terms of Service</a> and <a href="privacidad.html" target="_blank">Privacy Policy</a>.',
       'checkout.marketingLabel': 'Yes, send me promotions and special offers by email (optional).',
       'checkout.mustAcceptTerms': 'Please accept the Terms of Service and Privacy Policy to continue.',
       'footer.terms': 'Terms of Service', 'footer.privacy': 'Privacy Policy',
-      'checkout.slotTakenRefunded': 'That time was just taken, so we refunded your deposit. Please choose another time.',
       'checkout.recommendUse': 'Use this date',
       'checkout.noUpcomingSlots': 'No availability in the next month. Please call us at +1 678-895-5812.',
       'checkout.confirmModalServicesTitle': 'Requested services',
       'checkout.confirmModalApptTitle': 'Appointment details',
       'checkout.confirmModalDateTime': 'Date & time',
       'checkout.confirmModalCustomerTitle': 'Your details',
-      'checkout.confirmModalPaidSub': 'Your payment was received and your appointment request was sent.',
-      'checkout.confirmModalNoChargeSub': 'Your appointment request was sent — no charge (only variable-price add-ons).',
+      'checkout.confirmModalSub': 'Your appointment request was sent.',
       'checkout.confirmModalPendingNote': 'Your appointment is pending confirmation from our team — we’ll reach out shortly to confirm the date and time.',
-      'checkout.bookingAfterPaymentError': 'Your payment was received, but we couldn’t submit your appointment request. Please call us at +1 678-895-5812 so we can schedule it manually.',
+      'checkout.bookingError': 'We couldn’t submit your appointment request. Please try again or call us at +1 678-895-5812.',
     },
     es: {
       'checkout.backToServices': '‹ Volver a servicios',
       'checkout.pageTitle': 'Checkout',
-      'checkout.pageSub': 'Revisa tu pedido y completa el pago para reservar tus servicios.',
+      'checkout.pageSub': 'Revisa tu pedido y envía tu solicitud para reservar tus servicios.',
       'checkout.emptyTitle': 'Tu carrito está vacío',
       'checkout.emptyHint': 'Agrega uno o más servicios desde la tienda antes de pagar.',
       'checkout.emptyCta': 'Ver servicios',
@@ -427,13 +405,11 @@
       'checkout.city': 'Ciudad',
       'checkout.state': 'Estado',
       'checkout.zip': 'Código postal',
-      'checkout.paymentTitle': 'Datos de pago',
-      'checkout.paymentGateNote': 'Cobramos un depósito del 20% ahora para reservar tu lugar; el saldo se paga en sitio. Las cancelaciones con menos de 24 horas de anticipación no son reembolsables.',
-      'checkout.confirmModalDepositLabel': 'Depósito pagado (20%)',
-      'checkout.confirmModalBalanceLabel': 'Saldo a pagar en sitio',
-      'checkout.cardLabel': 'Tarjeta',
-      'checkout.payButton': 'Pagar',
-      'checkout.paymentNote': '🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.',
+      'checkout.requestTitle': 'Confirma tu solicitud',
+      'checkout.requestNote': 'No pagas nada ahora — el pago se hace en persona el día del servicio.',
+      'checkout.requestButton': 'Confirmar solicitud',
+      'checkout.confirmModalPaymentLabel': 'Pago',
+      'checkout.confirmModalPaymentValue': 'En persona, el día del servicio',
       'checkout.variablePrice': 'Precio variable',
       'checkout.orderNotePlain': 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo.',
       'checkout.orderNoteAddon': 'Precios de partida — el monto final puede variar según el tamaño y estado del vehículo. Los add-ons de precio variable no están incluidos en este total — se cotizan y se cobran en sitio con el técnico.',
@@ -451,37 +427,24 @@
       'checkout.chooseTimeFirst': 'Elige un horario primero',
       'checkout.writeYourName': 'Escribe tu nombre',
       'checkout.completeAddress': 'Completa la dirección donde se hará el servicio',
-      'checkout.confirmingAppt': 'Confirmando tu cita...',
+      'checkout.confirmingAppt': 'Enviando tu solicitud...',
       'checkout.apptConfirmedFor': 'Solicitud de cita enviada para',
-      'checkout.viewReceipt': 'Ver recibo',
-      'checkout.paymentIdLabel': 'ID de pago:',
-      'checkout.paymentReceived': '¡Pago recibido!',
       'checkout.apptConfirmedTitle': '¡Solicitud recibida!',
-      'checkout.totalCharged': 'Total cobrado:',
       'checkout.backToHome': 'Volver al inicio',
-      'checkout.sdkLoadError': 'No se pudo cargar Square Web Payments SDK.',
-      'checkout.cardFormError': 'No se pudo cargar el formulario de tarjeta (revisa la consola).',
-      'checkout.noChargeConfirmed': '✅ Solicitud enviada — no hay ningún cargo (solo add-ons de precio variable). Te confirmaremos tu cita pronto.',
-      'checkout.processing': 'Procesando...',
-      'checkout.cardError': 'No se pudo procesar la tarjeta',
-      'checkout.paymentSuccess': '✅ Pago exitoso',
-      'checkout.paymentRejected': 'El backend rechazó el pago',
       'checkout.recommendPrefix': 'Próxima disponibilidad:',
       'checkout.acceptTermsLabel': 'Acepto los <a href="terminos.html" target="_blank">Términos de servicio</a> y la <a href="privacidad.html" target="_blank">Política de privacidad</a>.',
       'checkout.marketingLabel': 'Sí, envíenme promociones y ofertas por correo electrónico (opcional).',
       'checkout.mustAcceptTerms': 'Acepta los Términos de servicio y la Política de privacidad para continuar.',
       'footer.terms': 'Términos de servicio', 'footer.privacy': 'Política de privacidad',
-      'checkout.slotTakenRefunded': 'Ese horario acaba de ocuparse, así que reembolsamos tu depósito. Elige otro horario, por favor.',
       'checkout.recommendUse': 'Usar esta fecha',
       'checkout.noUpcomingSlots': 'No hay disponibilidad en el próximo mes. Llámanos al +1 678-895-5812.',
       'checkout.confirmModalServicesTitle': 'Servicios solicitados',
       'checkout.confirmModalApptTitle': 'Detalles de la cita',
       'checkout.confirmModalDateTime': 'Fecha y hora',
       'checkout.confirmModalCustomerTitle': 'Tus datos',
-      'checkout.confirmModalPaidSub': 'Tu pago fue recibido y tu solicitud de cita fue enviada.',
-      'checkout.confirmModalNoChargeSub': 'Tu solicitud de cita fue enviada — no hay ningún cargo (solo add-ons de precio variable).',
+      'checkout.confirmModalSub': 'Tu solicitud de cita fue enviada.',
       'checkout.confirmModalPendingNote': 'Tu cita está pendiente de confirmación de nuestro equipo — te contactaremos pronto para confirmar la fecha y hora.',
-      'checkout.bookingAfterPaymentError': 'Tu pago fue recibido, pero no pudimos enviar tu solicitud de cita. Por favor llámanos al +1 678-895-5812 para agendarla manualmente.',
+      'checkout.bookingError': 'No pudimos enviar tu solicitud de cita. Inténtalo de nuevo o llámanos al +1 678-895-5812.',
     },
   };
   let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
@@ -509,10 +472,9 @@
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
   }
 
-  // Se ejecuta cada vez que cambia el idioma. Ojo: nunca reconstruye por
-  // completo el contenido de #checkoutContent una vez que Square ya montó
-  // el formulario de tarjeta ahí adentro — eso desprendería el iframe de
-  // Square. Por eso solo se actualizan textos de elementos ya existentes.
+  // Se ejecuta cada vez que cambia el idioma: solo actualiza textos de
+  // elementos ya existentes, sin reconstruir #checkoutContent (así no se
+  // pierde lo que el cliente ya escribió en el formulario).
   function applyLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('ohMyWashLang', lang);
@@ -608,34 +570,19 @@
         <p id="appt-status"></p>
       </div>
 
-      <div class="panel" id="paymentPanel">
-        <h2 data-i18n="checkout.paymentTitle">Datos de pago</h2>
-        <p class="section-hint" id="paymentGateNote" data-i18n="checkout.paymentGateNote">Completa los datos de tu cita arriba y paga aquí para enviar tu solicitud.</p>
-        <div class="pay-field">
-          <label data-i18n="checkout.cardLabel">Tarjeta</label>
-          <div id="card-container"></div>
-        </div>
+      <div class="panel">
+        <h2 data-i18n="checkout.requestTitle">Confirma tu solicitud</h2>
+        <p class="section-hint" data-i18n="checkout.requestNote">No pagas nada ahora — el pago se hace en persona el día del servicio.</p>
         <label class="consent-row"><input type="checkbox" id="acceptTerms"><span data-i18n="checkout.acceptTermsLabel">Acepto los <a href="terminos.html" target="_blank">Términos de servicio</a> y la <a href="privacidad.html" target="_blank">Política de privacidad</a>.</span></label>
         <label class="consent-row"><input type="checkbox" id="marketingOptIn"><span data-i18n="checkout.marketingLabel">Sí, envíenme promociones y ofertas por correo electrónico (opcional).</span></label>
-        <button id="card-button" type="button"></button>
-        <p id="payment-status"></p>
-        <p class="payment-note" data-i18n="checkout.paymentNote">🔒 Pago seguro procesado por Square. Tus datos de tarjeta nunca pasan por nuestros servidores.</p>
+        <button id="request-button" type="button" data-i18n="checkout.requestButton">Confirmar solicitud</button>
+        <p id="request-status"></p>
       </div>
     </div>
   `;
 
   const API_BASE = 'https://oh-my-wash-server.onrender.com';
-  const cardButton = document.getElementById('card-button');
-  const paymentPanel = document.getElementById('paymentPanel');
-
-  // Depósito del 20% que se cobra al reservar; el saldo se paga en sitio.
-  function depositCents() {
-    return Math.round(total * 20);
-  }
-  function updatePayButtonText() {
-    cardButton.textContent = `${t()['checkout.payButton']} ${formatUSD(depositCents() / 100)}`;
-  }
-  updatePayButtonText();
+  const requestButton = document.getElementById('request-button');
 
   function renderOrderNote() {
     document.getElementById('orderNote').textContent = cart.some(i => i.price == null)
@@ -676,7 +623,6 @@
     renderOrderItems();
     renderOrderNote();
     document.getElementById('orderTotal').textContent = formatUSD(total);
-    if (cardButton) updatePayButtonText();
     loadApptServices();
   }
 
@@ -1120,9 +1066,7 @@
   });
 
   // Lee y valida los datos de la cita que el cliente ya eligió arriba
-  // (horario + datos personales). Ya no hay un botón "Confirmar cita"
-  // aparte — esta validación se corre justo antes de cobrar, al pulsar
-  // "Pay", porque pagar Y solicitar la cita pasan en un solo paso.
+  // (horario + datos personales). Se corre al pulsar "Confirmar solicitud".
   function readApptDetails() {
     if (apptSelectedIndex == null) { setApptStatus(t()['checkout.chooseTimeFirst'], 'error'); return null; }
     const name = document.getElementById('apptName').value.trim();
@@ -1144,9 +1088,8 @@
     };
   }
 
-  // Manda la solicitud de cita a Square (queda pendiente de aprobación
-  // manual — ver server.js). Se llama DESPUÉS de cobrar la tarjeta, nunca
-  // antes: el dueño quiere que el pago pase primero.
+  // Manda la solicitud de cita (queda pendiente de aprobación manual — ver
+  // server.js). Ya no se cobra nada en línea: todo se paga en persona.
   async function submitBookingRequest(details) {
     const segments = details.slot.appointmentSegments;
     const res = await fetch(`${API_BASE}/create-booking`, {
@@ -1167,27 +1110,21 @@
         locality: details.city,
         administrativeDistrictLevel1: details.state || undefined,
         postalCode: details.zip,
-        // Solo informativo para el correo de aprobación — la cita en sí
-        // se crea con los IDs de arriba, no con este texto.
+        // Solo informativo para los correos — la cita en sí se crea con
+        // los IDs de arriba, no con este texto.
         serviceSummary: details.serviceSummary,
         staffName: details.staffName,
-        depositPaid: details.depositPaid,
         balanceDue: details.balanceDue,
-        paymentId: details.paymentId,
         termsAccepted: details.termsAccepted,
         marketingOptIn: details.marketingOptIn,
       }),
     });
     const data = await res.json();
-    if (!data.success) {
-      const err = new Error(data.error);
-      err.refunded = !!data.refunded;
-      throw err;
-    }
+    if (!data.success) throw new Error(data.error);
     return data;
   }
 
-  const statusEl = document.getElementById('payment-status');
+  const statusEl = document.getElementById('request-status');
 
   function setStatus(html, kind) {
     if (!statusEl) return;
@@ -1198,15 +1135,13 @@
   // Popup final: desglose de servicios + monto + datos del cliente,
   // confirmando que la solicitud de cita fue enviada (queda pendiente de
   // aprobación manual, no es una cita ya aceptada en Square).
-  function showConfirmModal(details, paymentData) {
+  function showConfirmModal(details) {
     const dateStr = new Date(details.slot.startAt).toLocaleString(dateLocale(), {
       weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
     });
 
     document.getElementById('confirmModalTitle').textContent = t()['checkout.apptConfirmedTitle'];
-    document.getElementById('confirmModalSub').textContent = paymentData.paymentId
-      ? t()['checkout.confirmModalPaidSub']
-      : t()['checkout.confirmModalNoChargeSub'];
+    document.getElementById('confirmModalSub').textContent = t()['checkout.confirmModalSub'];
 
     document.getElementById('confirmModalItems').innerHTML = cart.map(i => `
       <div class="confirm-modal-item">
@@ -1215,8 +1150,6 @@
       </div>
     `).join('');
     document.getElementById('confirmModalTotal').textContent = formatUSD(total);
-    document.getElementById('confirmModalDeposit').textContent = formatUSD(details.depositPaid);
-    document.getElementById('confirmModalBalance').textContent = formatUSD(details.balanceDue);
 
     document.getElementById('confirmModalDateTime').textContent = dateStr;
     document.getElementById('confirmModalStaff').textContent = details.staffName;
@@ -1233,104 +1166,47 @@
     localStorage.removeItem(CART_KEY);
   }
 
-  async function initSquarePayments() {
-    if (!window.Square) {
-      setStatus(t()['checkout.sdkLoadError'], 'error');
-      if (cardButton) cardButton.disabled = true;
+  const acceptTermsEl = document.getElementById('acceptTerms');
+  requestButton.disabled = !acceptTermsEl.checked;
+  acceptTermsEl.addEventListener('change', () => { requestButton.disabled = !acceptTermsEl.checked; });
+
+  requestButton.addEventListener('click', async () => {
+    if (!acceptTermsEl.checked) {
+      setStatus(t()['checkout.mustAcceptTerms'], 'error');
       return;
     }
+    const apptDetails = readApptDetails();
+    if (!apptDetails) return;
 
-    let card;
+    // Se vuelve a leer el carrito real de localStorage justo antes de
+    // enviar (no se confía en la variable "total" ya calculada): si algo
+    // se quitó del carrito en otra pestaña/página después de cargar esta,
+    // el total que se manda debe reflejar el carrito actual, no uno viejo.
+    let freshCart = [];
+    try { freshCart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { freshCart = []; }
+    cart = freshCart;
+    total = freshCart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
+
+    apptDetails.balanceDue = total;
+    apptDetails.termsAccepted = true;
+    apptDetails.marketingOptIn = document.getElementById('marketingOptIn').checked;
+
+    requestButton.disabled = true;
+    setStatus(t()['checkout.confirmingAppt'], 'info');
     try {
-      const payments = window.Square.payments(SQUARE_APP_ID, SQUARE_LOCATION_ID);
-      card = await payments.card();
-      await card.attach('#card-container');
+      await submitBookingRequest(apptDetails);
     } catch (err) {
-      console.error('No se pudo inicializar el formulario de tarjeta:', err);
-      setStatus(t()['checkout.cardFormError'], 'error');
-      if (cardButton) cardButton.disabled = true;
+      console.error(err);
+      setStatus(`❌ ${t()['checkout.bookingError']}`, 'error');
+      requestButton.disabled = false;
       return;
     }
 
-    const acceptTermsEl = document.getElementById('acceptTerms');
-    cardButton.disabled = !acceptTermsEl.checked;
-    acceptTermsEl.addEventListener('change', () => { cardButton.disabled = !acceptTermsEl.checked; });
-
-    cardButton.addEventListener('click', async () => {
-      if (!acceptTermsEl.checked) {
-        setStatus(t()['checkout.mustAcceptTerms'], 'error');
-        return;
-      }
-      const apptDetails = readApptDetails();
-      if (!apptDetails) return;
-
-      // Se vuelve a leer el carrito real de localStorage justo antes de
-      // cobrar (no se confía en la variable "total" ya calculada): si algo
-      // se quitó del carrito en otra pestaña/página después de cargar esta,
-      // el monto que se cobra debe reflejar el carrito actual, no uno viejo.
-      let freshCart = [];
-      try { freshCart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { freshCart = []; }
-      cart = freshCart;
-      total = freshCart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
-
-      apptDetails.depositPaid = depositCents() / 100;
-      apptDetails.balanceDue = Math.round((total * 100 - depositCents())) / 100;
-
-      cardButton.disabled = true;
-      try {
-        let paymentData = { paymentId: null, receiptUrl: null };
-
-        if (total > 0) {
-          setStatus(t()['checkout.processing'], 'info');
-          const amountCents = depositCents();
-          const tokenResult = await card.tokenize();
-          if (tokenResult.status !== 'OK') {
-            throw new Error(tokenResult.errors?.[0]?.message || t()['checkout.cardError']);
-          }
-
-          const res = await fetch(BACKEND_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sourceId: tokenResult.token, amount: amountCents }),
-          });
-          const data = await res.json();
-          if (!data.success) throw new Error(data.error || t()['checkout.paymentRejected']);
-          paymentData = data;
-          setStatus(t()['checkout.paymentSuccess'], 'ok');
-        } else {
-          setStatus(t()['checkout.noChargeConfirmed'], 'ok');
-        }
-
-        apptDetails.paymentId = paymentData.paymentId;
-        apptDetails.termsAccepted = true;
-        apptDetails.marketingOptIn = document.getElementById('marketingOptIn').checked;
-
-        // El pago (si aplicaba) ya se cobró — ahora se manda la solicitud
-        // de cita. Si esto falla, el dinero ya se cobró, así que se avisa
-        // aparte en vez de perderlo en silencio como si nada hubiera pasado.
-        setApptStatus(t()['checkout.confirmingAppt'], 'info');
-        try {
-          await submitBookingRequest(apptDetails);
-        } catch (bookingErr) {
-          console.error(bookingErr);
-          setApptStatus(`❌ ${bookingErr.refunded ? t()['checkout.slotTakenRefunded'] : t()['checkout.bookingAfterPaymentError']}`, 'error');
-          cardButton.disabled = false;
-          return;
-        }
-
-        showConfirmModal(apptDetails, paymentData);
-      } catch (err) {
-        console.error(err);
-        setStatus(`❌ ${err.message}`, 'error');
-        cardButton.disabled = false;
-      }
-    });
-  }
-
-  initSquarePayments();
+    setStatus('', 'info');
+    showConfirmModal(apptDetails);
+  });
 
   afterLanguageChange = () => {
-    updatePayButtonText();
     renderOrderItems();
     renderOrderNote();
     renderWeekdayHeaders();
