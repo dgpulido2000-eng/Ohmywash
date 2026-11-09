@@ -1,12 +1,1674 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=web-oh-my-wash.html">
-<title>Oh My Wash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Car Detailing &amp; Car Wash in Atlanta | Oh My Wash</title>
+<meta name="description" content="Oh My Wash brings mobile car detailing, car wash, waxing, paint correction and ceramic coating to your home or office in Atlanta and surrounding areas. Book online.">
+<link rel="canonical" href="https://ohmywashdetailing.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Oh My Wash">
+<meta property="og:title" content="Mobile Car Detailing &amp; Car Wash in Atlanta | Oh My Wash">
+<meta property="og:description" content="Oh My Wash brings mobile car detailing, car wash, waxing, paint correction and ceramic coating to your home or office in Atlanta and surrounding areas. Book online.">
+<meta property="og:url" content="https://ohmywashdetailing.com/">
+<meta property="og:image" content="https://ohmywashdetailing.com/assets/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Forum&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#2ec4b6;
+    --teal-dark:#22a89c;
+    --teal-deep:#0f6a62;
+    --teal-light:#7de0d4;
+    --teal-pale:#e6faf7;
+    --ink:#12191a;
+    --gray:#2b2b2b;
+    --paper:#ffffff;
+    --off:#f4fafb;
+    --shadow: 0 20px 50px rgba(20,50,55,.12);
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Inter',sans-serif;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  img{max-width:100%;display:block;}
+  ::selection{background:var(--teal);color:#fff;}
+  ::-webkit-scrollbar{width:10px;}
+  ::-webkit-scrollbar-track{background:var(--off);}
+  ::-webkit-scrollbar-thumb{background:var(--teal);border-radius:10px;}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- Reveal ---------- */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease), transform .8s var(--ease);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+  .reveal-scale{opacity:0;transform:scale(.92);transition:opacity .7s var(--ease), transform .7s var(--ease);}
+  .reveal-scale.in{opacity:1;transform:scale(1);}
+  .stagger > *{opacity:0;transform:translateY(24px);transition:opacity .6s var(--ease), transform .6s var(--ease);}
+  .stagger.in > *{opacity:1;transform:translateY(0);}
+  .stagger.in > *:nth-child(1){transition-delay:.05s;}
+  .stagger.in > *:nth-child(2){transition-delay:.12s;}
+  .stagger.in > *:nth-child(3){transition-delay:.19s;}
+  .stagger.in > *:nth-child(4){transition-delay:.26s;}
+  .stagger.in > *:nth-child(5){transition-delay:.33s;}
+  .stagger.in > *:nth-child(6){transition-delay:.4s;}
+
+  /* ---------- Nav ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 32px;
+    background:rgba(255,255,255,.7);
+    backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border-bottom:1px solid rgba(46,196,182,.15);
+    transition:padding .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  header.scrolled{padding:8px 32px;box-shadow:0 8px 30px rgba(20,50,55,.08);}
+  .logo{display:flex;align-items:center;}
+  .nav-icon{height:42px;display:inline-flex;align-items:center;}
+  .nav-icon img{height:100%;width:auto;display:block;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  nav ul{display:flex;gap:30px;align-items:center;}
+  nav a{font-weight:500;font-size:.95rem;color:var(--gray);position:relative;padding:4px 0;}
+  nav a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--teal);transition:width .3s var(--ease);}
+  nav a:hover::after{width:100%;}
+  .header-actions{display:flex;align-items:center;gap:14px;}
+  .nav-promo-link{color:var(--teal-deep)!important;font-weight:800!important;}
+  .lang-switch{display:flex;align-items:center;gap:4px;background:var(--teal-pale);border-radius:100px;padding:3px;}
+  .lang-switch-mobile{display:none;}
+  .lang-btn{
+    border:none;background:none;padding:6px 12px;border-radius:100px;font-weight:700;font-size:.8rem;
+    color:var(--teal-deep);cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .lang-btn.active{background:var(--teal);color:#fff;}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
+  .burger span{width:24px;height:2.5px;background:var(--teal-deep);border-radius:2px;}
+
+  /* ---------- Cart ---------- */
+  .cart-btn{
+    position:relative;width:54px;height:54px;border-radius:50%;border:none;flex:0 0 54px;
+    background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 8px 22px rgba(46,196,182,.4);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
+  }
+  .cart-btn:hover{transform:translateY(-2px);background:var(--teal-dark);box-shadow:0 12px 28px rgba(46,196,182,.5);}
+  .cart-badge{
+    position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;padding:0 6px;border-radius:100px;
+    background:#e2574c;color:#fff;font-size:.8rem;font-weight:700;display:none;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;border:2.5px solid #fff;
+  }
+  .add-cart-btn{
+    margin-top:14px;width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--teal);
+    background:#fff;color:var(--teal-deep);font-weight:600;font-size:.88rem;cursor:pointer;
+    transition:background .3s var(--ease), color .3s var(--ease), transform .2s var(--ease);
+    display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Inter',sans-serif;
+  }
+  .add-cart-btn:hover{background:var(--teal);color:#fff;}
+  .add-cart-btn:active{transform:scale(.97);}
+  .cart-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:200;
+    opacity:0;pointer-events:none;transition:opacity .35s var(--ease);
+  }
+  .cart-overlay.open{opacity:1;pointer-events:auto;}
+  .cart-drawer{
+    position:fixed;top:0;right:-420px;width:min(420px,92vw);height:100vh;background:#fff;z-index:201;
+    display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.25);
+    transition:right .4s var(--ease);
+  }
+  .cart-drawer.open{right:0;}
+  .cart-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:24px 26px;border-bottom:1px solid #eef4f4;}
+  .cart-drawer-header h3{font-family:'Inter',sans-serif;font-weight:700;font-size:1.3rem;color:var(--ink);}
+  .cart-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8b9a9c;width:34px;height:34px;border-radius:50%;transition:background .25s;}
+  .cart-close:hover{background:var(--teal-pale);color:var(--teal-deep);}
+  .cart-items{flex:1;overflow-y:auto;padding:8px 26px;}
+  .cart-empty{text-align:center;padding:60px 10px;color:#8b9a9c;}
+  .cart-empty span{font-size:3.4rem;display:block;margin-bottom:14px;}
+  .cart-empty p{font-weight:600;color:var(--ink);margin-bottom:4px;}
+  .cart-empty small{font-size:.85rem;}
+  .cart-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #f0f5f5;}
+  .cart-item-info{display:flex;flex-direction:column;gap:4px;}
+  .cart-item-name{font-weight:600;font-size:.9rem;color:var(--ink);}
+  .cart-item-price{font-size:.78rem;color:#8b9a9c;}
+  .cart-item-controls{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+  .qty-btn{
+    width:26px;height:26px;border-radius:8px;border:1px solid #d8e8ea;background:#fff;color:var(--teal-deep);
+    font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .qty-btn:hover{background:var(--teal-pale);}
+  .qty-value{min-width:16px;text-align:center;font-weight:600;font-size:.88rem;}
+  .remove-btn{background:none;border:none;cursor:pointer;font-size:1.25rem;line-height:1;opacity:.55;margin-left:2px;}
+  .remove-btn:hover{opacity:1;}
+  .cart-footer{padding:20px 26px 26px;border-top:1px solid #eef4f4;}
+  .cart-total-row{display:flex;justify-content:space-between;align-items:center;font-family:'Inter',sans-serif;font-weight:700;font-size:1.2rem;color:var(--ink);margin-bottom:16px;}
+  .cart-note{font-size:.74rem;color:#8b9a9c;text-align:center;margin-top:12px;line-height:1.5;}
+  .cart-clear-row{display:flex;justify-content:flex-end;padding:8px 0 2px;}
+  .cart-clear-btn{background:none;border:none;color:#e2574c;font-weight:600;font-size:.8rem;cursor:pointer;padding:4px 2px;transition:opacity .2s var(--ease);}
+  .cart-clear-btn:hover{opacity:.7;text-decoration:underline;}
+
+  /* ---------- Modal de add-ons antes del checkout ---------- */
+  .addon-modal-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:300;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .addon-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .addon-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(480px,92vw);
+    max-height:85vh;overflow-y:auto;background:#fff;border-radius:24px;box-shadow:var(--shadow);
+    z-index:301;padding:28px;opacity:0;pointer-events:none;transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .addon-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .addon-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .addon-modal-header h3{font-size:1.2rem;font-weight:700;color:var(--ink);}
+  .addon-modal-close{background:none;border:none;font-size:1.1rem;cursor:pointer;color:#8b9a9c;width:32px;height:32px;border-radius:50%;flex:0 0 32px;transition:background .2s var(--ease);}
+  .addon-modal-close:hover{background:var(--teal-pale);color:var(--teal-deep);}
+  .addon-modal-hint{font-size:.85rem;color:#8b9a9c;margin-top:6px;margin-bottom:20px;}
+  .addon-modal-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+  .addon-modal-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:14px;background:var(--off);}
+  .addon-modal-item-name{font-weight:600;font-size:.92rem;color:var(--ink);}
+  .addon-modal-item-meta{font-size:.78rem;color:#8b9a9c;margin-top:2px;}
+  .addon-modal-add-btn{
+    flex:0 0 auto;padding:9px 16px;border-radius:100px;border:1.5px solid var(--teal);background:#fff;
+    color:var(--teal-deep);font-weight:600;font-size:.82rem;cursor:pointer;transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .addon-modal-add-btn:hover{background:var(--teal);color:#fff;}
+  .addon-modal-add-btn:disabled{background:var(--teal-pale);border-color:var(--teal-pale);color:var(--teal-deep);cursor:default;opacity:.8;}
+
+  /* ---------- Modal de biografía del equipo ---------- */
+  .staff-card{cursor:pointer;}
+  .staff-modal-overlay{
+    position:fixed;inset:0;background:rgba(10,25,28,.5);z-index:300;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .staff-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .staff-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(560px,92vw);
+    max-height:85vh;overflow-y:auto;background:#fff;border-radius:26px;box-shadow:var(--shadow);
+    z-index:301;padding:40px 36px;text-align:center;opacity:0;pointer-events:none;
+    transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .staff-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .staff-modal-close{
+    position:absolute;top:18px;right:18px;background:var(--teal-pale);border:none;color:var(--teal-deep);
+    width:34px;height:34px;border-radius:50%;font-size:1.05rem;cursor:pointer;transition:background .2s var(--ease);
+  }
+  .staff-modal-close:hover{background:var(--teal);color:#fff;}
+  .staff-modal-photo{
+    width:120px;height:120px;border-radius:50%;margin:0 auto 18px;overflow:hidden;
+    border:4px solid var(--teal-pale);box-shadow:0 8px 20px rgba(20,50,55,.12);
+  }
+  .staff-modal-photo img{width:100%;height:100%;object-fit:cover;}
+  .staff-modal-name{font-family:'Inter',sans-serif;font-weight:700;font-size:1.35rem;color:var(--ink);}
+  .staff-modal-role{color:var(--teal-deep);font-weight:700;font-size:.9rem;letter-spacing:.3px;margin-top:4px;margin-bottom:22px;}
+  .staff-modal-bio{text-align:left;color:#5c6b6e;font-size:.95rem;line-height:1.7;}
+  .staff-modal-bio p{margin-bottom:14px;}
+  .staff-modal-bio p:last-child{margin-bottom:0;}
+  .staff-modal-bio .bio-soon{text-align:center;color:#8b9a9c;font-style:italic;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:140px 24px 80px;overflow:hidden;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(125,224,212,.55), transparent 55%),
+      radial-gradient(circle at 82% 78%, rgba(46,196,182,.5), transparent 55%),
+      linear-gradient(160deg, #0f2e33 0%, #164752 32%, var(--teal-deep) 55%, var(--teal-dark) 78%, var(--teal) 100%);
+  }
+  .hero::before{
+    content:'';position:absolute;inset:0;
+    background-image: radial-gradient(rgba(255,255,255,.22) 1.5px, transparent 1.5px);
+    background-size:34px 34px;
+    opacity:.35;
+    animation:drift 40s linear infinite;
+  }
+  @keyframes drift{from{background-position:0 0;}to{background-position:400px 400px;}}
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none;}
+  .blob1{width:420px;height:420px;background:radial-gradient(circle, rgba(255,255,255,.5), transparent 70%);top:-120px;left:-100px;}
+  .blob2{width:360px;height:360px;background:radial-gradient(circle, rgba(255,255,255,.35), transparent 70%);bottom:-140px;right:-80px;}
+
+  .hero-eyebrow{
+    position:relative;z-index:2;
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+    color:#fff;padding:8px 18px;border-radius:100px;font-size:.85rem;font-weight:600;
+    margin-bottom:26px;letter-spacing:.4px;
+  }
+  .hero h1{
+    position:relative;z-index:2;
+    font-size:clamp(1.6rem, 4vw, 2.6rem);font-weight:700;line-height:1.05;color:#fff;
+    text-shadow:0 8px 40px rgba(0,0,0,.25);
+  }
+  .hero h1 span{
+    background:linear-gradient(100deg,#fff, #bdeef3 45%, #fff 90%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    background-size:220% auto;
+    animation:shine 5s linear infinite;
+  }
+  @keyframes shine{to{background-position:220% center;}}
+  .hero-tagline{
+    position:relative;z-index:2;
+    font-family:'Inter',sans-serif;font-weight:700;font-size:clamp(1.1rem,2.4vw,1.5rem);
+    color:#eafcff;margin-top:18px;letter-spacing:.3px;
+  }
+  .hero p{position:relative;z-index:2;max-width:560px;margin:16px auto 0;color:rgba(255,255,255,.85);font-size:1.05rem;line-height:1.6;}
+  .hero-ctas{position:relative;z-index:2;display:flex;gap:16px;margin-top:38px;flex-wrap:wrap;justify-content:center;}
+  .btn{
+    padding:15px 30px;border-radius:100px;font-weight:600;font-size:1rem;cursor:pointer;border:none;
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn-solid{background:#fff;color:var(--teal-deep);box-shadow:0 10px 30px rgba(0,0,0,.2);}
+  .btn-solid:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(0,0,0,.28);}
+  .btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6);}
+  .btn-ghost:hover{background:rgba(255,255,255,.12);transform:translateY(-3px);}
+  .btn-teal{background:var(--teal);color:#fff;box-shadow:0 10px 26px rgba(46,196,182,.3);}
+  .btn-teal:hover{background:var(--teal-dark);transform:translateY(-3px);box-shadow:0 14px 32px rgba(46,196,182,.4);}
+  .scroll-cue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:2;color:rgba(255,255,255,.75);display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.75rem;letter-spacing:.5px;}
+  .scroll-cue .line{width:1.5px;height:34px;background:linear-gradient(to bottom, rgba(255,255,255,.9), transparent);animation:pulse 1.8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+  .brand-logo{
+    position:relative;z-index:2;width:fit-content;margin:0 auto 26px;
+  }
+  .brand-logo-img{width:clamp(390px,50vw,650px);height:auto;display:block;}
+
+  .wave{display:block;width:100%;line-height:0;}
+  .wave svg{width:100%;height:80px;display:block;}
+
+  /* ---------- Sections shared ---------- */
+  section{position:relative;}
+  .section-pad{padding:110px 0;}
+  .eyebrow{
+    display:inline-block;color:var(--teal);font-weight:700;font-size:.82rem;letter-spacing:2px;
+    text-transform:uppercase;margin-bottom:14px;
+  }
+  .section-title{font-size:clamp(2rem,4.2vw,3rem);font-weight:700;color:var(--ink);line-height:1.1;}
+  .section-sub{color:#5c6b6e;font-size:1.05rem;max-width:560px;line-height:1.65;margin-top:14px;}
+
+  /* ---------- About ---------- */
+  .about{background:var(--off);}
+  .about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:70px;align-items:center;}
+  .about-text p{color:#4b5a5c;font-size:1.05rem;line-height:1.8;margin-top:18px;}
+  .value-list{margin-top:32px;display:grid;gap:14px;}
+  .value-list li{
+    display:flex;align-items:center;gap:14px;background:#fff;padding:16px 20px;border-radius:16px;
+    box-shadow:0 6px 20px rgba(20,50,55,.06);font-weight:600;color:var(--teal-deep);
+    transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  .value-list li:hover{transform:translateX(6px);box-shadow:0 10px 26px rgba(20,50,55,.12);}
+  .value-list .ico{
+    width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:var(--teal-pale);
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem;
+  }
+  .about-visual{position:relative;height:390px;border-radius:28px;overflow:hidden;
+    background:linear-gradient(150deg, var(--teal-deep), var(--teal) 60%, var(--teal-light));
+    box-shadow:var(--shadow);
+  }
+  .about-visual::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.28) 2px, transparent 2px);background-size:26px 26px;opacity:.5;}
+  .about-visual-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .about-tag{
+    margin-top:18px;padding:18px 22px;border-radius:16px;background:var(--teal-pale);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  .about-tag strong{font-family:'Inter',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ink);}
+  .about-tag span{font-size:.85rem;color:var(--teal-deep);font-weight:600;}
+  .placeholder-note{position:absolute;top:16px;right:16px;background:rgba(0,0,0,.35);color:#fff;font-size:.68rem;padding:6px 10px;border-radius:8px;letter-spacing:.3px;}
+
+  /* ---------- Nuestra historia ---------- */
+  .story{background:var(--off);}
+  .story-timeline{max-width:720px;margin:0 auto;}
+  .story-item{position:relative;padding-left:44px;padding-bottom:34px;}
+  .story-item:last-child{padding-bottom:0;}
+  .story-item::before{content:'';position:absolute;left:9px;top:26px;bottom:-34px;width:2px;background:var(--teal-light);}
+  .story-item:last-child::before{display:none;}
+  .story-dot{position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-pale);}
+  .story-content h3{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .story-content p{color:#5c6b6e;font-size:.95rem;line-height:1.65;}
+  .story-quote{
+    max-width:640px;margin:50px auto 0;text-align:center;padding:36px 38px;border-radius:22px;
+    background:linear-gradient(135deg, var(--teal-deep), var(--teal));color:#fff;
+    font-size:1.15rem;font-weight:600;line-height:1.55;font-style:italic;
+    box-shadow:var(--shadow);position:relative;
+  }
+  .story-quote::before{
+    content:'"';font-family:Georgia,serif;font-size:4.5rem;color:rgba(255,255,255,.28);
+    position:absolute;top:-6px;left:22px;line-height:1;font-style:normal;
+  }
+  .story-closing{max-width:640px;margin:40px auto 0;text-align:center;color:#5c6b6e;font-size:1rem;line-height:1.7;padding:0 10px;}
+
+  /* ---------- Staff ---------- */
+  .staff{background:var(--off);}
+  .staff-carousel-wrap{display:flex;align-items:center;gap:14px;max-width:1120px;margin:0 auto;}
+  .staff-carousel{
+    display:flex;gap:28px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+    padding:8px 4px;-webkit-overflow-scrolling:touch;flex:1;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .staff-carousel::-webkit-scrollbar{display:none;}
+  .staff-dots{display:flex;justify-content:center;gap:9px;margin-top:22px;}
+  .staff-dot{
+    width:9px;height:9px;border-radius:50%;background:var(--teal-pale);border:none;padding:0;cursor:pointer;
+    transition:background .2s var(--ease), transform .2s var(--ease);
+  }
+  .staff-dot.active{background:var(--teal);transform:scale(1.35);}
+  .staff-nav{
+    flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:none;background:var(--teal-pale);color:var(--teal-deep);
+    font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;
+    transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .staff-nav:hover{background:var(--teal);color:#fff;}
+  .staff-card{
+    background:#fff;border-radius:26px;padding:42px 30px;text-align:center;
+    box-shadow:0 6px 22px rgba(20,50,55,.07);
+    transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+    scroll-snap-align:center;flex:0 0 auto;width:300px;
+  }
+  .staff-card:hover{transform:translateY(-8px);box-shadow:0 22px 40px rgba(20,50,55,.15);}
+  .staff-photo{
+    width:180px;height:180px;border-radius:50%;margin:0 auto 22px;overflow:hidden;
+    border:4px solid var(--teal-pale);box-shadow:0 8px 20px rgba(20,50,55,.12);
+  }
+  .staff-photo img{width:100%;height:100%;object-fit:cover;}
+  .avatar-fallback{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(150deg, var(--teal-light), var(--teal-deep));
+    color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:1.8rem;
+  }
+  .staff-name{font-family:'Inter',sans-serif;font-weight:700;font-size:1.35rem;color:var(--ink);}
+  .staff-role{color:var(--teal-deep);font-weight:700;font-size:.8rem;letter-spacing:.3px;margin-top:4px;}
+
+  /* ---------- Reviews ---------- */
+  .reviews{background:#fff;}
+  .reviews-summary{
+    display:flex;align-items:center;justify-content:center;gap:56px;
+    background:linear-gradient(135deg, var(--teal-deep), var(--teal) 70%, var(--teal-light));
+    border-radius:28px;box-shadow:0 24px 50px rgba(15,106,98,.3);
+    padding:38px 80px;margin:0 auto 54px;width:fit-content;max-width:100%;flex-wrap:wrap;
+  }
+  .reviews-score{display:flex;flex-direction:column;align-items:center;min-width:150px;}
+  .reviews-score-num{font-family:'Inter',sans-serif;font-weight:800;font-size:4.2rem;color:#fff;line-height:1;text-shadow:0 4px 16px rgba(0,0,0,.15);}
+  .reviews-stars{color:#ffd447;font-size:1.9rem;letter-spacing:4px;margin-top:6px;text-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .reviews-meta{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:150px;}
+  .reviews-count{font-size:1.05rem;color:#fff;font-weight:700;text-align:center;}
+  .reviews-divider{width:2px;height:64px;background:rgba(255,255,255,.35);}
+  .reviews-google-link{
+    display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;color:#fff;
+    text-decoration:underline;text-underline-offset:3px;
+  }
+  .reviews-google-link:hover{color:#eafcff;}
+  .reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;}
+  .review-card{
+    display:block;background:#fff;border:1px solid #eaf1f2;border-radius:20px;padding:24px;
+    box-shadow:0 4px 18px rgba(20,50,55,.05);cursor:pointer;
+    transition:transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s;
+  }
+  .review-card:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(20,50,55,.12);border-color:var(--teal-light);}
+  .review-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .review-avatar{
+    width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:.9rem;flex:0 0 42px;font-family:'Inter',sans-serif;
+  }
+  .review-name{font-weight:700;font-size:.95rem;color:var(--ink);line-height:1.2;}
+  .review-date{font-size:.76rem;color:#8b9a9c;margin-top:1px;}
+  .review-stars{color:#f5a623;font-size:.85rem;letter-spacing:2px;margin-bottom:10px;}
+  .review-text{font-size:.9rem;line-height:1.6;color:#4b5a5c;}
+
+  /* ---------- Why / parallax strip ---------- */
+  .strip{
+    background:linear-gradient(120deg, var(--teal-deep), var(--teal) 55%, var(--teal-dark));
+    padding:80px 0;overflow:hidden;position:relative;
+  }
+  .strip-track{display:flex;gap:60px;white-space:nowrap;font-family:'Inter',sans-serif;font-weight:700;font-size:2.1rem;color:rgba(255,255,255,.9);animation:marquee 26s linear infinite;}
+  .strip-track span{opacity:.9;}
+  .strip-track .sep{color:rgba(255,255,255,.45);}
+  @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* ---------- Contact ---------- */
+  .contact{background:var(--off);}
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+  .contact-card{
+    background:#fff;border-radius:24px;padding:38px;box-shadow:var(--shadow);
+  }
+  .contact-row{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid #eef4f4;}
+  a.contact-row{cursor:pointer;transition:opacity .2s var(--ease);}
+  a.contact-row:hover{opacity:.75;}
+  .contact-row:last-child{border-bottom:none;}
+  .contact-row .ico{width:44px;height:44px;border-radius:13px;background:var(--teal-pale);color:var(--teal-deep);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:0 0 44px;}
+  .contact-row a, .contact-row span{font-weight:600;color:var(--ink);}
+  .contact-row small{display:block;color:#8b9a9c;font-size:.78rem;font-weight:500;margin-bottom:2px;}
+  .map-visual{
+    border-radius:24px;min-height:340px;position:relative;overflow:hidden;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.5), transparent 60%), linear-gradient(150deg, var(--teal), var(--teal-deep));
+    display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:40px;
+    box-shadow:var(--shadow);
+  }
+  .map-visual::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.3) 2px, transparent 2px);background-size:30px 30px;opacity:.4;}
+  .map-visual h3{position:relative;font-family:'Inter',sans-serif;font-weight:700;font-size:1.7rem;margin-bottom:8px;}
+  .map-visual p{position:relative;opacity:.9;}
+  .final-cta{text-align:center;margin-top:60px;}
+  .final-cta .btn-solid{background:var(--teal);color:#fff;box-shadow:0 12px 30px rgba(46,196,182,.35);}
+  .final-cta .btn-solid:hover{background:var(--teal-dark);}
+
+  footer{background:#0f2226;color:rgba(255,255,255,.7);padding:50px 0 26px;}
+  .footer-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;padding-bottom:30px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .footer-logo{background:#fff;border-radius:14px;padding:10px 18px;box-shadow:0 10px 26px rgba(0,0,0,.25);width:fit-content;}
+  .footer-logo img{height:38px;width:auto;display:block;}
+  .footer-tag{font-size:.85rem;color:var(--teal-light);margin-top:4px;}
+  .social-links{display:flex;gap:10px;margin-top:14px;}
+  .social-badge{
+    width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;letter-spacing:.5px;
+    transition:background .2s var(--ease), transform .2s var(--ease);
+  }
+  .social-badge:hover{background:var(--teal);transform:translateY(-2px);}
+  .contact-social{margin-top:20px;padding-top:20px;border-top:1px solid #eef4f4;}
+  .contact-social small{display:block;color:#8b9a9c;font-weight:600;margin-bottom:10px;}
+  .contact-social .social-badge{background:var(--teal-pale);color:var(--teal-deep);}
+  .contact-social .social-badge:hover{background:var(--teal);color:#fff;}
+  .map-picker-wrap{position:relative;}
+  .map-picker-btn{
+    background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;
+    text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+    transition:text-decoration-color .2s var(--ease);
+  }
+  .map-picker-btn:hover{text-decoration-color:currentColor;}
+  .map-picker-menu{
+    position:absolute;top:calc(100% + 8px);left:0;z-index:10;background:#fff;border-radius:12px;
+    box-shadow:var(--shadow);padding:8px;display:flex;flex-direction:column;gap:2px;min-width:170px;
+  }
+  .map-picker-menu[hidden]{display:none;}
+  .map-picker-menu a{
+    padding:10px 14px;border-radius:8px;font-size:.88rem;font-weight:600;color:var(--ink);
+    transition:background .2s var(--ease);
+  }
+  .map-picker-menu a:hover{background:var(--teal-pale);color:var(--teal-deep);}
+  footer nav ul{display:flex;gap:24px;}
+  footer nav a{font-size:.9rem;color:rgba(255,255,255,.7);}
+  footer nav a:hover{color:#fff;}
+  .footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:22px;font-size:.8rem;color:rgba(255,255,255,.45);}
+  .footer-legal{text-align:center;margin-top:14px;font-size:.8rem;}
+  .footer-legal a{color:rgba(255,255,255,.75);text-decoration:none;}
+  .footer-legal a:hover{color:#fff;}
+  .powered-by{text-align:center;margin-top:22px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);font-size:.78rem;color:rgba(255,255,255,.4);}
+  .powered-by b{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.7);}
+  .powered-by a{text-decoration:none;}
+  .powered-by a:hover b{color:#fff;}
+
+
+  /* ---------- Promo flotante $40 OFF ---------- */
+  .promo-banner{
+    position:fixed;right:20px;top:38%;z-index:150;
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color:#fff;padding:13px 13px 13px 20px;border-radius:100px;
+    box-shadow:0 14px 34px rgba(20,50,55,.3);cursor:pointer;
+    transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+    animation:promoPulse 2.6s ease-in-out infinite;
+  }
+  .promo-banner:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(20,50,55,.42);}
+  .promo-banner[hidden]{display:none;}
+  .promo-banner-text{font-size:1.15rem;font-weight:800;white-space:nowrap;}
+  .promo-banner-close{
+    flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);
+    border:none;color:#fff;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:background .2s var(--ease);
+  }
+  .promo-banner-close:hover{background:rgba(255,255,255,.38);}
+  @keyframes promoPulse{
+    0%,100%{box-shadow:0 14px 34px rgba(20,50,55,.3);}
+    50%{box-shadow:0 14px 34px rgba(46,196,182,.6);}
+  }
+  .promo-modal-overlay{
+    position:fixed;inset:0;background:rgba(6,16,18,.75);z-index:410;
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+  }
+  .promo-modal-overlay.open{opacity:1;pointer-events:auto;}
+  .promo-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);
+    width:min(560px,92vw);max-height:88vh;overflow-y:auto;
+    background:linear-gradient(160deg,#1a3236,#0f2226);color:#fff;border-radius:26px;
+    padding:38px 32px 32px;z-index:411;opacity:0;pointer-events:none;
+    box-shadow:0 40px 90px rgba(0,0,0,.5);
+    transition:opacity .3s var(--ease), transform .3s var(--ease);
+  }
+  .promo-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+  .promo-modal-close{
+    position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,.12);border:none;color:#fff;font-size:1.1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:background .2s var(--ease);
+  }
+  .promo-modal-close:hover{background:rgba(255,255,255,.25);}
+  .promo-modal-logo{height:44px;margin:0 auto 18px;display:block;}
+  .promo-modal-eyebrow{text-align:center;color:var(--teal-light);font-weight:700;letter-spacing:1.5px;font-size:.78rem;text-transform:uppercase;}
+  .promo-modal-title{text-align:center;font-size:1.5rem;font-weight:800;line-height:1.2;margin:10px 0 18px;}
+  .promo-modal-desc{font-size:.9rem;line-height:1.65;color:rgba(255,255,255,.82);text-align:center;margin-bottom:16px;}
+  .promo-modal-price{text-align:center;font-size:3rem;font-weight:800;color:var(--teal-light);line-height:1;}
+  .promo-modal-price-sub{text-align:center;font-size:.82rem;color:rgba(255,255,255,.7);margin-top:6px;margin-bottom:26px;}
+  .promo-modal-how{text-align:center;font-size:1.15rem;font-weight:700;margin-bottom:16px;}
+  .promo-steps{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px;}
+  .promo-step{background:rgba(255,255,255,.06);border-radius:16px;padding:16px 12px;text-align:center;}
+  .promo-step-title{font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;color:var(--teal-light);}
+  .promo-step-text{font-size:.78rem;line-height:1.5;color:rgba(255,255,255,.75);}
+  .promo-modal-tagline{text-align:center;font-weight:700;font-size:.95rem;line-height:1.5;margin-bottom:22px;}
+  .promo-modal-cta{display:flex;justify-content:center;}
+  @media (max-width:600px){
+    .promo-banner{right:14px;top:34%;padding:11px 11px 11px 16px;}
+    .promo-banner-text{font-size:1rem;}
+  }
+  @media (max-width:480px){
+    .promo-steps{grid-template-columns:1fr 1fr;}
+    .promo-modal{padding:30px 20px 26px;}
+    .promo-modal-price{font-size:2.4rem;}
+  }
+  .nav-close{display:none;}
+
+  @media (max-width: 860px){
+    nav ul{position:fixed;top:0;right:-100%;width:78%;max-width:320px;height:100vh;background:#fff;flex-direction:column;justify-content:center;gap:34px;transition:right .4s var(--ease);box-shadow:-10px 0 40px rgba(0,0,0,.15);}
+    nav ul.open{right:0;}
+    .burger{display:flex;}
+    .nav-close{
+      display:flex;position:absolute;top:20px;left:22px;width:38px;height:38px;border-radius:50%;
+      background:var(--teal-pale);color:var(--teal-deep);border:none;font-size:1.15rem;cursor:pointer;
+      align-items:center;justify-content:center;
+    }
+    .about-grid, .contact-grid{grid-template-columns:1fr;}
+    .about-visual{height:300px;}
+    .staff-nav{display:none;}
+    .staff-card{width:220px;padding:30px 22px;}
+    .staff-photo{width:128px;height:128px;}
+    header{padding:14px 20px;}
+    body.nav-open .cart-btn{display:none;}
+    .lang-switch-desktop{display:none;}
+    .lang-switch-mobile{
+      display:flex;position:absolute;top:20px;right:22px;
+    }
+  }
+</style>
 </head>
 <body>
-<script>window.location.replace('web-oh-my-wash.html');</script>
-<p>Redirigiendo a <a href="web-oh-my-wash.html">Oh My Wash</a>…</p>
+
+<header id="siteHeader">
+  <a href="#top" class="logo" aria-label="Oh My Wash — inicio">
+    <span class="nav-icon">
+      <img src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
+    </span>
+    <span class="sr-only">Oh My Wash</span>
+  </a>
+  <nav>
+    <ul id="navList">
+      <button class="nav-close" id="navClose" aria-label="Cerrar menú">✕</button>
+      <div class="lang-switch lang-switch-mobile">
+        <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+        <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+      </div>
+      <li><a href="index.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
+      <li><a href="servicios.html" class="nav-link" data-i18n="nav.services">Servicios</a></li>
+      <li><a href="galeria.html" class="nav-link" data-i18n="nav.gallery">Galería</a></li>
+      <li><a href="#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
+      <li><a href="#reviews" class="nav-link" data-i18n="nav.reviews">Reseñas</a></li>
+      <li><a href="#nosotros" class="nav-link" data-i18n="nav.about">Nosotros</a></li>
+      <li><a href="#contacto" class="nav-link" data-i18n="nav.contact">Contacto</a></li>
+      <li><a href="#" class="nav-link nav-promo-link" id="navPromoLink">$40 OFF</a></li>
+    </ul>
+  </nav>
+  <div class="header-actions">
+    <div class="lang-switch lang-switch-desktop">
+      <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+      <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+    </div>
+    <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="burger" id="burger" aria-label="Menú"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+
+  <div class="brand-logo reveal-scale in">
+    <img src="assets/oh-my-wash-logo-hero.png" alt="Oh My Wash — we care like it's ours" class="brand-logo-img">
+  </div>
+  <div class="hero-eyebrow">Mobile car detailing · <span data-i18n="hero.area">Atlanta y alrededores</span></div>
+  <h1 class="sr-only">Oh My Wash</h1>
+  <p data-i18n="hero.subtitle">Lavamos, pulimos y protegemos tu auto donde estés. Detailing completo y ceramic coating a domicilio, con el mismo cuidado que le darías al tuyo.</p>
+  <div class="hero-ctas">
+    <a href="tel:+16788955812" class="btn btn-ghost" data-i18n="hero.call">Llamar</a>
+    <a href="servicios.html" class="btn btn-solid">Book Now</a>
+    <a href="servicios.html" class="btn btn-ghost" data-i18n="hero.viewServices">Ver servicios</a>
+  </div>
+  <div class="scroll-cue"><span>SCROLL</span><div class="line"></div></div>
+</section>
+
+<div class="wave" style="margin-top:-6px;">
+  <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,32 C240,80 480,0 720,24 C960,48 1200,88 1440,40 L1440,80 L0,80 Z" fill="#ffffff"></path></svg>
+</div>
+
+<section class="about section-pad" id="nosotros">
+  <div class="wrap about-grid">
+    <div class="about-text reveal">
+      <span class="eyebrow" data-i18n="about.eyebrow">Sobre nosotros</span>
+      <h2 class="section-title" data-i18n="about.title">Cuidamos tu auto<br>como si fuera nuestro</h2>
+      <p data-i18n="about.p1">Oh My Wash, LLC es un servicio de detailing móvil que lleva el lavado, encerado, pulido y ceramic coating directo a tu puerta en Atlanta y alrededores. Nada de filas ni esperas — nosotros vamos a donde estés.</p>
+      <p data-i18n="about.p2">Desde un interior detailing hasta un ceramic coating de 5 años con corrección de pintura, cada servicio se hace a mano y con el mismo cuidado que le daríamos a nuestro propio auto.</p>
+      <ul class="value-list">
+        <li><span class="ico">✓</span> <span data-i18n="about.value1">Servicio 100% móvil — vamos a tu casa u oficina</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value2">Productos y técnicas profesionales de detailing</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value3">Ceramic coating con protección de hasta 5 años</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value4">Trato cercano — "We care like it's ours"</span></li>
+        <li><span class="ico">✓</span> <span data-i18n="about.value5">Equipo certificado en detailing profesional</span></li>
+      </ul>
+    </div>
+    <div class="about-media reveal-scale">
+      <div class="about-visual">
+        <img class="about-visual-img" src="assets/about-van.jpg" alt="Oh My Wash — servicio móvil">
+      </div>
+      <div class="about-tag">
+        <strong data-i18n="hero.area">Atlanta y alrededores</strong>
+        <span data-i18n="about.tagSub">Zona de servicio móvil</span>
+      </div>
+      <a href="servicios.html" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:14px;">Book Now</a>
+    </div>
+  </div>
+</section>
+
+<section class="story section-pad" id="historia">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center;margin-bottom:50px;">
+      <span class="eyebrow" data-i18n="story.eyebrow">Nuestra historia</span>
+      <h2 class="section-title" data-i18n="story.title">De una idea compartida a un equipo completo</h2>
+    </div>
+
+    <div class="story-timeline stagger">
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter1.title">Cómo empezó todo</h3>
+          <p data-i18n="story.chapter1.text">Oh My Wash se fundó en 2023, pero la idea empezó mucho antes de que el negocio tuviera nombre — nació de la pasión compartida de Miguel y José por los autos, su gusto por la limpieza, y el sueño de construir algo propio.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter2.title">Tío y sobrino, unidos por los autos</h3>
+          <p data-i18n="story.chapter2.text">Como tío y sobrino, los autos siempre han sido parte de su relación. José creció viendo a Miguel competir en carreras de rally, y esas experiencias despertaron un interés que se convirtió en una pasión compartida — junto con una gran atención al detalle y el orgullo de ver un auto completamente transformado.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter3.title">Reinventando el cuidado automotriz</h3>
+          <p data-i18n="story.chapter3.text">La idea de Oh My Wash tomó forma en conversaciones sobre cómo debería sentirse realmente el cuidado de un auto: un servicio que le permitiera al cliente seguir con su día, relajarse en casa, o pasar tiempo con su familia mientras profesionales de confianza se encargaban de su vehículo.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter4.title">El salto de fe</h3>
+          <p data-i18n="story.chapter4.text">Decididos a hacer realidad esa visión, Miguel y José se arriesgaron y empezaron a construir el negocio desde cero. No había garantía de que funcionara — pero creían en su idea y estaban dispuestos a poner el trabajo necesario para hacerla crecer.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter5.title">Perfeccionando el oficio</h3>
+          <p data-i18n="story.chapter5.text">Amar los autos era solo el comienzo. Para ofrecer el nivel de servicio que imaginaban, invirtieron en capacitación profesional y se certificaron en detailing automotriz, corrección de pintura y ceramic coating — y siguen aprendiendo nuevas técnicas con cada servicio.</p>
+        </div>
+      </div>
+      <div class="story-item">
+        <div class="story-dot"></div>
+        <div class="story-content">
+          <h3 data-i18n="story.chapter6.title">De dos personas a todo un equipo</h3>
+          <p data-i18n="story.chapter6.text">A medida que Oh My Wash creció, lo que empezó como una idea de dos personas se convirtió en el trabajo de todo un equipo. Cada día, Miguel y José transmiten los mismos valores que dieron forma a la empresa desde el principio: dedicación, honestidad, atención al detalle y respeto por cada vehículo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-quote reveal-scale">
+      <p data-i18n="story.nameQuote">El nombre Oh My Wash nació de la expresión "Oh my gosh!" — la reacción espontánea que esperan provocar cuando los clientes ven la transformación de su auto.</p>
+    </div>
+
+    <p class="story-closing reveal" data-i18n="story.closing">Hoy, Oh My Wash es mucho más que un negocio familiar de detailing. Es el resultado de una pasión compartida, años de aprendizaje, y el valor de convertir una idea en realidad — y su mayor satisfacción es ganarse la confianza de sus clientes, una transformación a la vez.</p>
+  </div>
+</section>
+
+<section class="staff section-pad" id="equipo">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center;margin-bottom:50px;">
+      <span class="eyebrow" data-i18n="staff.eyebrow">Nuestro equipo</span>
+      <h2 class="section-title" data-i18n="staff.title">Las manos detrás del brillo</h2>
+    </div>
+    <div class="staff-carousel-wrap">
+      <button type="button" class="staff-nav staff-nav-prev" id="staffPrev" aria-label="Anterior">‹</button>
+      <div class="staff-carousel stagger" id="staffCarousel">
+        <div class="staff-card" data-staff="jp" tabindex="0" role="button">
+          <div class="staff-photo" data-initials="JP"><img src="assets/staff-jp.jpg?v=2" alt="JP — equipo Oh My Wash" style="object-position:center 25%"></div>
+          <div class="staff-name">JP</div>
+          <div class="staff-role"></div>
+        </div>
+        <div class="staff-card" data-staff="joseMiguel" tabindex="0" role="button">
+          <div class="staff-photo" data-initials="JM"><img src="assets/staff-jose-miguel.jpg?v=2" alt="Jose Miguel — equipo Oh My Wash" style="object-position:center 25%"></div>
+          <div class="staff-name">Jose Miguel</div>
+          <div class="staff-role"></div>
+        </div>
+        <div class="staff-card" data-staff="miguel" tabindex="0" role="button">
+          <div class="staff-photo" data-initials="M"><img src="assets/staff-miguel.jpg?v=2" alt="Miguel — equipo Oh My Wash" style="object-position:center 25%"></div>
+          <div class="staff-name">Miguel</div>
+          <div class="staff-role"></div>
+        </div>
+        <div class="staff-card" data-staff="mariaJuliana" tabindex="0" role="button">
+          <div class="staff-photo" data-initials="MJ"><img src="assets/staff-maria-juliana.jpg" alt="Maria Juliana — equipo Oh My Wash" style="object-position:center 25%"></div>
+          <div class="staff-name">Maria Juliana</div>
+          <div class="staff-role"></div>
+        </div>
+      </div>
+      <button type="button" class="staff-nav staff-nav-next" id="staffNext" aria-label="Siguiente">›</button>
+    </div>
+    <div class="staff-dots" id="staffDots"></div>
+    <div style="text-align:center;margin-top:36px;">
+      <a href="servicios.html" class="btn btn-teal">Book Now</a>
+    </div>
+  </div>
+</section>
+
+<section class="reviews section-pad" id="reviews">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center;margin-bottom:36px;">
+      <span class="eyebrow" data-i18n="reviews.eyebrow">Reseñas</span>
+      <h2 class="section-title" data-i18n="reviews.title">Lo que dicen nuestros clientes</h2>
+    </div>
+
+    <div class="reviews-summary reveal">
+      <div class="reviews-score">
+        <div class="reviews-score-num">5.0</div>
+        <div class="reviews-stars">★★★★★</div>
+      </div>
+      <div class="reviews-divider"></div>
+      <div class="reviews-meta">
+        <span class="reviews-count" data-i18n="reviews.count">166 reseñas en Google</span>
+        <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="reviews-google-link" data-i18n="reviews.viewAll">Ver todas en Google →</a>
+      </div>
+    </div>
+
+    <div class="reviews-grid stagger">
+      <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="review-card">
+        <div class="review-top">
+          <div class="review-avatar" style="background:#22a89c;">FR</div>
+          <div>
+            <div class="review-name">Franko Rangel</div>
+            <div class="review-date" data-i18n="review.date1">Hace 22 horas</div>
+          </div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">Excelente servicio, la atención al cliente es muy buena y quede muy contento con el resultado.</p>
+      </a>
+      <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="review-card">
+        <div class="review-top">
+          <div class="review-avatar" style="background:#0f6a62;">RK</div>
+          <div>
+            <div class="review-name">RKH III</div>
+            <div class="review-date" data-i18n="review.date2">Hace 1 semana</div>
+          </div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">A reasonably priced mobile detail company with an attention to detail &amp; genuine love for what they do is a rare commodity. I found it with the crew at Oh My. I couldn't be happier!</p>
+      </a>
+      <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="review-card">
+        <div class="review-top">
+          <div class="review-avatar" style="background:#2ec4b6;">DO</div>
+          <div>
+            <div class="review-name">David Oden</div>
+            <div class="review-date" data-i18n="review.date3">Hace 2 semanas</div>
+          </div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">My detainer Juan was excellent. On time and was thorough in his process. Worth the money</p>
+      </a>
+      <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="review-card">
+        <div class="review-top">
+          <div class="review-avatar" style="background:#1a8f83;">MF</div>
+          <div>
+            <div class="review-name">Matthew Ferris</div>
+            <div class="review-date" data-i18n="review.date4">Hace 2 semanas</div>
+          </div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">Great communication. Looks like a new car!</p>
+      </a>
+      <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="review-card">
+        <div class="review-top">
+          <div class="review-avatar" style="background:#17766c;">SW</div>
+          <div>
+            <div class="review-name">Scott Walding</div>
+            <div class="review-date" data-i18n="review.date5">Hace 3 semanas</div>
+          </div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">Had my car detailed today, and JP did a fantastic job. My car was pretty dirty, I did not think he would get it as clean as he did. He was on time, was patient while I had to use the car to pick up my son from school, and was very nice…</p>
+      </a>
+      <a href="https://www.google.com/search?q=Oh+My+Wash+Mobile+Car+Detailing" target="_blank" rel="noopener" class="review-card">
+        <div class="review-top">
+          <div class="review-avatar" style="background:#0c4f49;">NR</div>
+          <div>
+            <div class="review-name">Nithya Rao</div>
+            <div class="review-date" data-i18n="review.date6">Hace 7 meses</div>
+          </div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">Absolutely amazing service. They were super communicative from the start — they texted before arrival and even let me know ahead of time when they were running a little late, which I really appreciated…</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="strip" id="ceramic">
+  <div class="strip-track">
+    <span>CERAMIC COATING</span><span class="sep">•</span>
+    <span>PAINT CORRECTION</span><span class="sep">•</span>
+    <span data-i18n="strip.mobile">DETAILING MÓVIL</span><span class="sep">•</span>
+    <span>WE CARE LIKE IT'S OURS</span><span class="sep">•</span>
+    <span>CERAMIC COATING</span><span class="sep">•</span>
+    <span>PAINT CORRECTION</span><span class="sep">•</span>
+    <span data-i18n="strip.mobile">DETAILING MÓVIL</span><span class="sep">•</span>
+    <span>WE CARE LIKE IT'S OURS</span><span class="sep">•</span>
+  </div>
+</section>
+
+<section class="contact section-pad" id="contacto">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center;margin-bottom:50px;">
+      <span class="eyebrow" data-i18n="contact.eyebrow">Contacto</span>
+      <h2 class="section-title" data-i18n="contact.title">Hablemos de tu auto</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card reveal">
+        <div class="contact-row">
+          <span class="ico">✦</span>
+          <div><small data-i18n="contact.phoneLabel">Llámanos o escríbenos</small><a href="tel:+16788955812">+1 678-895-5812</a></div>
+        </div>
+        <div class="contact-row">
+          <span class="ico">✦</span>
+          <div><small data-i18n="contact.emailLabel">Email</small><a href="mailto:info.ohmywash@gmail.com">info.ohmywash@gmail.com</a></div>
+        </div>
+        <div class="contact-row">
+          <span class="ico">✦</span>
+          <div class="map-picker-wrap">
+            <small data-i18n="contact.areaLabel">Zona de servicio</small>
+            <button type="button" class="map-picker-btn" id="mapPickerBtn" data-i18n="contact.areaValue">Atlanta y alrededores (servicio móvil)</button>
+            <div class="map-picker-menu" id="mapPickerMenu" hidden>
+              <a href="https://www.google.com/maps/search/?api=1&query=Oh+My+Wash+Mobile+Car+Detailing+3450+Miller+Dr+Chamblee+GA+30341" target="_blank" rel="noopener">Google Maps</a>
+              <a href="https://maps.apple.com/?address=3450+Miller+Dr,+Chamblee,+GA+30341&q=Oh+My+Wash" target="_blank" rel="noopener">Apple Maps</a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-social">
+          <small data-i18n="contact.followLabel">Síguenos</small>
+          <div class="social-links">
+            <a href="https://www.instagram.com/oh_mywash/" target="_blank" rel="noopener" class="social-badge" aria-label="Instagram"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.25a3.25 3.25 0 1 1 0-6.5 3.25 3.25 0 0 1 0 6.5zM17.5 5.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg></a>
+            <a href="https://www.tiktok.com/@oh_mywash" target="_blank" rel="noopener" class="social-badge" aria-label="TikTok"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg></a>
+            <a href="https://www.facebook.com/people/Oh-my-wash/61553786844335/" target="_blank" rel="noopener" class="social-badge" aria-label="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.022 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.459h-1.26c-1.243 0-1.63.771-1.63 1.562v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.918 8.437-9.94z"/></svg></a>
+          </div>
+        </div>
+      </div>
+      <div class="map-visual reveal-scale">
+        <div>
+          <h3 data-i18n="contact.mapTitle">Vamos hasta ti</h3>
+          <p data-i18n="contact.mapSubtitle">Servicio 100% móvil en Atlanta y alrededores</p>
+        </div>
+      </div>
+    </div>
+    <div class="final-cta reveal">
+      <a href="servicios.html" class="btn btn-solid">Book Now</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo"><img src="assets/oh-my-wash-logo.png" alt="Oh My Wash"></div>
+        <div class="footer-tag">We care like it's ours</div>
+        <div class="social-links">
+          <a href="https://www.instagram.com/oh_mywash/" target="_blank" rel="noopener" class="social-badge" aria-label="Instagram"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.25a3.25 3.25 0 1 1 0-6.5 3.25 3.25 0 0 1 0 6.5zM17.5 5.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg></a>
+          <a href="https://www.tiktok.com/@oh_mywash" target="_blank" rel="noopener" class="social-badge" aria-label="TikTok"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg></a>
+          <a href="https://www.facebook.com/people/Oh-my-wash/61553786844335/" target="_blank" rel="noopener" class="social-badge" aria-label="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.022 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.459h-1.26c-1.243 0-1.63.771-1.63 1.562v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.918 8.437-9.94z"/></svg></a>
+        </div>
+      </div>
+      <nav><ul>
+        <li><a href="servicios.html" data-i18n="nav.services">Servicios</a></li>
+        <li><a href="galeria.html" data-i18n="nav.gallery">Galería</a></li>
+        <li><a href="#nosotros" data-i18n="nav.about">Nosotros</a></li>
+        <li><a href="#contacto" data-i18n="nav.contact">Contacto</a></li>
+      </ul></nav>
+    </div>
+    <div class="footer-bottom">
+      <span data-i18n="footer.copyright">© 2026 Oh My Wash, LLC — Atlanta y alrededores</span>
+      <span>+1 678-895-5812 · info.ohmywash@gmail.com</span>
+    </div>
+    <div class="footer-legal"><a href="terminos.html" data-i18n="footer.terms">Términos de servicio</a> · <a href="privacidad.html" data-i18n="footer.privacy">Política de privacidad</a></div>
+    <div class="powered-by">Powered by <a href="https://dgpulido2000-eng.github.io/nexo-growth-web/" target="_blank" rel="noopener"><b>NEXO GROWTH</b></a></div>
+  </div>
+</footer>
+
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header">
+    <h3 data-i18n="cart.title">Tu carrito</h3>
+    <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row"><span data-i18n="cart.totalLabel">Total</span><span id="cartTotal">$0.00</span></div>
+    <button class="btn btn-solid" id="cartCheckoutBtn" style="width:100%;justify-content:center;background:var(--teal);color:#fff;" disabled data-i18n="cart.checkout">Checkout →</button>
+    <p class="cart-note" data-i18n="cart.note">Precios de partida — el monto final puede variar según el vehículo.</p>
+  </div>
+</aside>
+
+<div class="addon-modal-overlay" id="addonModalOverlay"></div>
+<div class="addon-modal" id="addonModal" hidden>
+  <div class="addon-modal-header">
+    <h3 data-i18n="addon.modalTitle">¿Quieres agregar algún extra?</h3>
+    <button class="addon-modal-close" id="addonModalClose" aria-label="Cerrar">✕</button>
+  </div>
+  <p class="addon-modal-hint" data-i18n="addon.modalHint">Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.</p>
+  <div class="addon-modal-list" id="addonModalList"></div>
+  <button class="btn btn-solid" id="addonModalContinue" style="width:100%;justify-content:center;" data-i18n="addon.modalContinue">Continuar al checkout →</button>
+</div>
+
+<div class="staff-modal-overlay" id="staffModalOverlay"></div>
+<div class="staff-modal" id="staffModal" hidden>
+  <button class="staff-modal-close" id="staffModalClose" aria-label="Cerrar">✕</button>
+  <div class="staff-modal-photo" id="staffModalPhoto"></div>
+  <h3 class="staff-modal-name" id="staffModalName"></h3>
+  <div class="staff-modal-role" id="staffModalRole"></div>
+  <div class="staff-modal-bio" id="staffModalBio"></div>
+</div>
+
+<div class="promo-banner" id="promoBanner">
+  <strong class="promo-banner-text" data-i18n="promo.bannerTitle">$40 OFF</strong>
+  <button class="promo-banner-close" id="promoBannerClose" aria-label="Cerrar">✕</button>
+</div>
+
+<div class="promo-modal-overlay" id="promoModalOverlay"></div>
+<div class="promo-modal" id="promoModal" hidden>
+  <button class="promo-modal-close" id="promoModalClose" aria-label="Cerrar">✕</button>
+  <img class="promo-modal-logo" src="assets/oh-my-wash-logo-white.png" alt="Oh My Wash">
+  <div class="promo-modal-eyebrow" data-i18n="promo.eyebrow">Price List · Mobile Car Detailing Services</div>
+  <h3 class="promo-modal-title" data-i18n="promo.title">Monthly Maintenance Program</h3>
+  <p class="promo-modal-desc" data-i18n="promo.desc">Our monthly maintenance program is tailored to provide unmatched convenience while ensuring your vehicle stays in pristine condition. Join our community of satisfied clients and discover the joy of driving a well-maintained car with a reset every 4 weeks. As a valued member, after your first detailing service, enjoy</p>
+  <div class="promo-modal-price">$40 OFF</div>
+  <div class="promo-modal-price-sub" data-i18n="promo.priceSub">on your next services within each calendar month</div>
+  <div class="promo-modal-how" data-i18n="promo.how">How can you join?</div>
+  <div class="promo-steps">
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step1Title">Get your first detail</div>
+      <div class="promo-step-text" data-i18n="promo.step1Text">Receive our initial service from us. Feel free to choose the initial service package that aligns best with your needs.</div>
+    </div>
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step2Title">Join our program</div>
+      <div class="promo-step-text" data-i18n="promo.step2Text">After your first service with us, you're eligible to join our program for premium care and exclusive discounts.</div>
+    </div>
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step3Title">Set date/time</div>
+      <div class="promo-step-text" data-i18n="promo.step3Text">Choose the best recurring time and date that can work with your schedule to service your vehicle within each calendar month.</div>
+    </div>
+    <div class="promo-step">
+        <div class="promo-step-title" data-i18n="promo.step4Title">Enjoy premium car care</div>
+      <div class="promo-step-text" data-i18n="promo.step4Text">Experience our premium maintenance detailing to keep your vehicle in pristine condition.</div>
+    </div>
+  </div>
+  <p class="promo-modal-tagline" data-i18n="promo.tagline">Be part of the Oh My Wash family, where we take care of the vehicle that takes care of you every day.</p>
+  <div class="promo-modal-cta">
+    <a href="servicios.html" class="btn btn-solid" data-i18n="promo.cta">See services &amp; book →</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Idioma (EN/ES) ----------
+  // Todo el texto traducible tiene un atributo data-i18n="clave" en el HTML.
+  // applyLanguage() recorre esos elementos y les pone el texto del idioma
+  // activo. El idioma se guarda en localStorage para que se mantenga al
+  // navegar entre páginas. Por defecto el sitio abre en inglés.
+  const translations = {
+    en: {
+      'nav.home': 'Home', 'nav.services': 'Services', 'nav.gallery': 'Gallery', 'nav.team': 'Team', 'nav.reviews': 'Reviews', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'promo.bannerTitle': '$40 OFF',
+      'promo.eyebrow': 'Price List · Mobile Car Detailing Services',
+      'promo.title': 'Monthly Maintenance Program',
+      'promo.desc': 'Our monthly maintenance program is tailored to provide unmatched convenience while ensuring your vehicle stays in pristine condition. Join our community of satisfied clients and discover the joy of driving a well-maintained car with a reset every 4 weeks. As a valued member, after your first detailing service, enjoy',
+      'promo.priceSub': 'on your next services within each calendar month',
+      'promo.how': 'How can you join?',
+      'promo.step1Title': 'Get your first detail',
+      'promo.step1Text': 'Receive our initial service from us. Feel free to choose the initial service package that aligns best with your needs.',
+      'promo.step2Title': 'Join our program',
+      'promo.step2Text': 'After your first service with us, you\'re eligible to join our program for premium care and exclusive discounts.',
+      'promo.step3Title': 'Set date/time',
+      'promo.step3Text': 'Choose the best recurring time and date that can work with your schedule to service your vehicle within each calendar month.',
+      'promo.step4Title': 'Enjoy premium car care',
+      'promo.step4Text': 'Experience our premium maintenance detailing to keep your vehicle in pristine condition.',
+      'promo.tagline': 'Be part of the Oh My Wash family, where we take care of the vehicle that takes care of you every day.',
+      'promo.cta': 'See services & book →',
+      'hero.area': 'Atlanta and surrounding areas',
+      'hero.subtitle': 'We wash, polish, and protect your car wherever you are. Full detailing and ceramic coating at your doorstep, with the same care you\'d give your own.',
+      'hero.call': 'Call', 'hero.viewServices': 'View services',
+      'about.eyebrow': 'About us',
+      'about.title': 'We care for your car<br>like it\'s our own',
+      'about.p1': 'Oh My Wash, LLC is a mobile detailing service that brings washing, waxing, polishing, and ceramic coating straight to your door in Atlanta and surrounding areas. No lines, no waiting — we come to you.',
+      'about.p2': 'From an interior detailing to a 5-year ceramic coating with paint correction, every service is done by hand with the same care we\'d give our own car.',
+      'about.value1': 'A 100% mobile service — we come to your home or office',
+      'about.value2': 'Professional detailing products and techniques',
+      'about.value3': 'Ceramic coating with up to 5 years of protection',
+      'about.value4': 'Personal care — "We care like it\'s ours"',
+      'about.value5': 'Certified professional detailing team',
+      'about.photoNote': 'Replace with real photo in /assets',
+      'about.tagSub': 'Mobile service area',
+      'story.eyebrow': 'Our story',
+      'story.title': 'From a shared idea to a whole team',
+      'story.chapter1.title': 'How it all began',
+      'story.chapter1.text': "Oh My Wash was founded in 2023, but the idea began long before the business had a name. It grew from Miguel and José's shared passion for cars, their appreciation for cleanliness, and their dream of building something of their own.",
+      'story.chapter2.title': 'Uncle and nephew, bonded by cars',
+      'story.chapter2.text': 'As uncle and nephew, cars have always been an important part of their bond. Growing up, José watched Miguel compete in rally racing, and those experiences sparked an interest that became a shared passion — along with a strong attention to detail and the satisfaction of seeing a vehicle completely transformed.',
+      'story.chapter3.title': 'Reimagining car care',
+      'story.chapter3.text': 'The idea for Oh My Wash began to take shape through conversations about what the car care experience should truly feel like: a service that would let customers continue with their day, relax at home, or spend time with their families while trusted professionals took care of their vehicle.',
+      'story.chapter4.title': 'Taking the leap',
+      'story.chapter4.text': 'Determined to bring that vision to life, Miguel and José took a chance and began building the business from the ground up. There were no guarantees it would succeed, but they believed in their idea and were willing to put in the work required to make it grow.',
+      'story.chapter5.title': 'Mastering the craft',
+      'story.chapter5.text': 'Loving cars was only the beginning. To provide the level of service they envisioned, they invested in professional training and earned certifications in automotive detailing, paint correction, and ceramic coatings — and they keep studying new techniques with every service.',
+      'story.chapter6.title': 'From two people to a whole team',
+      'story.chapter6.text': "As Oh My Wash has grown, what began as an idea shared by two people has become the work of an entire team. Every day, Miguel and José pass on the same values that shaped the company from the beginning: dedication, honesty, attention to detail, and respect for every vehicle.",
+      'story.nameQuote': 'The name Oh My Wash was inspired by the expression "Oh my gosh!" — the spontaneous reaction they hope to create when customers see the transformation of their vehicle.',
+      'story.closing': "Today, Oh My Wash is much more than a family-owned detailing business. It is the result of a shared passion, years of learning, and the courage to turn an idea into reality. Their greatest satisfaction comes from earning their customers' trust, one transformation at a time.",
+      'staff.eyebrow': 'Our team',
+      'staff.title': 'The hands behind the shine',
+      'reviews.eyebrow': 'Reviews',
+      'reviews.title': 'What our customers say',
+      'reviews.count': '166 reviews on Google',
+      'reviews.viewAll': 'See all on Google →',
+      'review.date1': '22 hours ago', 'review.date2': '1 week ago', 'review.date3': '2 weeks ago', 'review.date4': '2 weeks ago', 'review.date5': '3 weeks ago', 'review.date6': '7 months ago',
+      'strip.mobile': 'MOBILE DETAILING',
+      'contact.eyebrow': 'Contact',
+      'contact.title': 'Let\'s talk about your car',
+      'contact.phoneLabel': 'Call or text us',
+      'contact.emailLabel': 'Email',
+      'contact.areaLabel': 'Service area',
+      'contact.areaValue': 'Atlanta and surrounding areas (mobile service)',
+      'contact.mapTitle': 'We come to you',
+      'contact.mapSubtitle': '100% mobile service in Atlanta and surrounding areas',
+      'contact.followLabel': 'Follow us',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta and surrounding areas',
+      'footer.terms': 'Terms of Service', 'footer.privacy': 'Privacy Policy',
+      'cart.title': 'Your cart', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Starting prices — final amount may vary depending on the vehicle.',
+      'cart.emptyTitle': 'Your cart is empty', 'cart.emptyHint': 'Add a service from the menu',
+      'cart.clearAll': 'Clear all',
+      'cart.variablePrice': 'Variable price',
+      'addon.modalTitle': 'Want to add an extra?',
+      'addon.modalHint': 'Extras compatible with your service — quoted on-site, not charged here.',
+      'addon.modalContinue': 'Continue to checkout →',
+      'addon.add': 'Add', 'addon.added': 'Added ✓',
+    },
+    es: {
+      'nav.home': 'Home', 'nav.services': 'Servicios', 'nav.gallery': 'Galería', 'nav.team': 'Equipo', 'nav.reviews': 'Reseñas', 'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
+      'promo.bannerTitle': '$40 OFF',
+      'promo.eyebrow': 'Lista de Precios · Detailing Móvil',
+      'promo.title': 'Programa de Mantenimiento Mensual',
+      'promo.desc': 'Nuestro programa de mantenimiento mensual está diseñado para ofrecerte una comodidad inigualable mientras mantenemos tu vehículo en condiciones impecables. Únete a nuestra comunidad de clientes satisfechos y descubre la sensación de manejar un auto bien cuidado con un reinicio cada 4 semanas. Como miembro, después de tu primer servicio de detailing, disfruta',
+      'promo.priceSub': 'en tus próximos servicios dentro de cada mes calendario',
+      'promo.how': '¿Cómo puedes unirte?',
+      'promo.step1Title': 'Agenda tu primer detailing',
+      'promo.step1Text': 'Recibe tu primer servicio con nosotros. Elige el paquete inicial que mejor se ajuste a tus necesidades.',
+      'promo.step2Title': 'Únete al programa',
+      'promo.step2Text': 'Después de tu primer servicio con nosotros, ya eres elegible para unirte a nuestro programa de cuidado premium y descuentos exclusivos.',
+      'promo.step3Title': 'Elige fecha y hora',
+      'promo.step3Text': 'Elige el mejor horario y fecha recurrente que se ajuste a tu agenda para atender tu vehículo dentro de cada mes calendario.',
+      'promo.step4Title': 'Disfruta cuidado premium',
+      'promo.step4Text': 'Disfruta nuestro detailing de mantenimiento premium para mantener tu vehículo en condiciones impecables.',
+      'promo.tagline': 'Sé parte de la familia Oh My Wash, donde cuidamos el vehículo que te cuida a ti todos los días.',
+      'promo.cta': 'Ver servicios y reservar →',
+      'hero.area': 'Atlanta y alrededores',
+      'hero.subtitle': 'Lavamos, pulimos y protegemos tu auto donde estés. Detailing completo y ceramic coating a domicilio, con el mismo cuidado que le darías al tuyo.',
+      'hero.call': 'Llamar', 'hero.viewServices': 'Ver servicios',
+      'about.eyebrow': 'Sobre nosotros',
+      'about.title': 'Cuidamos tu auto<br>como si fuera nuestro',
+      'about.p1': 'Oh My Wash, LLC es un servicio de detailing móvil que lleva el lavado, encerado, pulido y ceramic coating directo a tu puerta en Atlanta y alrededores. Nada de filas ni esperas — nosotros vamos a donde estés.',
+      'about.p2': 'Desde un interior detailing hasta un ceramic coating de 5 años con corrección de pintura, cada servicio se hace a mano y con el mismo cuidado que le daríamos a nuestro propio auto.',
+      'about.value1': 'Servicio 100% móvil — vamos a tu casa u oficina',
+      'about.value2': 'Productos y técnicas profesionales de detailing',
+      'about.value3': 'Ceramic coating con protección de hasta 5 años',
+      'about.value4': 'Trato cercano — "We care like it\'s ours"',
+      'about.value5': 'Equipo certificado en detailing profesional',
+      'about.photoNote': 'Sustituir por foto real en /assets',
+      'about.tagSub': 'Zona de servicio móvil',
+      'story.eyebrow': 'Nuestra historia',
+      'story.title': 'De una idea compartida a un equipo completo',
+      'story.chapter1.title': 'Cómo empezó todo',
+      'story.chapter1.text': 'Oh My Wash se fundó en 2023, pero la idea empezó mucho antes de que el negocio tuviera nombre — nació de la pasión compartida de Miguel y José por los autos, su gusto por la limpieza, y el sueño de construir algo propio.',
+      'story.chapter2.title': 'Tío y sobrino, unidos por los autos',
+      'story.chapter2.text': 'Como tío y sobrino, los autos siempre han sido parte de su relación. José creció viendo a Miguel competir en carreras de rally, y esas experiencias despertaron un interés que se convirtió en una pasión compartida — junto con una gran atención al detalle y el orgullo de ver un auto completamente transformado.',
+      'story.chapter3.title': 'Reinventando el cuidado automotriz',
+      'story.chapter3.text': 'La idea de Oh My Wash tomó forma en conversaciones sobre cómo debería sentirse realmente el cuidado de un auto: un servicio que le permitiera al cliente seguir con su día, relajarse en casa, o pasar tiempo con su familia mientras profesionales de confianza se encargaban de su vehículo.',
+      'story.chapter4.title': 'El salto de fe',
+      'story.chapter4.text': 'Decididos a hacer realidad esa visión, Miguel y José se arriesgaron y empezaron a construir el negocio desde cero. No había garantía de que funcionara — pero creían en su idea y estaban dispuestos a poner el trabajo necesario para hacerla crecer.',
+      'story.chapter5.title': 'Perfeccionando el oficio',
+      'story.chapter5.text': 'Amar los autos era solo el comienzo. Para ofrecer el nivel de servicio que imaginaban, invirtieron en capacitación profesional y se certificaron en detailing automotriz, corrección de pintura y ceramic coating — y siguen aprendiendo nuevas técnicas con cada servicio.',
+      'story.chapter6.title': 'De dos personas a todo un equipo',
+      'story.chapter6.text': 'A medida que Oh My Wash creció, lo que empezó como una idea de dos personas se convirtió en el trabajo de todo un equipo. Cada día, Miguel y José transmiten los mismos valores que dieron forma a la empresa desde el principio: dedicación, honestidad, atención al detalle y respeto por cada vehículo.',
+      'story.nameQuote': 'El nombre Oh My Wash nació de la expresión "Oh my gosh!" — la reacción espontánea que esperan provocar cuando los clientes ven la transformación de su auto.',
+      'story.closing': 'Hoy, Oh My Wash es mucho más que un negocio familiar de detailing. Es el resultado de una pasión compartida, años de aprendizaje, y el valor de convertir una idea en realidad — y su mayor satisfacción es ganarse la confianza de sus clientes, una transformación a la vez.',
+      'staff.eyebrow': 'Nuestro equipo',
+      'staff.title': 'Las manos detrás del brillo',
+      'reviews.eyebrow': 'Reseñas',
+      'reviews.title': 'Lo que dicen nuestros clientes',
+      'reviews.count': '166 reseñas en Google',
+      'reviews.viewAll': 'Ver todas en Google →',
+      'review.date1': 'Hace 22 horas', 'review.date2': 'Hace 1 semana', 'review.date3': 'Hace 2 semanas', 'review.date4': 'Hace 2 semanas', 'review.date5': 'Hace 3 semanas', 'review.date6': 'Hace 7 meses',
+      'strip.mobile': 'DETAILING MÓVIL',
+      'contact.eyebrow': 'Contacto',
+      'contact.title': 'Hablemos de tu auto',
+      'contact.phoneLabel': 'Llámanos o escríbenos',
+      'contact.emailLabel': 'Email',
+      'contact.areaLabel': 'Zona de servicio',
+      'contact.areaValue': 'Atlanta y alrededores (servicio móvil)',
+      'contact.mapTitle': 'Vamos hasta ti',
+      'contact.mapSubtitle': 'Servicio 100% móvil en Atlanta y alrededores',
+      'contact.followLabel': 'Síguenos',
+      'footer.copyright': '© 2026 Oh My Wash, LLC — Atlanta y alrededores',
+      'footer.terms': 'Términos de servicio', 'footer.privacy': 'Política de privacidad',
+      'cart.title': 'Tu carrito', 'cart.totalLabel': 'Total', 'cart.checkout': 'Checkout →',
+      'cart.note': 'Precios de partida — el monto final puede variar según el vehículo.',
+      'cart.emptyTitle': 'Tu carrito está vacío', 'cart.emptyHint': 'Agrega un servicio desde el menú',
+      'cart.clearAll': 'Borrar todo',
+      'cart.variablePrice': 'Precio variable',
+      'addon.modalTitle': '¿Quieres agregar algún extra?',
+      'addon.modalHint': 'Extras compatibles con tu servicio — se cotizan en sitio, no se cobran aquí.',
+      'addon.modalContinue': 'Continuar al checkout →',
+      'addon.add': 'Agregar', 'addon.added': 'Agregado ✓',
+    },
+  };
+
+  let currentLang = localStorage.getItem('ohMyWashLang') || 'en';
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    const dict = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (dict[key] != null) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    localStorage.setItem('ohMyWashLang', lang);
+    renderCart();
+    if (openStaffId) renderStaffModal();
+    if (typeof renderStaffRoles === 'function') renderStaffRoles();
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => applyLanguage(b.dataset.lang));
+  });
+
+  // Header shrink + burger menu
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 40);
+  }, {passive:true});
+
+  const burger = document.getElementById('burger');
+  const navList = document.getElementById('navList');
+  const navClose = document.getElementById('navClose');
+  burger.addEventListener('click', () => {
+    navList.classList.toggle('open');
+    document.body.classList.toggle('nav-open', navList.classList.contains('open'));
+  });
+  navClose.addEventListener('click', () => {
+    navList.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  });
+  document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => {
+    navList.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  }));
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:.15});
+  document.querySelectorAll('.reveal, .reveal-scale, .stagger').forEach(el => io.observe(el));
+
+  // Parallax blobs in hero
+  const blob1 = document.querySelector('.blob1');
+  const blob2 = document.querySelector('.blob2');
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReduced) {
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      if (blob1) blob1.style.transform = `translateY(${y * 0.25}px)`;
+      if (blob2) blob2.style.transform = `translateY(${y * -0.18}px)`;
+    }, {passive:true});
+  }
+
+// Staff photo fallback to initials avatar if file isn't in /assets yet
+  document.querySelectorAll('.staff-photo img').forEach(img => {
+    img.addEventListener('error', () => {
+      const card = img.closest('.staff-photo');
+      card.innerHTML = `<div class="avatar-fallback">${card.dataset.initials}</div>`;
+    });
+  });
+
+  // ---------- Carousel del equipo ----------
+  const staffCarousel = document.getElementById('staffCarousel');
+  const staffPrev = document.getElementById('staffPrev');
+  const staffNext = document.getElementById('staffNext');
+  const staffDots = document.getElementById('staffDots');
+  if (staffCarousel && staffPrev && staffNext && staffDots) {
+    const staffCards = Array.from(staffCarousel.querySelectorAll('.staff-card'));
+    const staffScrollStep = () => {
+      const card = staffCarousel.querySelector('.staff-card');
+      if (!card) return 240;
+      const gap = parseFloat(getComputedStyle(staffCarousel).columnGap) || 28;
+      return card.getBoundingClientRect().width + gap;
+    };
+    staffPrev.addEventListener('click', () => staffCarousel.scrollBy({ left: -staffScrollStep(), behavior: 'smooth' }));
+    staffNext.addEventListener('click', () => staffCarousel.scrollBy({ left: staffScrollStep(), behavior: 'smooth' }));
+
+    staffDots.innerHTML = staffCards.map((_, i) => `<button type="button" class="staff-dot${i === 0 ? ' active' : ''}" aria-label="${i + 1}"></button>`).join('');
+    const dotEls = Array.from(staffDots.children);
+    dotEls.forEach((dot, i) => {
+      dot.addEventListener('click', () => staffCards[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
+    });
+
+    let staffScrollTicking = false;
+    staffCarousel.addEventListener('scroll', () => {
+      if (staffScrollTicking) return;
+      staffScrollTicking = true;
+      requestAnimationFrame(() => {
+        const step = staffScrollStep();
+        const activeIndex = Math.max(0, Math.min(staffCards.length - 1, Math.round(staffCarousel.scrollLeft / step)));
+        dotEls.forEach((dot, i) => dot.classList.toggle('active', i === activeIndex));
+        staffScrollTicking = false;
+      });
+    }, { passive: true });
+  }
+
+  // ---------- Modal de biografía del equipo ----------
+  // Por ahora solo los dueños (Jose Miguel y Miguel) tienen biografía; JP y
+  // Maria Juliana solo muestran su puesto hasta que tengamos su biografía.
+  const STAFF_DATA = {
+    jp: {
+      photo: 'assets/staff-jp.jpg?v=2', photoPosition: 'center 25%', initials: 'JP', name: 'JP',
+      role: { en: 'Detailer', es: 'Detailer' },
+      bio: null,
+    },
+    joseMiguel: {
+      photo: 'assets/staff-jose-miguel.jpg?v=2', photoPosition: 'center 25%', initials: 'JM', name: 'Jose Miguel',
+      role: { en: 'CEO / Detailer', es: 'CEO / Detailer' },
+      bio: {
+        en: [
+          "José was born and raised in Mérida, Venezuela, where his passion for cars began at an early age. Growing up, he watched his uncle compete in rally racing, which sparked his interest in the automotive world. During his youth, José also played table tennis professionally and had the honor of representing Venezuela in international competitions across several countries. This experience helped shape his discipline, focus, and commitment to excellence.",
+          "More than 10 years ago, José moved to the United States and began building a career in the manufacturing industry. With over eight years of experience, he has worked in the production, inspection, and quality control of high-precision components for the aerospace industry and other specialized fields. This background has given him a sharp eye for detail and a strong appreciation for accuracy and high-quality workmanship.",
+          "Inspired by the passion he shared with his uncle, they founded Oh My Wash together. José is certified in professional auto detailing, paint correction and ceramic coating, combining his technical knowledge and quality-control experience to deliver exceptional results and care for every vehicle with precision and dedication.",
+          "In his free time, José enjoys playing soccer, hiking, and spending time with his family and his Goldendoodle, Rio.",
+        ],
+        es: [
+          "José nació y creció en Mérida, Venezuela, donde su pasión por los autos comenzó desde muy joven. Cuando era niño, veía a su tío competir en carreras de rally, lo que despertó su interés por el mundo automotriz. Durante su juventud, José también jugó tenis de mesa de forma profesional y tuvo el honor de representar a Venezuela en competencias internacionales en varios países. Esa experiencia ayudó a formar su disciplina, enfoque y compromiso con la excelencia.",
+          "Hace más de 10 años, José se mudó a Estados Unidos y comenzó a construir una carrera en la industria manufacturera. Con más de ocho años de experiencia, ha trabajado en producción, inspección y control de calidad de componentes de alta precisión para la industria aeroespacial y otros sectores especializados. Esta experiencia le ha dado un ojo agudo para el detalle y un fuerte aprecio por la precisión y el trabajo de alta calidad.",
+          "Inspirado por la pasión que compartía con su tío, juntos fundaron Oh My Wash. José está certificado en detailing automotriz profesional, corrección de pintura y ceramic coating, combinando su conocimiento técnico y su experiencia en control de calidad para ofrecer resultados excepcionales y cuidar cada vehículo con precisión y dedicación.",
+          "En su tiempo libre, a José le gusta jugar fútbol, hacer senderismo, y pasar tiempo con su familia y su Goldendoodle, Rio.",
+        ],
+      },
+    },
+    miguel: {
+      photo: 'assets/staff-miguel.jpg?v=2', photoPosition: 'center 25%', initials: 'M', name: 'Miguel',
+      role: { en: 'CEO / Detailer', es: 'CEO / Detailer' },
+      bio: {
+        en: [
+          "Miguel is originally from Mérida, Venezuela, and moved to the United States eight years ago to build a new future for himself and his family.",
+          "His passion for cars has been a constant throughout his life. Long before starting his career in the automotive industry, Miguel was deeply involved in motorsports. For several years, he served as a rally co-driver, proudly representing Venezuela and carrying his country's name across different countries and international competitions. This experience strengthened his love for cars while teaching him the importance of precision, teamwork, preparation, and attention to detail.",
+          "Before coming to the United States, Miguel worked as a Sales Manager for companies in the automotive industry and also owned and operated his own business. Throughout his career, he has always been recognized for his exceptional customer service, strong business sense, and commitment to understanding and meeting his customers' needs.",
+          "After moving to the United States, Miguel trained as a CNC Machine Operator and quickly established himself through his strong work ethic, attention to detail, and dedication to exceeding customer expectations. He has worked for two well-respected companies in the Atlanta area, gaining valuable experience in precision manufacturing, quality, and customer-focused operations.",
+          "Miguel's passion for entrepreneurship, combined with his lifelong love for cars and his forward-thinking vision, eventually inspired him to pursue a new opportunity. Together with his nephew, he founded Oh My Wash in 2023, turning their shared passion for cars into a family-owned car detailing business.",
+          "With his previous experience managing businesses and his commitment to continuous learning, Miguel pursued professional training and completed several courses in the car detailing industry. He brings the same precision, dedication, and attention to detail that have defined his career into every vehicle he works on.",
+          "For Miguel, car detailing is more than simply cleaning a vehicle—it is a way to combine his lifelong passion for cars, his entrepreneurial spirit, and his commitment to providing customers with an exceptional experience.",
+          "Outside of work, Miguel enjoys spending time with his family, riding his bicycle, and relaxing at the beach. Family, hard work, and a lifelong passion for cars are at the heart of everything he does.",
+        ],
+        es: [
+          "Miguel es originario de Mérida, Venezuela, y se mudó a Estados Unidos hace ocho años para construir un nuevo futuro para él y su familia.",
+          "Su pasión por los autos ha sido una constante a lo largo de su vida. Mucho antes de iniciar su carrera en la industria automotriz, Miguel estuvo muy involucrado en el mundo del motorsport. Durante varios años se desempeñó como copiloto de rally, representando con orgullo a Venezuela y llevando el nombre de su país por distintos países y competencias internacionales. Esa experiencia fortaleció su amor por los autos y le enseñó la importancia de la precisión, el trabajo en equipo, la preparación y la atención al detalle.",
+          "Antes de llegar a Estados Unidos, Miguel trabajó como Gerente de Ventas para empresas de la industria automotriz y también fue dueño y operó su propio negocio. A lo largo de su carrera, siempre ha sido reconocido por su excepcional servicio al cliente, su visión de negocio y su compromiso por entender y satisfacer las necesidades de sus clientes.",
+          "Después de mudarse a Estados Unidos, Miguel se capacitó como Operador de Máquinas CNC y rápidamente se destacó por su fuerte ética de trabajo, atención al detalle y dedicación a superar las expectativas de sus clientes. Ha trabajado para dos empresas reconocidas del área de Atlanta, ganando experiencia valiosa en manufactura de precisión, calidad y operaciones enfocadas en el cliente.",
+          "La pasión de Miguel por emprender, junto con su amor de toda la vida por los autos y su visión a futuro, eventualmente lo inspiraron a buscar una nueva oportunidad. Junto a su sobrino, fundó Oh My Wash en 2023, convirtiendo su pasión compartida por los autos en un negocio familiar de detailing automotriz.",
+          "Con su experiencia previa administrando negocios y su compromiso con el aprendizaje continuo, Miguel realizó capacitación profesional y completó varios cursos en la industria del detailing automotriz. Aporta la misma precisión, dedicación y atención al detalle que han definido su carrera en cada vehículo en el que trabaja.",
+          "Para Miguel, el detailing automotriz es mucho más que simplemente limpiar un vehículo — es una forma de combinar su pasión de toda la vida por los autos, su espíritu emprendedor y su compromiso de ofrecerle a los clientes una experiencia excepcional.",
+          "Fuera del trabajo, Miguel disfruta pasar tiempo con su familia, andar en bicicleta y relajarse en la playa. La familia, el trabajo duro y una pasión de toda la vida por los autos son el centro de todo lo que hace.",
+        ],
+      },
+    },
+    mariaJuliana: {
+      photo: 'assets/staff-maria-juliana.jpg', photoPosition: 'center 25%', initials: 'MJ', name: 'Maria Juliana',
+      role: { en: 'Operations Assistant', es: 'Asistente de Operaciones' },
+      bio: null,
+    },
+  };
+
+  const staffModalOverlay = document.getElementById('staffModalOverlay');
+  const staffModal = document.getElementById('staffModal');
+  const staffModalClose = document.getElementById('staffModalClose');
+  const staffModalPhoto = document.getElementById('staffModalPhoto');
+  const staffModalName = document.getElementById('staffModalName');
+  const staffModalRole = document.getElementById('staffModalRole');
+  const staffModalBio = document.getElementById('staffModalBio');
+  let openStaffId = null;
+
+  function renderStaffModal() {
+    const person = STAFF_DATA[openStaffId];
+    if (!person) return;
+    staffModalPhoto.innerHTML = `<img src="${person.photo}" alt="${person.name}"${person.photoPosition ? ` style="object-position:${person.photoPosition}"` : ''}>`;
+    const modalImg = staffModalPhoto.querySelector('img');
+    modalImg.addEventListener('error', () => {
+      staffModalPhoto.innerHTML = `<div class="avatar-fallback">${person.initials}</div>`;
+    });
+    staffModalName.textContent = person.name;
+    staffModalRole.textContent = person.role[currentLang];
+    if (person.bio) {
+      staffModalBio.innerHTML = person.bio[currentLang].map(p => `<p>${p}</p>`).join('');
+    } else {
+      staffModalBio.innerHTML = `<p class="bio-soon">${currentLang === 'en' ? 'Biography coming soon.' : 'Biografía próximamente.'}</p>`;
+    }
+  }
+
+  function openStaffModal(id) {
+    if (!STAFF_DATA[id]) return;
+    openStaffId = id;
+    renderStaffModal();
+    staffModal.hidden = false;
+    staffModalOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      staffModal.classList.add('open');
+      staffModalOverlay.classList.add('open');
+    });
+  }
+
+  function closeStaffModal() {
+    staffModal.classList.remove('open');
+    staffModalOverlay.classList.remove('open');
+    setTimeout(() => { staffModal.hidden = true; staffModalOverlay.hidden = true; openStaffId = null; }, 300);
+  }
+
+  document.querySelectorAll('.staff-card[data-staff]').forEach(card => {
+    card.addEventListener('click', () => openStaffModal(card.dataset.staff));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openStaffModal(card.dataset.staff); }
+    });
+  });
+  staffModalClose.addEventListener('click', closeStaffModal);
+  staffModalOverlay.addEventListener('click', closeStaffModal);
+
+  function renderStaffRoles() {
+    document.querySelectorAll('.staff-card[data-staff]').forEach(card => {
+      const person = STAFF_DATA[card.dataset.staff];
+      const roleEl = card.querySelector('.staff-role');
+      if (person && roleEl) roleEl.textContent = person.role[currentLang];
+    });
+  }
+  renderStaffRoles();
+
+  // ---------- Carrito ----------
+  const CART_KEY = 'ohMyWashCart';
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { cart = []; }
+
+  const cartItemsEl = document.getElementById('cartItems');
+  const cartTotalEl = document.getElementById('cartTotal');
+  const cartBadgeEl = document.getElementById('cartBadge');
+  const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+  const cartDrawer = document.getElementById('cartDrawer');
+  const cartOverlay = document.getElementById('cartOverlay');
+
+  const formatUSD = (n) => '$' + n.toFixed(2);
+  const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  const cartTotal = () => cart.reduce((sum, i) => sum + (i.price != null ? i.price * i.qty : 0), 0);
+
+  function openCart(){ cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
+  function closeCart(){ cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
+
+  // ---------- Modal de add-ons antes del checkout ----------
+  // Cada servicio ya trae incluidos ciertos extras (ej. Wax & Engine ya
+  // incluye la limpieza del motor), así que no tiene sentido ofrecerlos de
+  // nuevo como add-on. Este mapa dice, por nombre base del servicio (sin el
+  // tamaño de auto entre paréntesis), qué add-ons NO se deben mostrar.
+  const ADDON_EXCLUSIONS = {
+    'Oh My Wash | Wax & Engine': ['Engine Bay Cleaning'],
+    'All In One': ['Upholstery Cleaning'],
+    'Interior Detailing': ['Upholstery Cleaning'],
+    'Oh My Wash | Full Detailing': ['Upholstery Cleaning', 'Stain Removal'],
+  };
+  const ADDON_CATALOG = [
+    { name: 'Stain Removal', duration: '2h 30m' },
+    { name: 'Headlight Restoration with Ceramic Coating', duration: '1h' },
+    { name: 'Engine Bay Cleaning', duration: '1h 30m' },
+    { name: 'Upholstery Cleaning', duration: '2h 40m' },
+    { name: 'Carpet Cleaning', duration: '1h 30m' },
+  ];
+
+  function getAvailableAddons() {
+    const excluded = new Set();
+    cart.forEach(item => {
+      for (const key in ADDON_EXCLUSIONS) {
+        if (item.name.indexOf(key) === 0) {
+          ADDON_EXCLUSIONS[key].forEach(a => excluded.add(a));
+        }
+      }
+    });
+    return ADDON_CATALOG.filter(a => !excluded.has(a.name) && !cart.some(i => i.name === a.name));
+  }
+
+  const addonModalOverlay = document.getElementById('addonModalOverlay');
+  const addonModal = document.getElementById('addonModal');
+  const addonModalList = document.getElementById('addonModalList');
+  const addonModalContinue = document.getElementById('addonModalContinue');
+  const addonModalClose = document.getElementById('addonModalClose');
+
+  function openAddonModal() {
+    const available = getAvailableAddons();
+    addonModalList.innerHTML = available.map(a => `
+      <div class="addon-modal-item" data-addon-name="${a.name.replace(/"/g, '&quot;')}">
+        <div>
+          <div class="addon-modal-item-name">${a.name}</div>
+          <div class="addon-modal-item-meta">${a.duration} · ${translations[currentLang]['cart.variablePrice']}</div>
+        </div>
+        <button type="button" class="addon-modal-add-btn">+ ${translations[currentLang]['addon.add']}</button>
+      </div>
+    `).join('');
+    addonModalList.querySelectorAll('.addon-modal-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.closest('.addon-modal-item').dataset.addonName;
+        addToCart(name, null);
+        btn.disabled = true;
+        btn.textContent = translations[currentLang]['addon.added'];
+      });
+    });
+    addonModal.hidden = false;
+    addonModalOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      addonModal.classList.add('open');
+      addonModalOverlay.classList.add('open');
+    });
+  }
+
+  function closeAddonModal() {
+    addonModal.classList.remove('open');
+    addonModalOverlay.classList.remove('open');
+    setTimeout(() => { addonModal.hidden = true; addonModalOverlay.hidden = true; }, 300);
+  }
+
+  addonModalClose.addEventListener('click', closeAddonModal);
+  addonModalOverlay.addEventListener('click', closeAddonModal);
+  addonModalContinue.addEventListener('click', () => {
+    window.location.href = 'checkout.html';
+  });
+
+  function renderCart(){
+    const count = cart.reduce((sum, i) => sum + i.qty, 0);
+    cartBadgeEl.textContent = count;
+    cartBadgeEl.style.display = count > 0 ? 'flex' : 'none';
+
+    if (!cart.length) {
+      cartItemsEl.innerHTML = `<div class="cart-empty"><p>${translations[currentLang]['cart.emptyTitle']}</p><small>${translations[currentLang]['cart.emptyHint']}</small></div>`;
+      cartCheckoutBtn.disabled = true;
+    } else {
+      cartItemsEl.innerHTML = cart.map(i => `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <span class="cart-item-name">${i.name}</span>
+            <span class="cart-item-price">${i.price != null ? formatUSD(i.price) + ' c/u' : 'Precio variable'}</span>
+          </div>
+          <div class="cart-item-controls">
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="-1">−</button>
+            <span class="qty-value">${i.qty}</span>
+            <button class="qty-btn" data-name="${i.name.replace(/"/g, '&quot;')}" data-delta="1">+</button>
+            <button class="remove-btn" data-name="${i.name.replace(/"/g, '&quot;')}" aria-label="Quitar">✕</button>
+          </div>
+        </div>
+      `).join('') + `
+        <div class="cart-clear-row">
+          <button type="button" class="cart-clear-btn" id="cartClearBtn">${translations[currentLang]['cart.clearAll']}</button>
+        </div>
+      `;
+      cartCheckoutBtn.disabled = false;
+
+      cartItemsEl.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeQty(btn.dataset.name, parseInt(btn.dataset.delta, 10)));
+      });
+      cartItemsEl.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => removeItem(btn.dataset.name));
+      });
+      document.getElementById('cartClearBtn')?.addEventListener('click', clearCart);
+    }
+    cartTotalEl.textContent = formatUSD(cartTotal());
+  }
+
+  // Productos con un máximo por auto (ej. Headlight Restoration se cobra
+  // por faro, y un auto tiene dos) — el carrito no deja pasar de ahí.
+  const MAX_QTY = { 'Headlight Restoration with Ceramic Coating': 2 };
+  const capQty = (name, qty) => Math.min(qty, MAX_QTY[name] || Infinity);
+
+  function addToCart(name, price){
+    const existing = cart.find(i => i.name === name);
+    if (existing) existing.qty = capQty(name, existing.qty + 1);
+    else cart.push({ name, price, qty: 1 });
+    saveCart();
+    renderCart();
+    openCart();
+  }
+
+  function changeQty(name, delta){
+    const item = cart.find(i => i.name === name);
+    if (!item) return;
+    item.qty = capQty(name, item.qty + delta);
+    if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
+    saveCart();
+    renderCart();
+  }
+
+  function removeItem(name){
+    cart = cart.filter(i => i.name !== name);
+    saveCart();
+    renderCart();
+  }
+
+  function clearCart(){
+    cart = [];
+    saveCart();
+    renderCart();
+  }
+
+  document.querySelectorAll('.add-cart-btn').forEach(btn => {
+    btn.addEventListener('click', () => addToCart(btn.dataset.name, parseFloat(btn.dataset.price)));
+  });
+
+  const mapPickerBtn = document.getElementById('mapPickerBtn');
+  const mapPickerMenu = document.getElementById('mapPickerMenu');
+  mapPickerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    mapPickerMenu.hidden = !mapPickerMenu.hidden;
+  });
+  document.addEventListener('click', (e) => {
+    if (!mapPickerMenu.hidden && !mapPickerMenu.contains(e.target) && e.target !== mapPickerBtn) {
+      mapPickerMenu.hidden = true;
+    }
+  });
+
+  document.getElementById('cartBtn').addEventListener('click', openCart);
+  document.getElementById('cartClose').addEventListener('click', closeCart);
+  cartOverlay.addEventListener('click', closeCart);
+  cartCheckoutBtn.addEventListener('click', () => {
+    if (!cart.length) return;
+    if (getAvailableAddons().length) {
+      openAddonModal();
+    } else {
+      window.location.href = 'checkout.html';
+    }
+  });
+
+  applyLanguage(currentLang);
+})();
+</script>
+
+<script>
+(function(){
+  // ---------- Promo flotante $40 OFF ----------
+  // Sin localStorage a propósito: el dueño quiere que el botón SIEMPRE
+  // aparezca al abrir la página, en cada visita — la "X" solo lo oculta
+  // para esa vista actual, no lo recuerda entre visitas.
+  const promoBanner = document.getElementById('promoBanner');
+  const promoBannerClose = document.getElementById('promoBannerClose');
+  const promoModalOverlay = document.getElementById('promoModalOverlay');
+  const promoModal = document.getElementById('promoModal');
+  const promoModalClose = document.getElementById('promoModalClose');
+  const navPromoLink = document.getElementById('navPromoLink');
+
+  function openPromoModal(){
+    promoModal.hidden = false;
+    promoModalOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      promoModal.classList.add('open');
+      promoModalOverlay.classList.add('open');
+    });
+  }
+  function closePromoModal(){
+    promoModal.classList.remove('open');
+    promoModalOverlay.classList.remove('open');
+    setTimeout(() => { promoModal.hidden = true; promoModalOverlay.hidden = true; }, 300);
+  }
+
+  promoBanner.addEventListener('click', openPromoModal);
+  promoBannerClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    promoBanner.hidden = true;
+  });
+  promoModalClose.addEventListener('click', closePromoModal);
+  promoModalOverlay.addEventListener('click', closePromoModal);
+  if (navPromoLink) {
+    navPromoLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openPromoModal();
+    });
+  }
+})();
+</script>
 </body>
 </html>

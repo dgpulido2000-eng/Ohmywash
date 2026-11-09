@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /checkout.html
+Disallow: /server/
+
+Sitemap: https://ohmywashdetailing.com/sitemap.xml

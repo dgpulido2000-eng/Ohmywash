@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Servicio — Oh My Wash</title>
+<title>Mobile Car Detailing Service in Atlanta | Oh My Wash</title>
+<meta name="description" content="Mobile car detailing, ceramic coating and paint correction at your home or office in Atlanta. See options and prices and book online with Oh My Wash.">
+<link rel="canonical" href="https://ohmywashdetailing.com/servicios.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Oh My Wash">
+<meta property="og:title" content="Mobile Car Detailing Service in Atlanta | Oh My Wash">
+<meta property="og:description" content="Mobile car detailing, ceramic coating and paint correction at your home or office in Atlanta. See options and prices and book online with Oh My Wash.">
+<meta property="og:url" content="https://ohmywashdetailing.com/servicios.html">
+<meta property="og:image" content="https://ohmywashdetailing.com/assets/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Forum&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -328,7 +337,7 @@
 <body>
 
 <header id="siteHeader">
-  <a href="web-oh-my-wash.html" class="logo" aria-label="Oh My Wash — inicio">
+  <a href="index.html" class="logo" aria-label="Oh My Wash — inicio">
     <span class="nav-icon">
       <img src="assets/oh-my-wash-logo-transparent.png" alt="Oh My Wash">
     </span>
@@ -341,12 +350,12 @@
         <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
         <button class="lang-btn" data-lang="es" aria-label="Español">ES</button>
       </div>
-      <li><a href="web-oh-my-wash.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
+      <li><a href="index.html#top" class="nav-link" data-i18n="nav.home">Home</a></li>
       <li><a href="servicios.html" class="nav-link active" data-i18n="nav.services">Servicios</a></li>
       <li><a href="galeria.html" class="nav-link" data-i18n="nav.gallery">Galería</a></li>
-      <li><a href="web-oh-my-wash.html#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
-      <li><a href="web-oh-my-wash.html#nosotros" class="nav-link" data-i18n="nav.about">Nosotros</a></li>
-      <li><a href="web-oh-my-wash.html#contacto" class="nav-link" data-i18n="nav.contact">Contacto</a></li>
+      <li><a href="index.html#equipo" class="nav-link" data-i18n="nav.team">Equipo</a></li>
+      <li><a href="index.html#nosotros" class="nav-link" data-i18n="nav.about">Nosotros</a></li>
+      <li><a href="index.html#contacto" class="nav-link" data-i18n="nav.contact">Contacto</a></li>
       <li><a href="#" class="nav-link nav-promo-link" id="navPromoLink">$40 OFF</a></li>
     </ul>
   </nav>
@@ -380,10 +389,10 @@
         </div>
       </div>
       <nav><ul>
-        <li><a href="web-oh-my-wash.html" data-i18n="footer.home">Inicio</a></li>
+        <li><a href="index.html" data-i18n="footer.home">Inicio</a></li>
         <li><a href="galeria.html" data-i18n="nav.gallery">Galería</a></li>
-        <li><a href="web-oh-my-wash.html#nosotros" data-i18n="nav.about">Nosotros</a></li>
-        <li><a href="web-oh-my-wash.html#contacto" data-i18n="nav.contact">Contacto</a></li>
+        <li><a href="index.html#nosotros" data-i18n="nav.about">Nosotros</a></li>
+        <li><a href="index.html#contacto" data-i18n="nav.contact">Contacto</a></li>
       </ul></nav>
     </div>
     <div class="footer-bottom">
@@ -881,6 +890,19 @@
     }
 
     const service = { ...serviceRaw[currentLang], photoFile: serviceRaw.photoFile, photoFiles: serviceRaw.photoFiles, photoPosition: serviceRaw.photoPosition, photoFit: serviceRaw.photoFit, options: serviceRaw.options };
+
+    // Título, descripción y URL propios de cada servicio para Google (siempre
+    // en inglés, que es como buscan los clientes).
+    const seo = serviceRaw.en;
+    const seoTitle = `${seo.name.replace(/^Oh My Wash \| /, '')} — Mobile Detailing in Atlanta | Oh My Wash`;
+    const seoDesc = seo.description.length > 155 ? seo.description.slice(0, 152).replace(/\s+\S*$/, '') + '…' : seo.description;
+    const seoUrl = `https://ohmywashdetailing.com/servicio.html?id=${serviceId}`;
+    document.title = seoTitle;
+    document.querySelector('meta[name="description"]').setAttribute('content', seoDesc);
+    document.querySelector('link[rel="canonical"]').setAttribute('href', seoUrl);
+    document.querySelector('meta[property="og:title"]').setAttribute('content', seoTitle);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', seoDesc);
+    document.querySelector('meta[property="og:url"]').setAttribute('content', seoUrl);
     const t = translations[currentLang];
     const carLabel = (label) => (currentLang === 'en' && CAR_LABEL_EN[label]) || label;
 
