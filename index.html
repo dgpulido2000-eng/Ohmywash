@@ -13,6 +13,58 @@
 <meta property="og:url" content="https://ohmywashdetailing.com/">
 <meta property="og:image" content="https://ohmywashdetailing.com/assets/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<!-- Ficha de negocio para Google (datos estructurados). La web es la fuente
+     oficial: la descripción es la de "About us" y el Google Business Profile
+     debe usar los mismos datos (nombre, dirección, teléfono, horario, zonas).
+     El horario es el de las reservas de la web (STAFF_SCHEDULE en
+     checkout.html): todos los días de 9 AM a 5 PM. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AutoWash",
+  "@id": "https://ohmywashdetailing.com/#business",
+  "name": "Oh My Wash",
+  "legalName": "Oh My Wash, LLC",
+  "description": "Oh My Wash, LLC is a mobile detailing service that brings washing, waxing, polishing, and ceramic coating straight to your door in Atlanta and surrounding areas. No lines, no waiting — we come to you. From an interior detailing to a 5-year ceramic coating with paint correction, every service is done by hand with the same care we'd give our own car.",
+  "url": "https://ohmywashdetailing.com/",
+  "telephone": "+1-678-895-5812",
+  "logo": "https://ohmywashdetailing.com/assets/oh-my-wash-logo.png",
+  "image": "https://ohmywashdetailing.com/assets/og-image.jpg",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "3450 Miller Dr",
+    "addressLocality": "Chamblee",
+    "addressRegion": "GA",
+    "postalCode": "30341",
+    "addressCountry": "US"
+  },
+  "areaServed": [
+    { "@type": "City", "name": "Atlanta, GA" },
+    { "@type": "City", "name": "Chamblee, GA" },
+    { "@type": "City", "name": "Brookhaven, GA" },
+    { "@type": "City", "name": "Doraville, GA" },
+    { "@type": "City", "name": "Dunwoody, GA" },
+    { "@type": "City", "name": "Marietta, GA" }
+  ],
+  "openingHoursSpecification": [{
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "opens": "09:00",
+    "closes": "17:00"
+  }],
+  "sameAs": [
+    "https://www.instagram.com/oh_mywash/",
+    "https://www.tiktok.com/@oh_mywash",
+    "https://www.facebook.com/people/Oh-my-wash/61553786844335/"
+  ],
+  "makesOffer": [
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Mobile Car Detailing", "url": "https://ohmywashdetailing.com/servicios.html" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Interior Detailing", "url": "https://ohmywashdetailing.com/servicio.html?id=interior-detailing" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Ceramic Coating", "url": "https://ohmywashdetailing.com/servicio.html?id=ceramic-5y" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Paint Correction", "url": "https://ohmywashdetailing.com/servicio.html?id=paint-correction" } }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Forum&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
