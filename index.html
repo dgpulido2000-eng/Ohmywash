@@ -1725,5 +1725,39 @@
   }
 })();
 </script>
+<script>
+// URL limpia: los botones del menú (Home, Team, About, Contact…) bajan a su
+// sección sin añadir "#nosotros", "#contacto" ni "index.html" a la
+// dirección — siempre se ve solo ohmywashdetailing.com. Solo se limpia en
+// la web publicada (http/https); abriendo el archivo en local se deja igual.
+(() => {
+  const canClean = location.protocol.startsWith('http');
+  const cleanPath = location.pathname.replace(/index\.html$/, '');
+  const clean = () => { if (canClean) history.replaceState(null, '', cleanPath + location.search); };
+
+  const goTo = (id, smooth) => {
+    const el = id === 'top' ? null : document.getElementById(id);
+    if (id !== 'top' && !el) return false;
+    if (el) el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+    else window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+    return true;
+  };
+
+  // Clics dentro de la portada: "#seccion" o "index.html#seccion".
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    const m = a.getAttribute('href').match(/^(?:index\.html)?#([\w-]+)$/);
+    if (!m) return;
+    if (goTo(m[1], true)) { e.preventDefault(); clean(); }
+  });
+
+  // Llegando desde otra página (ej. Services → About): se baja a la sección
+  // como siempre y después se limpia la dirección.
+  const initial = location.hash.slice(1);
+  if (initial) window.addEventListener('load', () => { goTo(initial, false); clean(); });
+  else clean();
+})();
+</script>
 </body>
 </html>
